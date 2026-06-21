@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal Harian — TUTUP / BUKA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg: #f5f3ee;
+    --panel: #ffffff;
+    --line: #e2ddd2;
+    --ink: #1c1d1f;
+    --dim: #8a8578;
+    --amber: #c4791f;
+    --green: #2f8a5e;
+    --shadow-soft: rgba(28,29,31,0.08);
+    --shadow-strong: rgba(28,29,31,0.14);
+    --overlay-bg: rgba(28,26,22,0.45);
+  }
+
+  html[data-theme="dark"]{
+    --bg: #0b0d10;
+    --panel: #14171b;
+    --line: #262b31;
+    --ink: #eef1f4;
+    --dim: #7a8389;
+    --amber: #e8a23a;
+    --green: #4caf7d;
+    --shadow-soft: rgba(0,0,0,0.5);
+    --shadow-strong: rgba(0,0,0,0.7);
+    --overlay-bg: rgba(5,6,8,0.78);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html, body{
+    height:100%;
+    background:
+      radial-gradient(ellipse at top, color-mix(in srgb, var(--amber) 6%, transparent), transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .stage{
+    width: min(560px, 92vw);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 28px;
+  }
+
+  .clock{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform:uppercase;
+    border:1px solid var(--line);
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .clock span{ color: var(--ink); }
+
+  /* THEME TOGGLE */
+  .theme-toggle{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index: 50;
+    transition: border-color 0.2s ease, background 0.3s ease, transform 0.15s ease;
+  }
+
+  .theme-toggle:hover{ border-color: var(--amber); }
+  .theme-toggle:active{ transform: scale(0.92); }
+
+  .theme-toggle svg{ width: 19px; height: 19px; }
+
+  .theme-toggle .icon-sun{ display: none; }
+  .theme-toggle .icon-moon{ display: block; }
+
+  html[data-theme="dark"] .theme-toggle .icon-sun{ display: block; }
+  html[data-theme="dark"] .theme-toggle .icon-moon{ display: none; }
+
+  /* MAIN PANEL */
+  .main-panel{
+    width:100%;
+    background: linear-gradient(180deg, var(--panel), color-mix(in srgb, var(--panel) 92%, var(--bg)));
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 36px 24px 40px;
+    text-align:center;
+    position:relative;
+    box-shadow: 0 30px 60px -20px var(--shadow-strong), inset 0 1px 0 color-mix(in srgb, var(--ink) 3%, transparent);
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .main-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.35em;
+    color: var(--dim);
+    text-transform:uppercase;
+    margin-bottom: 18px;
+  }
+
+  .main-title{
+    font-size: clamp(40px, 9vw, 64px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    line-height:1;
+  }
+
+  .main-rule{
+    width: 48px;
+    height: 2px;
+    background: var(--line);
+    margin: 22px auto;
+  }
+
+  .main-letter{
+    font-family:'JetBrains Mono', monospace;
+    font-size: clamp(120px, 32vw, 200px);
+    font-weight: 700;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    transition: color 0.4s ease;
+  }
+
+  .main-letter.is-v{ color: var(--green); }
+  .main-letter.is-a{ color: var(--amber); }
+
+  .main-date{
+    margin-top: 18px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* BOTTOM BOXES */
+  .pair{
+    width:100%;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .box{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 10px 20px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .box::before{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height: 3px;
+  }
+
+  .box.buka::before{ background: var(--amber); }
+  .box.tutup::before{ background: var(--green); }
+
+  .box-title{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--dim);
+    text-transform:uppercase;
+    margin-bottom: 10px;
+  }
+
+  .box-letter{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 40px;
+    font-weight: 700;
+  }
+
+  .box.buka .box-letter{ color: var(--amber); }
+  .box.tutup .box-letter{ color: var(--green); }
+
+  .footnote{
+    font-size: 11px;
+    color: var(--dim);
+    text-align:center;
+    letter-spacing: 0.05em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .main-letter{ transition:none; }
+  }
+
+  /* CALENDAR BUTTON */
+  .cal-btn{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  }
+
+  .cal-btn:hover{
+    border-color: var(--amber);
+    background: color-mix(in srgb, var(--panel) 90%, var(--ink) 5%);
+  }
+
+  .cal-btn:active{ transform: scale(0.97); }
+
+  .cal-btn svg{ color: var(--dim); flex-shrink:0; }
+
+  /* OVERLAY + MODAL */
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-bg);
+    backdrop-filter: blur(4px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 100;
+  }
+
+  .overlay.is-open{ display:flex; }
+
+  .cal-modal{
+    width: min(380px, 100%);
+    background: linear-gradient(180deg, var(--panel), color-mix(in srgb, var(--panel) 92%, var(--bg)));
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 40px 80px -20px var(--shadow-strong);
+  }
+
+  .cal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 16px;
+  }
+
+  .cal-month{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform:uppercase;
+    color: var(--ink);
+  }
+
+  .cal-nav{
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    font-size: 18px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: border-color 0.2s ease;
+  }
+
+  .cal-nav:hover{ border-color: var(--amber); }
+
+  .cal-weekdays{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 6px;
+  }
+
+  .cal-weekdays span{
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    text-transform:uppercase;
+    padding-bottom: 6px;
+  }
+
+  .cal-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day{
+    aspect-ratio: 1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius: 9px;
+    font-family:'JetBrains Mono', monospace;
+    position:relative;
+    border: 1px solid transparent;
+  }
+
+  .cal-day.empty{ visibility:hidden; }
+
+  .cal-day .d-num{
+    font-size: 12px;
+    color: var(--ink);
+    line-height:1;
+  }
+
+  .cal-day .d-letter{
+    font-size: 10px;
+    font-weight:700;
+    letter-spacing: 0.05em;
+    margin-top: 3px;
+    line-height:1;
+  }
+
+  .cal-day.v{ background: color-mix(in srgb, var(--green) 12%, transparent); }
+  .cal-day.v .d-letter{ color: var(--green); }
+
+  .cal-day.a{ background: color-mix(in srgb, var(--amber) 12%, transparent); }
+  .cal-day.a .d-letter{ color: var(--amber); }
+
+  .cal-day.is-today{
+    border-color: var(--ink);
+  }
+
+  .cal-legend{
+    display:flex;
+    justify-content:center;
+    gap: 18px;
+    margin-top: 16px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .legend-item{ display:flex; align-items:center; gap: 6px; }
+
+  .dot{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display:inline-block;
+  }
+
+  .dot-v{ background: var(--green); }
+  .dot-a{ background: var(--amber); }
+
+  .cal-close{
+    width:100%;
+    margin-top: 18px;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor:pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .cal-close:hover{ border-color: var(--amber); }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+
+<div class="stage">
+  <div class="clock" id="clock">— : — : —</div>
+
+  <div class="main-panel">
+    <div class="main-eyebrow">[TUTUP]</div>
+    <div class="main-letter" id="mainLetter">—</div>
+    <div class="main-rule"></div>
+    <div class="main-date" id="dateLabel">—</div>
+  </div>
+
+  <div class="pair">
+    <div class="box buka">
+      <div class="box-title">[BUKA]</div>
+      <div class="box-letter" id="bukaLetter">—</div>
+    </div>
+    <div class="box tutup">
+      <div class="box-title">[TUTUP]</div>
+      <div class="box-letter" id="tutupLetter">—</div>
+    </div>
+  </div>
+
+  <div class="footnote">Berganti otomatis tiap pergantian hari (00:00)</div>
+
+  <button class="cal-btn" id="calBtn" type="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Lihat Kalender TUTUP
+  </button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="cal-modal">
+    <div class="cal-head">
+      <button class="cal-nav" id="prevMonth" type="button" aria-label="Bulan sebelumnya">&#8249;</button>
+      <div class="cal-month" id="calMonthLabel">—</div>
+      <button class="cal-nav" id="nextMonth" type="button" aria-label="Bulan berikutnya">&#8250;</button>
+    </div>
+
+    <div class="cal-weekdays">
+      <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="cal-legend">
+      <span class="legend-item"><i class="dot dot-v"></i> TUTUP = V</span>
+      <span class="legend-item"><i class="dot dot-a"></i> TUTUP = A</span>
+    </div>
+
+    <button class="cal-close" id="calClose" type="button">Tutup</button>
+  </div>
+</div>
+
+<script>
+  // Reference epoch: day 0 = TUTUP is 'A'. Each following day flips.
+  // Using local midnight so it flips exactly at day change.
+  function getDayIndex(date){
+    // Normalize to local midnight, then count days since a fixed epoch.
+    const epoch = new Date(2023, 11, 31); // Dec 31 2023 — calibrated so Jun 21 2026 = V
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const msPerDay = 24 * 60 * 60 * 1000;
+    return Math.round((d - epoch) / msPerDay);
+  }
+
+  function getTutupLetter(date){
+    const idx = getDayIndex(date);
+    // even day -> A, odd day -> V
+    return idx % 2 === 0 ? 'A' : 'V';
+  }
+
+  function updateDisplay(){
+    const now = new Date();
+
+    // Clock
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock').innerHTML =
+      `<span>${hh}:${mm}:${ss}</span>`;
+
+    // Date label
+    const dateStr = now.toLocaleDateString('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    document.getElementById('dateLabel').textContent = dateStr;
+
+    // Letters
+    const tutup = getTutupLetter(now);
+    const buka = tutup === 'A' ? 'V' : 'A';
+
+    const mainLetterEl = document.getElementById('mainLetter');
+    mainLetterEl.textContent = tutup;
+    mainLetterEl.classList.toggle('is-v', tutup === 'V');
+    mainLetterEl.classList.toggle('is-a', tutup === 'A');
+
+    document.getElementById('tutupLetter').textContent = tutup;
+    document.getElementById('bukaLetter').textContent = buka;
+  }
+
+  // THEME TOGGLE (default: light)
+  const themeToggle = document.getElementById('themeToggle');
+  const htmlEl = document.documentElement;
+
+  function applyTheme(theme){
+    htmlEl.setAttribute('data-theme', theme);
+  }
+
+  // Default to light mode regardless of stored/system preference on first load.
+  applyTheme('light');
+
+  themeToggle.addEventListener('click', () => {
+    const current = htmlEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  });
+
+  updateDisplay();
+  setInterval(updateDisplay, 1000);
+
+  // CALENDAR
+  const overlay = document.getElementById('overlay');
+  const calBtn = document.getElementById('calBtn');
+  const calClose = document.getElementById('calClose');
+  const calGrid = document.getElementById('calGrid');
+  const calMonthLabel = document.getElementById('calMonthLabel');
+  const prevMonth = document.getElementById('prevMonth');
+  const nextMonth = document.getElementById('nextMonth');
+
+  const today = new Date();
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth(); // 0-indexed
+
+  const monthNames = [
+    'Januari','Februari','Maret','April','Mei','Juni',
+    'Juli','Agustus','September','Oktober','November','Desember'
+  ];
+
+  function renderCalendar(){
+    calMonthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+    calGrid.innerHTML = '';
+
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startWeekday = firstDay.getDay(); // 0 = Sunday
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    // Leading empty cells
+    for (let i = 0; i < startWeekday; i++){
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      calGrid.appendChild(empty);
+    }
+
+    // Day cells
+    for (let day = 1; day <= daysInMonth; day++){
+      const cellDate = new Date(viewYear, viewMonth, day);
+      const letter = getTutupLetter(cellDate);
+
+      const cell = document.createElement('div');
+      cell.className = `cal-day ${letter.toLowerCase()}`;
+
+      const isToday =
+        cellDate.getFullYear() === today.getFullYear() &&
+        cellDate.getMonth() === today.getMonth() &&
+        cellDate.getDate() === today.getDate();
+
+      if (isToday) cell.classList.add('is-today');
+
+      cell.innerHTML = `
+        <span class="d-num">${day}</span>
+        <span class="d-letter">${letter}</span>
+      `;
+      cell.title = `${day} ${monthNames[viewMonth]} ${viewYear} — TUTUP: ${letter}`;
+
+      calGrid.appendChild(cell);
+    }
+  }
+
+  calBtn.addEventListener('click', () => {
+    viewYear = today.getFullYear();
+    viewMonth = today.getMonth();
+    renderCalendar();
+    overlay.classList.add('is-open');
+  });
+
+  function closeCal(){ overlay.classList.remove('is-open'); }
+
+  calClose.addEventListener('click', closeCal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeCal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeCal();
+  });
+
+  prevMonth.addEventListener('click', () => {
+    viewMonth--;
+    if (viewMonth < 0){ viewMonth = 11; viewYear--; }
+    renderCalendar();
+  });
+
+  nextMonth.addEventListener('click', () => {
+    viewMonth++;
+    if (viewMonth > 11){ viewMonth = 0; viewYear++; }
+    renderCalendar();
+  });
+</script>
+
+</body>
+</html>
