@@ -218,6 +218,261 @@
 
   .color-reset:hover{ border-color: var(--amber); color: var(--ink); }
 
+  /* LAUNCHER (hamburger) BUTTON */
+  .launcher-toggle{
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index: 60;
+    transition: border-color 0.2s ease, background 0.3s ease, transform 0.15s ease;
+  }
+
+  .launcher-toggle:hover{ border-color: var(--amber); }
+  .launcher-toggle:active{ transform: scale(0.92); }
+
+  .launcher-toggle svg{ width: 19px; height: 19px; }
+
+  /* DRAWER */
+  .drawer-overlay{
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-bg);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events:none;
+    visibility:hidden;
+    transition: opacity 0.25s ease, visibility 0.25s;
+    z-index: 90;
+  }
+
+  .drawer-overlay.is-open{
+    opacity:1;
+    pointer-events:auto;
+    visibility:visible;
+  }
+
+  .drawer{
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 86vw);
+    background: linear-gradient(180deg, var(--panel), color-mix(in srgb, var(--panel) 92%, var(--bg)));
+    border-right: 1px solid var(--line);
+    box-shadow: 30px 0 60px -30px var(--shadow-strong);
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 91;
+    display:flex;
+    flex-direction:column;
+    padding: 22px 18px;
+    overflow-y:auto;
+  }
+
+  .drawer-overlay.is-open .drawer{ transform: translateX(0); }
+
+  .drawer-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 22px;
+  }
+
+  .drawer-title{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    text-transform:uppercase;
+    color: var(--dim);
+  }
+
+  .drawer-close{
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .drawer-close:hover{ border-color: var(--amber); }
+  .drawer-close svg{ width: 16px; height: 16px; }
+
+  .drawer-crumb{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 0 16px;
+  }
+
+  .drawer-crumb:hover{ color: var(--ink); }
+  .drawer-crumb svg{ width: 15px; height: 15px; }
+  .drawer-crumb.hidden{ display:none; }
+
+  .drawer-list{
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+  }
+
+  .drawer-item{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    width:100%;
+    text-align:left;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 2%, transparent);
+    color: var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor:pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s ease;
+  }
+
+  .drawer-item:hover{
+    border-color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 8%, transparent);
+  }
+
+  .drawer-item:active{ transform: scale(0.98); }
+
+  .drawer-item .item-icon{
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    color: var(--dim);
+  }
+
+  .drawer-item.folder .item-icon{ color: var(--amber); }
+  .drawer-item.file .item-icon{ color: var(--green); }
+
+  .drawer-item .item-icon svg{ width: 17px; height: 17px; }
+
+  .drawer-item .item-chevron{
+    margin-left:auto;
+    color: var(--dim);
+    flex-shrink:0;
+  }
+
+  .drawer-item .item-chevron svg{ width: 15px; height: 15px; }
+
+  .drawer-empty{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    text-align:center;
+    padding: 30px 10px;
+    line-height: 1.6;
+  }
+
+  .drawer-footnote{
+    margin-top: auto;
+    padding-top: 18px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    border-top: 1px solid var(--line);
+  }
+
+  /* APP PLAYER OVERLAY */
+  .player-overlay{
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events:none;
+    visibility:hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+    z-index: 200;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .player-overlay.is-open{
+    opacity:1;
+    pointer-events:auto;
+    visibility:visible;
+  }
+
+  .player-bar{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    flex-shrink:0;
+  }
+
+  .player-back{
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor:pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .player-back:hover{ border-color: var(--amber); }
+  .player-back svg{ width: 15px; height: 15px; }
+
+  .player-name{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .player-frame{
+    flex:1;
+    width:100%;
+    border:none;
+    background: var(--bg);
+  }
+
   /* MAIN PANEL */
   .main-panel{
     width:100%;
@@ -635,6 +890,41 @@
 </head>
 <body>
 
+<button class="launcher-toggle" id="launcherToggle" type="button" aria-label="Buka menu aplikasi">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<div class="drawer-overlay" id="drawerOverlay">
+  <nav class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title" id="drawerTitle">Menu</div>
+      <button class="drawer-close" id="drawerClose" type="button" aria-label="Tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <button class="drawer-crumb hidden" id="drawerBack" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
+
+    <div class="drawer-list" id="drawerList"></div>
+
+    <div class="drawer-footnote">Daftar item diatur lewat <strong>menu.json</strong> di root repo.</div>
+  </nav>
+</div>
+
+<div class="player-overlay" id="playerOverlay">
+  <div class="player-bar">
+    <button class="player-back" id="playerBack" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
+    <div class="player-name" id="playerName">—</div>
+  </div>
+  <iframe class="player-frame" id="playerFrame" title="App"></iframe>
+</div>
+
 <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema">
   <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -873,6 +1163,145 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') colorPanel.classList.remove('is-open');
+  });
+
+  // LAUNCHER MENU (reads menu.json, renders folders/files, opens apps in overlay)
+  const launcherToggle = document.getElementById('launcherToggle');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const drawerClose = document.getElementById('drawerClose');
+  const drawerTitle = document.getElementById('drawerTitle');
+  const drawerBack = document.getElementById('drawerBack');
+  const drawerList = document.getElementById('drawerList');
+
+  const playerOverlay = document.getElementById('playerOverlay');
+  const playerBack = document.getElementById('playerBack');
+  const playerName = document.getElementById('playerName');
+  const playerFrame = document.getElementById('playerFrame');
+
+  const folderIconSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>`;
+  const fileIconSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  const chevronSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+  let menuData = null;
+  let menuLoadError = false;
+  let currentFolder = null; // null = root
+
+  async function loadMenu(){
+    try {
+      const res = await fetch('menu.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('menu.json tidak ditemukan');
+      menuData = await res.json();
+    } catch (err){
+      console.warn('Tidak bisa memuat menu.json:', err);
+      menuLoadError = true;
+      menuData = { folders: [] };
+    }
+  }
+
+  function renderRoot(){
+    currentFolder = null;
+    drawerTitle.textContent = 'Menu';
+    drawerBack.classList.add('hidden');
+    drawerList.innerHTML = '';
+
+    if (menuLoadError){
+      drawerList.innerHTML = `<div class="drawer-empty">menu.json tidak ditemukan atau formatnya salah.<br>Pastikan file menu.json ada di root repo, sejajar dengan index.html.</div>`;
+      return;
+    }
+
+    const folders = (menuData && menuData.folders) || [];
+
+    if (folders.length === 0){
+      drawerList.innerHTML = `<div class="drawer-empty">Belum ada folder.<br>Tambahkan folder di menu.json untuk mulai mengisi menu ini.</div>`;
+      return;
+    }
+
+    folders.forEach((folder) => {
+      const btn = document.createElement('button');
+      btn.className = 'drawer-item folder';
+      btn.innerHTML = `
+        <span class="item-icon">${folderIconSVG}</span>
+        <span>${escapeHtml(folder.name || folder.path)}</span>
+        <span class="item-chevron">${chevronSVG}</span>
+      `;
+      btn.addEventListener('click', () => renderFolder(folder));
+      drawerList.appendChild(btn);
+    });
+  }
+
+  function renderFolder(folder){
+    currentFolder = folder;
+    drawerTitle.textContent = folder.name || folder.path;
+    drawerBack.classList.remove('hidden');
+    drawerList.innerHTML = '';
+
+    const files = folder.files || [];
+
+    if (files.length === 0){
+      drawerList.innerHTML = `<div class="drawer-empty">Folder ini masih kosong.<br>Tambahkan file HTML ke dalamnya lewat menu.json.</div>`;
+      return;
+    }
+
+    files.forEach((file) => {
+      const btn = document.createElement('button');
+      btn.className = 'drawer-item file';
+      btn.innerHTML = `
+        <span class="item-icon">${fileIconSVG}</span>
+        <span>${escapeHtml(file.name || file.path)}</span>
+      `;
+      const fullPath = `${folder.path.replace(/\/$/, '')}/${file.path}`;
+      btn.addEventListener('click', () => openApp(file.name || file.path, fullPath));
+      drawerList.appendChild(btn);
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function openDrawer(){
+    drawerOverlay.classList.add('is-open');
+    if (!menuData) {
+      drawerList.innerHTML = `<div class="drawer-empty">Memuat menu…</div>`;
+      loadMenu().then(renderRoot);
+    } else {
+      renderRoot();
+    }
+  }
+
+  function closeDrawer(){
+    drawerOverlay.classList.remove('is-open');
+  }
+
+  function openApp(name, path){
+    playerName.textContent = name;
+    playerFrame.src = path;
+    playerOverlay.classList.add('is-open');
+    closeDrawer();
+  }
+
+  function closePlayer(){
+    playerOverlay.classList.remove('is-open');
+    playerFrame.src = 'about:blank';
+  }
+
+  launcherToggle.addEventListener('click', openDrawer);
+  drawerClose.addEventListener('click', closeDrawer);
+  drawerBack.addEventListener('click', renderRoot);
+
+  drawerOverlay.addEventListener('click', (e) => {
+    if (e.target === drawerOverlay) closeDrawer();
+  });
+
+  playerBack.addEventListener('click', closePlayer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){
+      if (playerOverlay.classList.contains('is-open')) closePlayer();
+      else closeDrawer();
+    }
   });
 
   updateDisplay();

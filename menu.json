@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "name": "Games",
+      "path": "Games",
+      "files": [
+        { "name": "Tebak Angka", "path": "tebak-angka.html" }
+      ]
+    },
+    {
+      "name": "Tools",
+      "path": "Tools",
+      "files": [
+        { "name": "Konversi Suhu", "path": "konversi-suhu.html" }
+      ]
+    }
+  ]
+}
