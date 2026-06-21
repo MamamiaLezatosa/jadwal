@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg: #f5f3ee;
+    --panel: #ffffff;
+    --line: #e2ddd2;
+    --ink: #1c1d1f;
+    --dim: #8a8578;
+    --accent: #2f8a5e;
+    --op: #c4791f;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+  html{ background:var(--bg); }
+
+  body{
+    min-height:100dvh;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Space Grotesk',sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px 16px;
+  }
+
+  .card{
+    width:min(340px,100%);
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:20px;
+    box-shadow:0 24px 60px -24px rgba(0,0,0,0.18);
+  }
+
+  .display{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 18px 18px;
+    margin-bottom:16px;
+    overflow:hidden;
+    position:relative;
+    cursor:text;
+    user-select:none;
+  }
+
+  .display-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    min-height:24px;
+    margin-bottom:2px;
+  }
+
+  .display .expression{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--dim);
+    white-space:nowrap;
+    overflow-x:auto;
+    letter-spacing:0.02em;
+    flex:1;
+    text-align:right;
+    padding-right:8px;
+  }
+
+  .btn-backspace{
+    flex-shrink:0;
+    background:none; border:none; cursor:pointer;
+    color:var(--dim); font-size:18px;
+    padding:2px 0 2px 4px; line-height:1; outline:none;
+    transition:color 0.15s ease, transform 0.1s ease;
+  }
+  .btn-backspace:active{ transform:scale(0.9); color:var(--ink); }
+
+  .current-wrap{
+    position:relative;
+    overflow-x:auto;
+    white-space:nowrap;
+    text-align:right;
+    line-height:1.15;
+    /* extra bottom padding so the handle doesn't get clipped */
+    padding-bottom:28px;
+    margin-bottom:-28px;
+  }
+
+  #hidden-input{
+    position:absolute;
+    opacity:0;
+    width:1px; height:1px;
+    top:0; left:0;
+    pointer-events:none;
+  }
+
+  .current{
+    font-family:'JetBrains Mono',monospace;
+    font-size:36px;
+    font-weight:700;
+    display:inline;
+    white-space:nowrap;
+    transition:font-size 0.15s ease;
+  }
+
+  /* Blinking cursor bar */
+  .caret{
+    display:inline-block;
+    width:2px;
+    height:1em;
+    background:var(--accent);
+    vertical-align:text-bottom;
+    margin:0 1px;
+    border-radius:1px;
+    animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0} }
+  .caret.hidden{ display:none; }
+
+  /* ── Draggable teardrop handle ───────────────────────── */
+  #cursor-handle{
+    position:absolute;
+    /* positioned via JS */
+    display:none;
+    width:28px;
+    height:28px;
+    transform:translateX(-50%);
+    touch-action:none;
+    cursor:grab;
+    z-index:10;
+  }
+  #cursor-handle.visible{ display:block; }
+  #cursor-handle:active{ cursor:grabbing; }
+
+  /* ── Landscape / short screens ───────────────────────── */
+  @media (max-height: 500px) and (orientation: landscape){
+    body{ padding:8px 16px; align-items:flex-start; }
+    .card{
+      width:100%;
+      max-width:520px;
+      display:grid;
+      grid-template-columns:1fr 1.15fr;
+      gap:10px;
+      padding:12px;
+      border-radius:18px;
+    }
+    .display{
+      margin-bottom:0;
+      padding:10px 14px 12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+    .current-wrap{ padding-bottom:20px; margin-bottom:-20px; }
+    button.key{ padding:8px 0; font-size:15px; border-radius:11px; }
+    button.key.func{ font-size:13px; }
+    .keys{ gap:6px; }
+  }
+
+  /* Keys */
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+
+  button.key{
+    border:1px solid var(--line);
+    background:var(--bg); color:var(--ink);
+    border-radius:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:17px; font-weight:500;
+    padding:14px 0;
+    cursor:pointer; outline:none;
+    transition:transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  button.key:active{ transform:scale(0.95); }
+
+  button.key.op{
+    background:color-mix(in srgb,var(--op) 12%,var(--panel));
+    color:var(--op);
+    border-color:color-mix(in srgb,var(--op) 30%,var(--line));
+    font-weight:700;
+  }
+  button.key.op:hover{ border-color:var(--op); }
+
+  button.key.func{ color:var(--dim); font-weight:600; font-size:15px; }
+  button.key.func:hover{ border-color:var(--dim); }
+
+  button.key.equals{
+    background:var(--accent); border-color:var(--accent);
+    color:#fff; font-weight:700;
+  }
+  button.key.equals:hover{ filter:brightness(1.05); }
+
+  button.key.zero{ grid-column:span 2; }
+  button.key sup{ font-size:0.6em; vertical-align:super; line-height:0; }
+  button.key sub{ font-size:0.6em; vertical-align:sub; line-height:0; }
+
+  /* Scientific toggle pill */
+  .sci-toggle{
+    display:flex; justify-content:flex-end;
+    margin-bottom:10px;
+  }
+  .btn-sci{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:20px;
+    color:var(--dim);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px; font-weight:500;
+    padding:4px 12px;
+    cursor:pointer; outline:none;
+    letter-spacing:0.04em;
+    transition:background 0.15s, color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-sci.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  /* Scientific keys panel */
+  .sci-keys{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    overflow:hidden;
+    max-height:0;
+    opacity:0;
+    margin-bottom:0;
+    transition:max-height 0.25s ease, opacity 0.2s ease, margin-bottom 0.25s ease;
+  }
+  .sci-keys.open{
+    max-height:300px;
+    opacity:1;
+    margin-bottom:8px;
+  }
+  button.key.sci{
+    color:var(--accent);
+    border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+    background:color-mix(in srgb,var(--accent) 6%,var(--panel));
+    font-size:13px; font-weight:600;
+    padding:11px 0;
+  }
+  button.key.sci:active{ transform:scale(0.95); }
+
+  .right-col{ display:contents; }
+
+  @media (orientation:landscape) and (max-height:500px){
+    body{ padding:6px 10px; align-items:center; }
+    .card{
+      width:100%;
+      max-width:680px;
+      padding:8px;
+      border-radius:14px;
+      display:grid;
+      grid-template-columns:1fr 1.55fr;
+      gap:8px;
+      align-items:stretch;
+    }
+    .display{
+      margin-bottom:0;
+      padding:10px 12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+    .current-wrap{ padding-bottom:20px; margin-bottom:-20px; }
+    .right-col{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .sci-toggle{ margin-bottom:0; }
+    .sci-keys{ gap:4px; margin-bottom:0 !important; }
+    .sci-keys.open{ max-height:150px; }
+    .keys{ gap:4px; flex:1; }
+    button.key{ padding:6px 0; font-size:13px; border-radius:9px; }
+    button.key.sci{ padding:5px 0; font-size:11px; }
+    button.key.func{ font-size:12px; }
+    .btn-sci{ font-size:11px; padding:3px 9px; }
+    .display .expression{ font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="display" id="display">
+    <div class="display-top">
+      <div class="expression" id="expression">&nbsp;</div>
+      <button class="btn-backspace" id="btn-backspace" aria-label="Backspace">⌫</button>
+    </div>
+    <div class="current-wrap" id="current-wrap">
+      <span class="current" id="current-before"></span><span class="caret hidden" id="caret"></span><span class="current" id="current-after">0</span>
+      <!-- Teardrop cursor handle -->
+      <svg id="cursor-handle" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- stem line from top of circle down to point -->
+        <line x1="14" y1="10" x2="14" y2="28" stroke="#2f8a5e" stroke-width="2" stroke-linecap="round"/>
+        <!-- filled circle -->
+        <circle cx="14" cy="9" r="8" fill="#2f8a5e"/>
+        <!-- left arrow -->
+        <polyline points="11,6 8,9 11,12" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- right arrow -->
+        <polyline points="17,6 20,9 17,12" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <input id="hidden-input" type="text" inputmode="none" readonly>
+  </div>
+
+  <div class="right-col">
+  <div class="sci-toggle">
+    <button class="btn-sci" id="btn-sci">SCI</button>
+  </div>
+
+  <div class="sci-keys" id="sci-keys">
+    <button class="key sci" data-action="sci-func" data-value="sin">sin</button>
+    <button class="key sci" data-action="sci-func" data-value="cos">cos</button>
+    <button class="key sci" data-action="sci-func" data-value="tan">tan</button>
+    <button class="key sci" data-action="sci-func" data-value="log">log</button>
+
+    <button class="key sci" data-action="sci-func" data-value="asin">sin<sup>-1</sup></button>
+    <button class="key sci" data-action="sci-func" data-value="acos">cos<sup>-1</sup></button>
+    <button class="key sci" data-action="sci-func" data-value="atan">tan<sup>-1</sup></button>
+    <button class="key sci" data-action="sci-func" data-value="ln">ln</button>
+
+    <button class="key sci" data-action="sci-const" data-value="π">π</button>
+    <button class="key sci" data-action="sci-const" data-value="e">e</button>
+    <button class="key sci" data-action="sci-func" data-value="abs">|x|</button>
+    <button class="key sci" data-action="sci-func" data-value="fact">n!</button>
+  </div>
+
+  <div class="keys">
+    <button class="key func" data-action="clear">AC</button>
+    <button class="key func" data-action="paren" data-value="(">(</button>
+    <button class="key func" data-action="paren" data-value=")">)</button>
+    <button class="key op"   data-action="operator" data-value="÷">÷</button>
+
+    <button class="key func" data-action="percent">%</button>
+    <button class="key func" data-action="operator" data-value="^">x<sup>y</sup></button>
+    <button class="key func" data-action="sqrt">√</button>
+    <button class="key op"   data-action="operator" data-value="×">×</button>
+
+    <button class="key" data-action="digit" data-value="7">7</button>
+    <button class="key" data-action="digit" data-value="8">8</button>
+    <button class="key" data-action="digit" data-value="9">9</button>
+    <button class="key op" data-action="operator" data-value="−">−</button>
+
+    <button class="key" data-action="digit" data-value="4">4</button>
+    <button class="key" data-action="digit" data-value="5">5</button>
+    <button class="key" data-action="digit" data-value="6">6</button>
+    <button class="key op" data-action="operator" data-value="+">+</button>
+
+    <button class="key" data-action="digit" data-value="1">1</button>
+    <button class="key" data-action="digit" data-value="2">2</button>
+    <button class="key" data-action="digit" data-value="3">3</button>
+    <button class="key equals" data-action="equals" style="grid-row:span 2">=</button>
+
+    <button class="key zero" data-action="digit" data-value="0">0</button>
+    <button class="key" data-action="decimal">,</button>
+  </div>
+  </div><!-- /right-col -->
+</div>
+
+<script>
+  const expressionEl = document.getElementById('expression');
+  const beforeEl     = document.getElementById('current-before');
+  const caretEl      = document.getElementById('caret');
+  const afterEl      = document.getElementById('current-after');
+  const displayEl    = document.getElementById('display');
+  const wrapEl       = document.getElementById('current-wrap');
+  const handleEl     = document.getElementById('cursor-handle');
+
+  let isTouchDevice = false;
+  window.addEventListener('touchstart', () => { isTouchDevice = true; }, { once: true, passive: true });
+
+  let expression    = '';
+  let cursor        = 0;
+  let justEvaluated = false;
+  let caretVisible  = false;
+
+  // ── Display ───────────────────────────────────────────────────────────────
+
+  function showCaret(){
+    caretEl.classList.remove('hidden');
+    caretVisible = true;
+    // position handle after layout settles
+    setTimeout(positionHandle, 0);
+  }
+
+  function hideCaret(){
+    caretEl.classList.add('hidden');
+    caretVisible = false;
+    handleEl.classList.remove('visible');
+  }
+
+  function updateDisplay(keepCaret){
+    const expr = expression;
+    if (!caretVisible){
+      beforeEl.textContent = '';
+      afterEl.textContent  = expr === '' ? '0' : expr;
+    } else {
+      beforeEl.textContent = expr.slice(0, cursor);
+      afterEl.textContent  = expr.slice(cursor) || '';
+      if (expr === '') afterEl.textContent = '';
+    }
+
+    if (caretVisible){
+      setTimeout(() => {
+        caretEl.scrollIntoView({ block:'nearest', inline:'nearest' });
+        positionHandle();
+      }, 0);
+    }
+
+    if (expression === '') expressionEl.textContent = '\u00A0';
+
+    // Scale font size based on expression length
+    const len = expression.length || 1;
+    const size = Math.max(14, Math.min(36, Math.round(36 - (len - 1) * 1.5)));
+    beforeEl.style.fontSize = size + 'px';
+    afterEl.style.fontSize  = size + 'px';
+    caretEl.style.height    = size + 'px';
+  }
+
+  // ── Handle positioning ────────────────────────────────────────────────────
+
+  function positionHandle(){
+    if (!caretVisible || !isTouchDevice){ handleEl.classList.remove('visible'); return; }
+    const caretRect = caretEl.getBoundingClientRect();
+    const wrapRect  = wrapEl.getBoundingClientRect();
+    // X = caret center relative to wrap, accounting for scroll
+    const x = caretRect.left - wrapRect.left + wrapEl.scrollLeft + caretRect.width / 2;
+    // Y = just below the text baseline; caret bottom relative to wrap top
+    const y = caretRect.bottom - wrapRect.top;
+    handleEl.style.left = x + 'px';
+    handleEl.style.top  = y + 'px';
+    handleEl.classList.add('visible');
+  }
+
+  // ── Handle drag (touch + mouse) ───────────────────────────────────────────
+
+  let dragging = false;
+
+  function getClientXFromEvent(e){
+    return e.touches ? e.touches[0].clientX : e.clientX;
+  }
+
+  function onDragStart(e){
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    // pause blink so it's solid while dragging
+    caretEl.style.animation = 'none';
+    caretEl.style.opacity   = '1';
+    document.addEventListener('touchmove', onDragMove, { passive:false });
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchend',  onDragEnd);
+    document.addEventListener('mouseup',   onDragEnd);
+  }
+
+  function onDragMove(e){
+    if (!dragging) return;
+    e.preventDefault();
+    const clientX = getClientXFromEvent(e);
+    const newCursor = getCursorFromX(clientX);
+    if (newCursor !== cursor){
+      cursor = newCursor;
+      updateDisplay(true);
+    }
+  }
+
+  function onDragEnd(e){
+    dragging = false;
+    caretEl.style.animation = '';
+    caretEl.style.opacity   = '';
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('touchend',  onDragEnd);
+    document.removeEventListener('mouseup',   onDragEnd);
+  }
+
+  handleEl.addEventListener('touchstart', onDragStart, { passive:false });
+  handleEl.addEventListener('mousedown',  onDragStart);
+
+  // ── Cursor position from X coordinate ────────────────────────────────────
+
+  function measureTextWidth(str, refEl){
+    const span = document.createElement('span');
+    const cs   = getComputedStyle(refEl);
+    span.style.cssText = `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};visibility:hidden;position:absolute;white-space:pre;top:0;left:0;`;
+    span.textContent = str;
+    document.body.appendChild(span);
+    const w = span.getBoundingClientRect().width;
+    document.body.removeChild(span);
+    return w;
+  }
+
+  function getCursorFromX(clientX){
+    if (expression === '') return 0;
+    const expr = expression;
+    const len  = expr.length;
+
+    const wrapRect  = wrapEl.getBoundingClientRect();
+    const totalW    = measureTextWidth(expr, beforeEl);
+    const scrollLeft = wrapEl.scrollLeft;
+    // text is right-aligned: text starts at wrapRect.right - totalW + scrollLeft
+    const textStartX = wrapRect.right - totalW + scrollLeft;
+    const relX = clientX - textStartX;
+
+    if (relX <= 0) return 0;
+    if (relX >= totalW) return len;
+
+    let lo = 0, hi = len;
+    while (lo < hi){
+      const mid = Math.floor((lo + hi) / 2);
+      const w   = measureTextWidth(expr.slice(0, mid), beforeEl);
+      if (w < relX) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+
+  function getCursorFromClick(e){
+    return getCursorFromX(e.clientX);
+  }
+
+  wrapEl.addEventListener('click', (e) => {
+    if (e.target === handleEl) return;
+    if (justEvaluated) return;
+    if (expression === '') return;
+    cursor = getCursorFromClick(e);
+    showCaret();
+    updateDisplay(true);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!displayEl.contains(e.target) && !e.target.classList.contains('key') && e.target.id !== 'btn-backspace'){
+      hideCaret();
+      updateDisplay();
+    }
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function charAtCursor(){ return expression[cursor - 1] || ''; }
+  function charAfterCursor(){ return expression[cursor] || ''; }
+  function isOperator(ch){ return ch && ('+-×÷^'.includes(ch) || ch === '−'); }
+  function isDigitOrDot(ch){ return ch && ((ch >= '0' && ch <= '9') || ch === ','); }
+
+  function insert(str){
+    expression = expression.slice(0, cursor) + str + expression.slice(cursor);
+    cursor += str.length;
+  }
+
+  // ── Input functions ───────────────────────────────────────────────────────
+
+  function activateCursor(keepResult){
+    if (justEvaluated){
+      if (!keepResult) expression = '';
+      cursor = expression.length;
+      justEvaluated = false;
+      hideCaret();
+    }
+  }
+  function inputDigit(d){
+    activateCursor(false);
+    const after = charAfterCursor();
+    if (after === ')') insert('×');
+    insert(d);
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function inputDecimal(){
+    activateCursor(false);
+    const before = charAtCursor();
+    if (expression === '' || isOperator(before) || before === '('){
+      insert('0,');
+    } else if (!commaInCurrentNumber()){
+      insert(',');
+    }
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function commaInCurrentNumber(){
+    let i = cursor - 1;
+    while (i >= 0 && isDigitOrDot(expression[i])) i--;
+    let j = cursor;
+    while (j < expression.length && isDigitOrDot(expression[j])) j++;
+    return expression.slice(i+1, j).includes(',');
+  }
+
+  function inputOperator(op){
+    activateCursor(true);
+    if (expression === '' && op !== '−') return;
+    if (expression === ''){ insert('0'); }
+    const before = charAtCursor();
+    const after  = charAfterCursor();
+    if (isOperator(before)){
+      expression = expression.slice(0, cursor-1) + expression.slice(cursor);
+      cursor--;
+    }
+    if (charAtCursor() === '(' && op !== '−') return;
+    insert(op);
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function inputParen(p){
+    activateCursor(false);
+    if (p === '('){
+      const before = charAtCursor();
+      if (expression !== '' && (isDigitOrDot(before) || before === ')'))
+        insert('×');
+      insert('(');
+    } else {
+      const opens  = (expression.match(/\(/g)||[]).length;
+      const closes = (expression.match(/\)/g)||[]).length;
+      const before = charAtCursor();
+      if (opens > closes && !isOperator(before) && before !== '(')
+        insert(')');
+    }
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function inputSqrt(){
+    activateCursor(false);
+    const before = charAtCursor();
+    if (expression !== '' && (isDigitOrDot(before) || before === ')'))
+      insert('×');
+    insert('√(');
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function applyPercent(){
+    activateCursor(false);
+    const before = charAtCursor();
+    if (expression === '' || isOperator(before) || before === '(') return;
+    insert('%');
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function inputSciFunc(name){
+    activateCursor(false);
+    const before = charAtCursor();
+    if (expression !== '' && (isDigitOrDot(before) || before === ')'))
+      insert('×');
+    insert(name + '(');
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function inputSciConst(val){
+    activateCursor(false);
+    const before = charAtCursor();
+    if (expression !== '' && (isDigitOrDot(before) || before === ')' || before === 'π' || before === 'e'))
+      insert('×');
+    // store π and e as their numeric values with the symbol for display
+    if (val === 'π'){ insert('π'); }
+    else if (val === 'e'){ insert('e'); }
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  function clearAll(){
+    expression = '';
+    cursor = 0;
+    justEvaluated = false;
+    hideCaret();
+    expressionEl.textContent = '\u00A0';
+    updateDisplay();
+  }
+
+  function backspace(){
+    if (justEvaluated){ clearAll(); return; }
+    if (expression === '') return;
+    const pos = caretVisible ? cursor : expression.length;
+    if (pos === 0) return;
+    const funcMatch = expression.slice(0, pos).match(/(sin|cos|tan|asin|acos|atan|log|ln|abs|fact|√)\($/) ;
+    if (funcMatch){
+      const del = funcMatch[0].length;
+      expression = expression.slice(0, pos-del) + expression.slice(pos);
+      cursor = pos - del;
+    } else {
+      expression = expression.slice(0, pos-1) + expression.slice(pos);
+      cursor = pos - 1;
+    }
+    if (!caretVisible) cursor = expression.length;
+    updateDisplay(true);
+  }
+
+  // ── Evaluator ─────────────────────────────────────────────────────────────
+
+  function tokenize(expr){
+    const tokens = []; let i = 0;
+    while (i < expr.length){
+      const ch = expr[i];
+      if (ch === ' '){ i++; continue; }
+      if ((ch >= '0' && ch <= '9') || ch === ','){
+        let num = '';
+        while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || expr[i] === ',')){
+          num += expr[i]; i++;
+        }
+        let val = parseFloat(num.replace(',','.'));
+        if (expr[i] === '%'){ val = val/100; i++; }
+        tokens.push({ type:'num', val });
+      } else if (ch === '√'){ tokens.push({ type:'func', name:'sqrt' }); i++;
+      } else if (/[a-z]/.test(ch)){
+        let fname = '';
+        while (i < expr.length && /[a-z]/.test(expr[i])){ fname += expr[i]; i++; }
+        const validFuncs = ['sin','cos','tan','asin','acos','atan','log','ln','abs','fact'];
+        if (validFuncs.includes(fname)) tokens.push({ type:'func', name:fname });
+      } else if (ch === '('){ tokens.push({ type:'lparen' }); i++;
+      } else if (ch === ')'){ tokens.push({ type:'rparen' }); i++;
+      } else if ('+-×÷^'.includes(ch) || ch === '−'){ tokens.push({ type:'op', op:ch }); i++;
+      } else if (ch === 'π'){ tokens.push({ type:'num', val:Math.PI }); i++;
+      } else if (ch === 'e' && (i===0 || !/[a-z]/.test(expr[i-1]))){ tokens.push({ type:'num', val:Math.E }); i++;
+      } else { i++; }
+    }
+    return tokens;
+  }
+
+  const prec = { '+'  :1, '−':1, '×':2, '÷':2, '^':3 };
+  const rightAssoc = { '^':true };
+
+  function shuntingYard(tokens){
+    const output=[], ops=[];
+    for (const tok of tokens){
+      if (tok.type==='num'){ output.push(tok); }
+      else if (tok.type==='func'){ ops.push(tok); }
+      else if (tok.type==='op'){
+        while (ops.length){
+          const top=ops[ops.length-1];
+          if (top.type==='lparen') break;
+          if (top.type==='func'){ output.push(ops.pop()); continue; }
+          if (top.type==='op'){
+            const tp=prec[top.op]||0, cp=prec[tok.op]||0;
+            if (tp>cp||(tp===cp&&!rightAssoc[tok.op])){ output.push(ops.pop()); } else break;
+          } else break;
+        }
+        ops.push(tok);
+      } else if (tok.type==='lparen'){ ops.push(tok);
+      } else if (tok.type==='rparen'){
+        while (ops.length&&ops[ops.length-1].type!=='lparen') output.push(ops.pop());
+        if (ops.length) ops.pop();
+        if (ops.length&&ops[ops.length-1].type==='func') output.push(ops.pop());
+      }
+    }
+    while (ops.length) output.push(ops.pop());
+    return output;
+  }
+
+  function evalRPN(rpn){
+    const stack=[];
+    for (const tok of rpn){
+      if (tok.type==='num'){ stack.push(tok.val); }
+      else if (tok.type==='func'){
+        const v=stack.pop();
+        const d=Math.PI/180;
+        switch(tok.name){
+          case 'sqrt':  stack.push(Math.sqrt(v)); break;
+          case 'sin':   stack.push(Math.sin(v*d)); break;
+          case 'cos':   stack.push(Math.cos(v*d)); break;
+          case 'tan':   stack.push(Math.tan(v*d)); break;
+          case 'asin':  stack.push(Math.asin(v)/d); break;
+          case 'acos':  stack.push(Math.acos(v)/d); break;
+          case 'atan':  stack.push(Math.atan(v)/d); break;
+          case 'log':   stack.push(Math.log10(v)); break;
+          case 'ln':    stack.push(Math.log(v)); break;
+          case 'abs':   stack.push(Math.abs(v)); break;
+          case 'fact':  { let r=1,n=Math.round(v); for(let k=2;k<=n;k++) r*=k; stack.push(r); } break;
+          default: stack.push(v);
+        }
+      }
+      else if (tok.type==='op'){
+        const b=stack.pop(), a=stack.pop();
+        switch(tok.op){
+          case '+': stack.push(a+b); break;
+          case '−': stack.push(a-b); break;
+          case '×': stack.push(a*b); break;
+          case '÷': stack.push(b===0?Infinity:a/b); break;
+          case '^': stack.push(Math.pow(a,b)); break;
+        }
+      }
+    }
+    return stack[0];
+  }
+
+  function evaluate(expr){
+    try {
+      const tokens = tokenize(expr);
+      if (!tokens.length) return null;
+      const fixed=[];
+      for (let i=0;i<tokens.length;i++){
+        const tok=tokens[i];
+        if (tok.type==='op'&&tok.op==='−'){
+          const prev=fixed[fixed.length-1];
+          if (!prev||prev.type==='lparen'||prev.type==='op') fixed.push({type:'num',val:0});
+        }
+        fixed.push(tok);
+      }
+      return evalRPN(shuntingYard(fixed));
+    } catch(e){ return null; }
+  }
+
+  function formatNumber(num){
+    if (num===null||num===undefined) return 'Error';
+    if (!isFinite(num)) return num>0?'Error: ÷0':'Error';
+    return (Math.round(num*1e10)/1e10).toString().replace('.',',');
+  }
+
+  function equals(){
+    if (expression==='') return;
+    const opens=(expression.match(/\(/g)||[]).length;
+    const closes=(expression.match(/\)/g)||[]).length;
+    let expr=expression;
+    for (let i=0;i<opens-closes;i++) expr+=')';
+    const result=evaluate(expr);
+    const resultStr=formatNumber(result);
+    expressionEl.textContent=expression+' =';
+    expression=resultStr.includes('Error')?'':resultStr;
+    cursor=expression.length;
+    justEvaluated=true;
+    hideCaret();
+    beforeEl.textContent='';
+    afterEl.textContent=resultStr;
+  }
+
+  // ── Event wiring ──────────────────────────────────────────────────────────
+
+  function handleKeyAction(btn, e){
+    e.stopPropagation();
+    e.preventDefault();
+    const action=btn.dataset.action, value=btn.dataset.value;
+    if      (action==='digit')    inputDigit(value);
+    else if (action==='sci-func')  inputSciFunc(value);
+    else if (action==='sci-const') inputSciConst(value);
+    else if (action==='decimal')  inputDecimal();
+    else if (action==='clear')    clearAll();
+    else if (action==='percent')  applyPercent();
+    else if (action==='operator') inputOperator(value);
+    else if (action==='paren')    inputParen(value);
+    else if (action==='sqrt')     inputSqrt();
+    else if (action==='equals')   equals();
+  }
+
+  const bsBtn = document.getElementById('btn-backspace');
+  bsBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); backspace(); }, { passive:false });
+  bsBtn.addEventListener('click', (e) => { e.stopPropagation(); }); // absorb ghost click
+
+  document.querySelectorAll('.key').forEach((btn) => {
+    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); }); // absorb ghost click
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key>='0'&&e.key<='9') inputDigit(e.key);
+    else if (e.key==='.'||e.key===',') inputDecimal();
+    else if (e.key==='+') inputOperator('+');
+    else if (e.key==='-') inputOperator('−');
+    else if (e.key==='*') inputOperator('×');
+    else if (e.key==='/'){ e.preventDefault(); inputOperator('÷'); }
+    else if (e.key==='^') inputOperator('^');
+    else if (e.key==='(') inputParen('(');
+    else if (e.key===')') inputParen(')');
+    else if (e.key==='Enter'||e.key==='=') equals();
+    else if (e.key==='Backspace') backspace();
+    else if (e.key==='Escape') clearAll();
+    else if (e.key==='%') applyPercent();
+    else if (e.key==='ArrowLeft'&&caretVisible){ cursor=Math.max(0,cursor-1); updateDisplay(true); }
+    else if (e.key==='ArrowRight'&&caretVisible){ cursor=Math.min(expression.length,cursor+1); updateDisplay(true); }
+  });
+
+  // ── Sci toggle ───────────────────────────────────────────────────────────
+  const btnSci  = document.getElementById('btn-sci');
+  const sciKeys = document.getElementById('sci-keys');
+  let sciOpen   = false;
+
+  function toggleSci(e){
+    if(e){ e.stopPropagation(); e.preventDefault(); }
+    sciOpen = !sciOpen;
+    sciKeys.classList.toggle('open', sciOpen);
+    btnSci.classList.toggle('active', sciOpen);
+    btnSci.textContent = sciOpen ? 'SCI ✕' : 'SCI';
+  }
+
+  btnSci.addEventListener('touchstart', toggleSci, { passive:false });
+  btnSci.addEventListener('click', (e) => e.stopPropagation());
+
+  // Wire sci buttons
+  document.querySelectorAll('.key.sci').forEach((btn) => {
+    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
+    btn.addEventListener('click', (e) => e.stopPropagation());
+  });
+
+  updateDisplay();
+</script>
+
+</body>
+</html>
