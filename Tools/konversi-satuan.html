@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konversi Satuan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg: #f5f3ee;
+    --panel: #ffffff;
+    --line: #e2ddd2;
+    --ink: #1c1d1f;
+    --dim: #8a8578;
+    --accent: #2f8a5e;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
+
+  html, body{
+    min-height:100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+
+  .card{
+    width: min(440px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 28px 24px 30px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,0.15);
+  }
+
+  h1{
+    font-size: 21px;
+    margin-bottom: 18px;
+    text-align:center;
+  }
+
+  /* CATEGORY TABS */
+  .tabs{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .tabs.row-two{
+    margin-top: 6px;
+    margin-bottom: 22px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tab-btn{
+    padding: 9px 4px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--dim);
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor:pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+
+  .tab-btn:hover{ border-color: var(--accent); color: var(--ink); }
+
+  .tab-btn.active{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* CONVERTER LAYOUT */
+  .convert-row{
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items:end;
+    gap: 8px;
+  }
+
+  .field label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform:uppercase;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+
+  .field select{
+    width:100%;
+    padding: 11px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--ink);
+    cursor:pointer;
+  }
+
+  .field select:focus{
+    outline:none;
+    border-color: var(--accent);
+  }
+
+  .field input{
+    width:100%;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 18px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .field input:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .swap-btn{
+    width: 38px;
+    height: 38px;
+    margin-bottom: 1px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--accent);
+    color: #fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: transform 0.18s ease;
+    flex-shrink:0;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  .swap-btn::-moz-focus-inner{ border: 0; }
+
+  .swap-btn svg{ width: 17px; height: 17px; }
+
+  @keyframes swap-spin{
+    from{ transform: rotate(0deg); }
+    to{ transform: rotate(180deg); }
+  }
+
+  .swap-btn.is-spinning{
+    animation: swap-spin 0.35s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .swap-btn.is-spinning{ animation: none; }
+  }
+
+  .note{
+    margin-top: 18px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dim);
+    text-align:center;
+  }
+
+  .result-line{
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    text-align:center;
+    color: var(--ink);
+    word-break: break-word;
+  }
+
+  @media (max-width: 380px){
+    .convert-row{ grid-template-columns: 1fr; }
+    .swap-btn{
+      justify-self:center;
+      margin: 4px 0;
+      transform: rotate(90deg);
+    }
+
+    @keyframes swap-spin-mobile{
+      from{ transform: rotate(90deg); }
+      to{ transform: rotate(270deg); }
+    }
+
+    .swap-btn.is-spinning{
+      animation: swap-spin-mobile 0.35s ease;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Konversi Satuan</h1>
+
+  <div class="tabs" id="tabsRowOne"></div>
+  <div class="tabs row-two" id="tabsRowTwo"></div>
+
+  <div class="convert-row">
+    <div class="field">
+      <label for="fromUnit">Dari</label>
+      <select id="fromUnit"></select>
+      <input type="number" id="fromValue" placeholder="0">
+    </div>
+
+    <button class="swap-btn" id="swapBtn" type="button" aria-label="Tukar satuan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+
+    <div class="field">
+      <label for="toUnit">Ke</label>
+      <select id="toUnit"></select>
+      <input type="number" id="toValue" placeholder="0">
+    </div>
+  </div>
+
+  <div class="result-line" id="resultLine">—</div>
+
+  <div class="note">Isi salah satu kolom, yang lain otomatis menyesuaikan.</div>
+</div>
+
+<script>
+  // ---- CATEGORY DEFINITIONS ----
+  // Linear categories store a factor relative to one shared base unit
+  // (factor = how many base-units equal 1 of this unit).
+  // Temperature is non-linear (different zero points) so it's handled
+  // with explicit formulas instead of a shared factor.
+
+  const categories = {
+    suhu: {
+      label: 'Suhu',
+      kind: 'temperature',
+      units: [
+        { id: 'celsius', label: 'Celsius (°C)' },
+        { id: 'fahrenheit', label: 'Fahrenheit (°F)' },
+        { id: 'kelvin', label: 'Kelvin (K)' },
+        { id: 'reaumur', label: 'Réaumur (°Ré)' }
+      ]
+    },
+    panjang: {
+      label: 'Panjang',
+      kind: 'linear',
+      // base unit: meter
+      units: [
+        { id: 'nm', label: 'Nanometer (nm)', factor: 1e-9 },
+        { id: 'um', label: 'Mikrometer (µm)', factor: 1e-6 },
+        { id: 'mm', label: 'Milimeter (mm)', factor: 0.001 },
+        { id: 'cm', label: 'Sentimeter (cm)', factor: 0.01 },
+        { id: 'dm', label: 'Desimeter (dm)', factor: 0.1 },
+        { id: 'm', label: 'Meter (m)', factor: 1 },
+        { id: 'dam', label: 'Dekameter (dam)', factor: 10 },
+        { id: 'hm', label: 'Hektometer (hm)', factor: 100 },
+        { id: 'km', label: 'Kilometer (km)', factor: 1000 },
+        { id: 'inch', label: 'Inci (in)', factor: 0.0254 },
+        { id: 'ft', label: 'Kaki (ft)', factor: 0.3048 },
+        { id: 'yard', label: 'Yard (yd)', factor: 0.9144 },
+        { id: 'mile', label: 'Mil (mi)', factor: 1609.344 },
+        { id: 'nautical_mile', label: 'Mil Laut (nmi)', factor: 1852 },
+        { id: 'lightyear', label: 'Tahun Cahaya (ly)', factor: 9.4607e15 }
+      ]
+    },
+    massa: {
+      label: 'Massa / Berat',
+      kind: 'linear',
+      // base unit: gram
+      units: [
+        { id: 'mcg', label: 'Mikrogram (µg)', factor: 1e-6 },
+        { id: 'mg', label: 'Miligram (mg)', factor: 0.001 },
+        { id: 'g', label: 'Gram (g)', factor: 1 },
+        { id: 'dag', label: 'Dekagram (dag)', factor: 10 },
+        { id: 'hg', label: 'Hektogram / Ons ID (hg)', factor: 100 },
+        { id: 'kg', label: 'Kilogram (kg)', factor: 1000 },
+        { id: 'ton', label: 'Ton Metrik (t)', factor: 1000000 },
+        { id: 'oz', label: 'Ons (oz)', factor: 28.3495 },
+        { id: 'lb', label: 'Pon (lb)', factor: 453.592 },
+        { id: 'stone', label: 'Stone (st)', factor: 6350.29 },
+        { id: 'short_ton', label: 'Ton AS (short ton)', factor: 907184.74 },
+        { id: 'long_ton', label: 'Ton Inggris (long ton)', factor: 1016046.91 },
+        { id: 'karat', label: 'Karat (ct)', factor: 0.2 }
+      ]
+    },
+    volume: {
+      label: 'Volume',
+      kind: 'linear',
+      // base unit: liter
+      units: [
+        { id: 'ml', label: 'Mililiter (mL)', factor: 0.001 },
+        { id: 'cl', label: 'Sentiliter (cL)', factor: 0.01 },
+        { id: 'dl', label: 'Desiliter (dL)', factor: 0.1 },
+        { id: 'l', label: 'Liter (L)', factor: 1 },
+        { id: 'm3', label: 'Meter Kubik (m³)', factor: 1000 },
+        { id: 'cm3', label: 'Sentimeter Kubik (cm³)', factor: 0.001 },
+        { id: 'tsp', label: 'Sendok Teh (tsp)', factor: 0.00492892 },
+        { id: 'tbsp', label: 'Sendok Makan (tbsp)', factor: 0.0147868 },
+        { id: 'floz', label: 'Ons Cair (fl oz, US)', factor: 0.0295735 },
+        { id: 'cup', label: 'Cangkir (cup, US)', factor: 0.236588 },
+        { id: 'pint', label: 'Pint (US)', factor: 0.473176 },
+        { id: 'quart', label: 'Quart (US)', factor: 0.946353 },
+        { id: 'gallon', label: 'Galon (US gal)', factor: 3.78541 },
+        { id: 'gallon_uk', label: 'Galon Inggris (UK gal)', factor: 4.54609 },
+        { id: 'barrel', label: 'Barel Minyak (bbl)', factor: 158.987 }
+      ]
+    },
+    luas: {
+      label: 'Luas',
+      kind: 'linear',
+      // base unit: square meter
+      units: [
+        { id: 'mm2', label: 'Milimeter² (mm²)', factor: 0.000001 },
+        { id: 'cm2', label: 'Sentimeter² (cm²)', factor: 0.0001 },
+        { id: 'm2', label: 'Meter² (m²)', factor: 1 },
+        { id: 'are', label: 'Are (a)', factor: 100 },
+        { id: 'hektar', label: 'Hektar (ha)', factor: 10000 },
+        { id: 'km2', label: 'Kilometer² (km²)', factor: 1000000 },
+        { id: 'inch2', label: 'Inci² (in²)', factor: 0.00064516 },
+        { id: 'ft2', label: 'Kaki² (ft²)', factor: 0.092903 },
+        { id: 'yard2', label: 'Yard² (yd²)', factor: 0.836127 },
+        { id: 'acre', label: 'Acre', factor: 4046.86 },
+        { id: 'mile2', label: 'Mil² (mi²)', factor: 2589988.11 }
+      ]
+    },
+    kecepatan: {
+      label: 'Kecepatan',
+      kind: 'linear',
+      // base unit: meter per second
+      units: [
+        { id: 'mps', label: 'Meter/detik (m/s)', factor: 1 },
+        { id: 'kmh', label: 'Kilometer/jam (km/h)', factor: 0.277778 },
+        { id: 'mph', label: 'Mil/jam (mph)', factor: 0.44704 },
+        { id: 'knot', label: 'Knot (kn)', factor: 0.514444 },
+        { id: 'fps', label: 'Kaki/detik (ft/s)', factor: 0.3048 },
+        { id: 'mach', label: 'Mach (kecepatan suara)', factor: 343 }
+      ]
+    },
+    data: {
+      label: 'Data Digital',
+      kind: 'linear',
+      // base unit: byte
+      units: [
+        { id: 'bit', label: 'Bit (b)', factor: 0.125 },
+        { id: 'byte', label: 'Byte (B)', factor: 1 },
+        { id: 'kb', label: 'Kilobyte (KB)', factor: 1024 },
+        { id: 'mb', label: 'Megabyte (MB)', factor: 1048576 },
+        { id: 'gb', label: 'Gigabyte (GB)', factor: 1073741824 },
+        { id: 'tb', label: 'Terabyte (TB)', factor: 1099511627776 }
+      ]
+    }
+  };
+
+  // ---- STATE ----
+  let currentCategory = 'panjang';
+
+  const tabsRowOne = document.getElementById('tabsRowOne');
+  const tabsRowTwo = document.getElementById('tabsRowTwo');
+  const fromUnitSel = document.getElementById('fromUnit');
+  const toUnitSel = document.getElementById('toUnit');
+  const fromValueInput = document.getElementById('fromValue');
+  const toValueInput = document.getElementById('toValue');
+  const swapBtn = document.getElementById('swapBtn');
+  const resultLine = document.getElementById('resultLine');
+
+  // ---- TAB RENDERING ----
+  function renderTabs(){
+    const keys = Object.keys(categories);
+    const rowOneKeys = keys.slice(0, 3);
+    const rowTwoKeys = keys.slice(3);
+
+    tabsRowOne.innerHTML = '';
+    rowOneKeys.forEach((key) => tabsRowOne.appendChild(makeTabButton(key)));
+
+    tabsRowTwo.innerHTML = '';
+    rowTwoKeys.forEach((key) => tabsRowTwo.appendChild(makeTabButton(key)));
+  }
+
+  function makeTabButton(key){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tab-btn' + (key === currentCategory ? ' active' : '');
+    btn.textContent = categories[key].label;
+    btn.addEventListener('click', () => switchCategory(key));
+    return btn;
+  }
+
+  function switchCategory(key){
+    currentCategory = key;
+    renderTabs();
+    renderUnitDropdowns();
+  }
+
+  // ---- DROPDOWN RENDERING ----
+  function renderUnitDropdowns(){
+    const cat = categories[currentCategory];
+
+    fromUnitSel.innerHTML = '';
+    toUnitSel.innerHTML = '';
+
+    cat.units.forEach((unit, idx) => {
+      const optFrom = document.createElement('option');
+      optFrom.value = unit.id;
+      optFrom.textContent = unit.label;
+      fromUnitSel.appendChild(optFrom);
+
+      const optTo = document.createElement('option');
+      optTo.value = unit.id;
+      optTo.textContent = unit.label;
+      toUnitSel.appendChild(optTo);
+    });
+
+    // Default: first unit -> second unit (or same if only one exists)
+    fromUnitSel.selectedIndex = 0;
+    toUnitSel.selectedIndex = cat.units.length > 1 ? 1 : 0;
+
+    fromValueInput.value = '';
+    toValueInput.value = '';
+    resultLine.textContent = 'Masukkan angka untuk mulai konversi.';
+  }
+
+  // ---- CONVERSION LOGIC ----
+  function celsiusFrom(unitId, val){
+    if (unitId === 'celsius') return val;
+    if (unitId === 'fahrenheit') return (val - 32) * 5/9;
+    if (unitId === 'kelvin') return val - 273.15;
+    if (unitId === 'reaumur') return val * 5/4;
+  }
+
+  function celsiusTo(unitId, celsius){
+    if (unitId === 'celsius') return celsius;
+    if (unitId === 'fahrenheit') return celsius * 9/5 + 32;
+    if (unitId === 'kelvin') return celsius + 273.15;
+    if (unitId === 'reaumur') return celsius * 4/5;
+  }
+
+  function convert(sourceUnitId, targetUnitId, val){
+    const cat = categories[currentCategory];
+
+    if (cat.kind === 'temperature'){
+      const celsius = celsiusFrom(sourceUnitId, val);
+      return celsiusTo(targetUnitId, celsius);
+    }
+
+    const sourceUnit = cat.units.find(u => u.id === sourceUnitId);
+    const targetUnit = cat.units.find(u => u.id === targetUnitId);
+    const baseVal = val * sourceUnit.factor;
+    return baseVal / targetUnit.factor;
+  }
+
+  function formatResult(num){
+    if (!isFinite(num)) return '';
+    const rounded = Math.round(num * 1e8) / 1e8;
+    return parseFloat(rounded.toFixed(8)).toString();
+  }
+
+  function updateResultLine(){
+    const fromLabel = fromUnitSel.options[fromUnitSel.selectedIndex]?.textContent || '';
+    const toLabel = toUnitSel.options[toUnitSel.selectedIndex]?.textContent || '';
+    const fromVal = fromValueInput.value;
+    const toVal = toValueInput.value;
+
+    if (fromVal === '' || toVal === ''){
+      resultLine.textContent = 'Masukkan angka untuk mulai konversi.';
+      return;
+    }
+    resultLine.textContent = `${fromVal} ${fromLabel} = ${toVal} ${toLabel}`;
+  }
+
+  function recalcFromSource(){
+    if (fromValueInput.value === '') {
+      toValueInput.value = '';
+      updateResultLine();
+      return;
+    }
+    const val = parseFloat(fromValueInput.value);
+    if (isNaN(val)) return;
+    const result = convert(fromUnitSel.value, toUnitSel.value, val);
+    toValueInput.value = formatResult(result);
+    updateResultLine();
+  }
+
+  function recalcFromTarget(){
+    if (toValueInput.value === '') {
+      fromValueInput.value = '';
+      updateResultLine();
+      return;
+    }
+    const val = parseFloat(toValueInput.value);
+    if (isNaN(val)) return;
+    const result = convert(toUnitSel.value, fromUnitSel.value, val);
+    fromValueInput.value = formatResult(result);
+    updateResultLine();
+  }
+
+  fromValueInput.addEventListener('input', recalcFromSource);
+  toValueInput.addEventListener('input', recalcFromTarget);
+  fromUnitSel.addEventListener('change', recalcFromSource);
+  toUnitSel.addEventListener('change', recalcFromSource);
+
+  swapBtn.addEventListener('click', () => {
+    const tempUnit = fromUnitSel.value;
+    fromUnitSel.value = toUnitSel.value;
+    toUnitSel.value = tempUnit;
+
+    const tempVal = fromValueInput.value;
+    fromValueInput.value = toValueInput.value;
+    toValueInput.value = tempVal;
+
+    updateResultLine();
+
+    // Re-trigger the spin animation every click, even back-to-back.
+    swapBtn.classList.remove('is-spinning');
+    void swapBtn.offsetWidth; // force reflow so the animation restarts
+    swapBtn.classList.add('is-spinning');
+  });
+
+  swapBtn.addEventListener('animationend', () => {
+    swapBtn.classList.remove('is-spinning');
+  });
+
+  // ---- INIT ----
+  renderTabs();
+  renderUnitDropdowns();
+</script>
+
+</body>
+</html>
