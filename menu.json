@@ -11,7 +11,7 @@
       "name": "Tools",
       "path": "Tools",
       "files": [
-        { "name": "Konversi Suhu", "path": "konversi-suhu.html" }
+        { "name": "Konversi Satuan", "path": "konversi-satuan.html" }
       ]
     }
   ]
