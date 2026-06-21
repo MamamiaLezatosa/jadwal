@@ -17,6 +17,7 @@
     --op: #c4791f;
     --mem: #6b4fbb;
     --second: #1a6ba0;
+    --danger: #c4392f;
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -50,7 +51,8 @@
     overflow:hidden;
     position:relative;
     cursor:text;
-    user-select:none;
+    user-select:text;
+    -webkit-user-select:text;
   }
 
   .display-status{
@@ -74,6 +76,7 @@
     padding:2px 6px;
     border-radius:6px;
     line-height:1.4;
+    user-select:none;
   }
 
   .badge.deg{ background:color-mix(in srgb,var(--op) 15%,var(--panel)); color:var(--op); border:1px solid color-mix(in srgb,var(--op) 30%,var(--line)); }
@@ -105,12 +108,11 @@
 
   .btn-backspace{
     flex-shrink:0;
-    background:none; border:none; cursor:pointer;
-    color:var(--dim); font-size:18px;
-    padding:2px 0 2px 4px; line-height:1; outline:none;
-    transition:color 0.15s ease, transform 0.1s ease;
+    color:var(--dim); font-size:14px;
+    line-height:1;
+    transition:color 0.15s ease, transform 0.1s ease, background 0.15s, border-color 0.15s;
   }
-  .btn-backspace:active{ transform:scale(0.9); color:var(--ink); }
+  .btn-backspace:active{ transform:scale(0.92); color:var(--ink); }
 
   .current-wrap{
     position:relative;
@@ -141,6 +143,7 @@
     margin:0 1px;
     border-radius:1px;
     animation:blink 1s step-end infinite;
+    user-select:none;
   }
   @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0} }
   .caret.hidden{ display:none; }
@@ -152,6 +155,7 @@
     transform:translateX(-50%);
     touch-action:none;
     cursor:grab; z-index:10;
+    user-select:none;
   }
   #cursor-handle.visible{ display:block; }
   #cursor-handle:active{ cursor:grabbing; }
@@ -212,6 +216,19 @@
     flex-shrink:0;
     transition:color 0.15s;
   }
+  .history-item-delete{
+    flex-shrink:0;
+    background:none;
+    border:none;
+    color:var(--dim);
+    font-size:14px;
+    line-height:1;
+    padding:0 0 0 6px;
+    cursor:pointer;
+    opacity:0.5;
+    transition:opacity 0.15s, color 0.15s;
+  }
+  .history-item-delete:hover{ opacity:1; color:var(--danger); }
   .history-header{
     display:flex;
     justify-content:space-between;
@@ -248,6 +265,7 @@
     transition:transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
     position:relative;
     overflow:hidden;
+    touch-action:pan-y;
   }
   button.key:active{ transform:scale(0.95); }
 
@@ -282,6 +300,18 @@
     margin-top:0;
     order:-1;
   }
+  /* SCI panel open (2nd off): make the primary label pop the same way */
+  button.key.sci.sci-active:not(.second-active) .label-primary{
+    font-size:13px;
+    opacity:1;
+    color:var(--accent);
+  }
+  button.key.sci.sci-active:not(.second-active) .label-second{
+    font-size:9px;
+    opacity:0.5;
+    color:var(--dim);
+    margin-top:2px;
+  }
   /* Use flex column-reverse to put label-second on top */
   button.key.sci.second-active{
     display:flex;
@@ -309,6 +339,14 @@
 
   button.key.func{ color:var(--dim); font-weight:600; font-size:14px; }
   button.key.func:hover{ border-color:var(--dim); }
+
+  button.key.clear{
+    background:color-mix(in srgb,var(--danger) 10%,var(--panel));
+    color:var(--danger);
+    border-color:color-mix(in srgb,var(--danger) 30%,var(--line));
+    font-weight:700;
+  }
+  button.key.clear:hover{ border-color:var(--danger); }
 
   button.key.equals{
     background:var(--accent); border-color:var(--accent);
@@ -348,6 +386,7 @@
     transition:background 0.15s, color 0.15s, border-color 0.15s;
     -webkit-tap-highlight-color:transparent;
     white-space:nowrap;
+    touch-action:pan-y;
   }
   .pill-btn.active{
     background:var(--accent);
@@ -370,6 +409,14 @@
     background:var(--ink);
     border-color:var(--ink);
     color:#fff;
+  }
+  .pill-btn.sci-only{
+    visibility:hidden;
+    pointer-events:none;
+  }
+  .pill-btn.sci-only.sci-visible{
+    visibility:visible;
+    pointer-events:auto;
   }
 
   /* ── Scientific keys panel ── */
@@ -443,7 +490,6 @@
     </div>
     <div class="display-top">
       <div class="expression" id="expression">&nbsp;</div>
-      <button class="btn-backspace" id="btn-backspace" aria-label="Backspace">⌫</button>
     </div>
     <div class="current-wrap" id="current-wrap">
       <span class="current" id="current-before"></span><span class="caret hidden" id="caret"></span><span class="current" id="current-after">0</span>
@@ -468,23 +514,24 @@
 
   <!-- Top controls -->
   <div class="top-controls">
-    <button class="pill-btn deg-rad-btn" id="btn-deg-rad">DEG</button>
-    <button class="pill-btn second-btn" id="btn-second">2nd</button>
+    <button class="pill-btn deg-rad-btn sci-only" id="btn-deg-rad">DEG</button>
+    <button class="pill-btn second-btn sci-only" id="btn-second">2nd</button>
     <button class="pill-btn" id="btn-sci">SCI</button>
     <button class="pill-btn hist-btn" id="btn-hist">Hist</button>
+    <button class="pill-btn btn-backspace" id="btn-backspace" aria-label="Backspace">⌫</button>
   </div>
 
   <!-- Scientific panel -->
   <div class="sci-keys" id="sci-keys">
     <!-- Row 1: trig -->
     <button class="key sci" data-action="sci-func" data-value="sin" data-second-action="sci-func" data-second-value="asin">
-      <span class="label-primary">sin</span><span class="label-second">sin⁻¹</span>
+      <span class="label-primary">sin</span><span class="label-second">sin<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="cos" data-second-action="sci-func" data-second-value="acos">
-      <span class="label-primary">cos</span><span class="label-second">cos⁻¹</span>
+      <span class="label-primary">cos</span><span class="label-second">cos<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="tan" data-second-action="sci-func" data-second-value="atan">
-      <span class="label-primary">tan</span><span class="label-second">tan⁻¹</span>
+      <span class="label-primary">tan</span><span class="label-second">tan<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="log" data-second-action="sci-func" data-second-value="log2">
       <span class="label-primary">log</span><span class="label-second">log₂</span>
@@ -492,16 +539,16 @@
 
     <!-- Row 2 -->
     <button class="key sci" data-action="sci-func" data-value="sinh" data-second-action="sci-func" data-second-value="asinh">
-      <span class="label-primary">sinh</span><span class="label-second">sinh⁻¹</span>
+      <span class="label-primary">sinh</span><span class="label-second">sinh<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="cosh" data-second-action="sci-func" data-second-value="acosh">
-      <span class="label-primary">cosh</span><span class="label-second">cosh⁻¹</span>
+      <span class="label-primary">cosh</span><span class="label-second">cosh<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="tanh" data-second-action="sci-func" data-second-value="atanh">
-      <span class="label-primary">tanh</span><span class="label-second">tanh⁻¹</span>
+      <span class="label-primary">tanh</span><span class="label-second">tanh<sup>-1</sup></span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="ln" data-second-action="sci-func" data-second-value="exp">
-      <span class="label-primary">ln</span><span class="label-second">eˣ</span>
+      <span class="label-primary">ln</span><span class="label-second">e<sup>x</sup></span>
     </button>
 
     <!-- Row 3 -->
@@ -511,8 +558,8 @@
     <button class="key sci" data-action="sci-const" data-value="e" data-second-action="sci-action" data-second-value="reciprocal">
       <span class="label-primary">e</span><span class="label-second">1/x</span>
     </button>
-    <button class="key sci" data-action="sci-action" data-value="square" data-second-action="sci-func" data-second-value="sqrt">
-      <span class="label-primary">x²</span><span class="label-second">√x</span>
+    <button class="key sci" data-action="sci-action" data-value="square" data-second-action="sci-action" data-second-value="cube">
+      <span class="label-primary">x²</span><span class="label-second">x³</span>
     </button>
     <button class="key sci" data-action="sci-func" data-value="abs" data-second-action="sci-func" data-second-value="fact">
       <span class="label-primary">|x|</span><span class="label-second">n!</span>
@@ -527,7 +574,7 @@
 
   <!-- Main keypad -->
   <div class="keys">
-    <button class="key func" data-action="clear"><span class="label-primary">AC</span></button>
+    <button class="key func clear" data-action="clear"><span class="label-primary">AC</span></button>
     <button class="key func" data-action="paren" data-value="(">(</button>
     <button class="key func" data-action="paren" data-value=")">)</button>
     <button class="key op"   data-action="operator" data-value="÷">÷</button>
@@ -708,7 +755,11 @@
 
   wrapEl.addEventListener('click', (e) => {
     if (e.target === handleEl) return;
-    if (justEvaluated || expression === '') return;
+    if (expression === '') return;
+    if (justEvaluated){
+      // Resume editing the result instead of blocking interaction.
+      activateCursor(true);
+    }
     cursor = getCursorFromX(e.clientX);
     showCaret(); updateDisplay(true);
   });
@@ -849,6 +900,15 @@
         if (!caretVisible) cursor = expression.length;
         updateDisplay(true);
       }
+    } else if (val === 'cube'){
+      // append ^3
+      activateCursor(false);
+      const before = charAtCursor();
+      if (expression !== '' && (isDigitOrDot(before) || before === ')')) {
+        insert('^3');
+        if (!caretVisible) cursor = expression.length;
+        updateDisplay(true);
+      }
     } else if (val === 'reciprocal'){
       // wrap expression so far in 1/(...)
       activateCursor(false);
@@ -883,6 +943,7 @@
         val = parseFloat(afterEl.textContent.replace(',','.'));
       } else if (expression !== ''){
         val = evaluate(expression);
+        if (typeof val === 'bigint') val = Number(val);
       }
       if (val !== null && isFinite(val)){
         memory = (memHasValue ? memory : 0) + (cmd === 'm+' ? val : -val);
@@ -908,7 +969,7 @@
     if (expression === '') return;
     const pos = caretVisible ? cursor : expression.length;
     if (pos === 0) return;
-    const funcMatch = expression.slice(0, pos).match(/(sinh|cosh|tanh|asinh|acosh|atanh|asin|acos|atan|sin|cos|tan|log2|log|ln|exp|cbrt|abs|fact|√)\($/) ;
+    const funcMatch = expression.slice(0, pos).match(/(sinh|cosh|tanh|asinh|acosh|atanh|asin|acos|atan|sin|cos|tan|log2|log|ln|exp|cbrt|abs|fact|sqrt|√)\($/) ;
     if (funcMatch){
       const del = funcMatch[0].length;
       expression = expression.slice(0, pos-del) + expression.slice(pos);
@@ -940,13 +1001,18 @@
       } else if (/[a-z]/.test(ch)){
         let fname = '';
         while (i < expr.length && /[a-z]/.test(expr[i])){ fname += expr[i]; i++; }
-        const validFuncs = ['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','asinh','acosh','atanh','log','log2','ln','exp','abs','fact','cbrt'];
-        if (validFuncs.includes(fname)) tokens.push({ type:'func', name:fname });
+        // Special case: "log2" contains a digit, so check for a trailing "2" right after the letters
+        if (fname === 'log' && expr[i] === '2'){ fname = 'log2'; i++; }
+        if (fname === 'e'){
+          tokens.push({ type:'num', val:Math.E });
+        } else {
+          const validFuncs = ['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','asinh','acosh','atanh','log','log2','ln','exp','abs','fact','cbrt','sqrt'];
+          if (validFuncs.includes(fname)) tokens.push({ type:'func', name:fname });
+        }
       } else if (ch === '('){ tokens.push({ type:'lparen' }); i++;
       } else if (ch === ')'){ tokens.push({ type:'rparen' }); i++;
       } else if ('+-×÷^'.includes(ch) || ch === '−'){ tokens.push({ type:'op', op:ch }); i++;
       } else if (ch === 'π'){ tokens.push({ type:'num', val:Math.PI }); i++;
-      } else if (ch === 'e' && (i===0 || !/[a-z]/.test(expr[i-1]))){ tokens.push({ type:'num', val:Math.E }); i++;
       } else { i++; }
     }
     return tokens;
@@ -985,12 +1051,18 @@
   function toRad(v){ return angleMode === 'deg' ? v * Math.PI / 180 : v; }
   function fromRad(v){ return angleMode === 'deg' ? v * 180 / Math.PI : v; }
 
+  // Treat a JS number as exact-integer-eligible if it's a safe, finite integer.
+  function isExactInt(v){
+    return typeof v === 'number' && Number.isInteger(v) && Math.abs(v) <= Number.MAX_SAFE_INTEGER;
+  }
+  function toNum(v){ return typeof v === 'bigint' ? Number(v) : v; }
+
   function evalRPN(rpn){
     const stack=[];
     for (const tok of rpn){
       if (tok.type==='num'){ stack.push(tok.val); }
       else if (tok.type==='func'){
-        const v=stack.pop();
+        const v=toNum(stack.pop());
         switch(tok.name){
           case 'sqrt':  stack.push(Math.sqrt(v)); break;
           case 'cbrt':  stack.push(Math.cbrt(v)); break;
@@ -1011,11 +1083,36 @@
           case 'ln':    stack.push(Math.log(v)); break;
           case 'exp':   stack.push(Math.exp(v)); break;
           case 'abs':   stack.push(Math.abs(v)); break;
-          case 'fact':  { let r=1,n=Math.round(v); for(let k=2;k<=n;k++) r*=k; stack.push(r); } break;
+          case 'fact':  {
+            // Exact integer factorial via BigInt
+            let n=Math.round(v);
+            if (n < 0 || n > 1000){ stack.push(NaN); break; }
+            let r=1n; for(let k=2n;k<=BigInt(n);k++) r*=k;
+            stack.push(r > BigInt(Number.MAX_SAFE_INTEGER) ? r : Number(r));
+          } break;
           default: stack.push(v);
         }
       } else if (tok.type==='op'){
-        const b=stack.pop(), a=stack.pop();
+        let b=stack.pop(), a=stack.pop();
+
+        // Try exact BigInt math for +, -, ×, ^ when both sides are whole integers
+        const bothInt = isExactInt(a) && isExactInt(b);
+        if (bothInt && (tok.op==='+'||tok.op==='−'||tok.op==='×'||tok.op==='^')){
+          const ba = BigInt(a), bb = BigInt(b);
+          try {
+            switch(tok.op){
+              case '+': stack.push(ba+bb); continue;
+              case '−': stack.push(ba-bb); continue;
+              case '×': stack.push(ba*bb); continue;
+              case '^':
+                if (bb >= 0n && bb <= 10000n){ stack.push(ba**bb); continue; }
+                break; // negative/huge exponent: fall through to float
+            }
+          } catch(e){ /* fall through to float below */ }
+        }
+
+        // Float path (also used to finish off any BigInt operands)
+        a = toNum(a); b = toNum(b);
         switch(tok.op){
           case '+': stack.push(a+b); break;
           case '−': stack.push(a-b); break;
@@ -1047,12 +1144,27 @@
 
   function formatNumber(num){
     if (num===null||num===undefined) return 'Error';
-    if (!isFinite(num)) return num>0?'Error: ÷0':'Error';
-    const rounded = Math.round(num*1e10)/1e10;
-    // Use scientific notation for very large/small numbers
-    if (Math.abs(rounded) >= 1e12 || (Math.abs(rounded) < 1e-7 && rounded !== 0)){
-      return rounded.toExponential(6).replace('e+','×10^').replace('e-','×10^−').replace('.',',');
+    if (typeof num === 'bigint'){
+      // Exact integer result from BigInt math — print all digits, no rounding.
+      const abs = num < 0n ? -num : num;
+      if (abs >= 10n**21n){
+        return Number(num).toExponential(6).replace('e+','×10^').replace('e-','×10^−').replace('.',',');
+      }
+      return num.toString();
     }
+    if (!isFinite(num)) return num>0?'Error: ÷0':'Error';
+    // Only switch to scientific notation once the number is too big to
+    // represent meaningfully as an integer (beyond float precision),
+    // or too small to show with normal decimals.
+    if (Math.abs(num) >= 1e21 || (Math.abs(num) < 1e-7 && num !== 0)){
+      return num.toExponential(6).replace('e+','×10^').replace('e-','×10^−').replace('.',',');
+    }
+    // For large integers, avoid rounding to 10 decimals (that can introduce
+    // float noise); just let JS's own string conversion give the full digits.
+    if (Math.abs(num) >= 1e12){
+      return num.toString().replace('.',',');
+    }
+    const rounded = Math.round(num*1e10)/1e10;
     return rounded.toString().replace('.',',');
   }
 
@@ -1090,7 +1202,7 @@
     history.forEach((item, idx) => {
       const div = document.createElement('div');
       div.className = 'history-item';
-      div.innerHTML = `<span class="history-expr">${item.expr} =</span><span class="history-result">${item.result}</span>`;
+      div.innerHTML = `<span class="history-expr">${item.expr} =</span><span class="history-result">${item.result}</span><button class="history-item-delete" aria-label="Hapus item">×</button>`;
       div.addEventListener('click', () => {
         expression = item.result.replace(',','').replace(/×10\^[−-]?\d+/,''); // simplified recall
         // better: recall the numeric result
@@ -1102,6 +1214,11 @@
         beforeEl.textContent = '';
         afterEl.textContent = item.result;
         justEvaluated = true;
+      });
+      div.querySelector('.history-item-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        history.splice(idx, 1);
+        renderHistory();
       });
       inner.appendChild(div);
     });
@@ -1130,69 +1247,122 @@
     afterEl.textContent  = resultStr;
   }
 
+  // ── Tap helper (distinguishes a tap from the start of a scroll/swipe) ──────
+  // Buttons only fire if the finger doesn't move past a small threshold
+  // between touchstart and touchend. This lets people scroll the page by
+  // starting their drag on top of a button without accidentally pressing it.
+  const TAP_MOVE_THRESHOLD = 10; // px
+
+  function onTap(el, handler, opts){
+    opts = opts || {};
+    let startX = 0, startY = 0, moved = false, active = false;
+
+    el.addEventListener('touchstart', (e) => {
+      if (!opts.allowMultiTouch) e.stopPropagation();
+      active = true; moved = false;
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      if (opts.onStart) opts.onStart(e);
+    }, { passive:true });
+
+    el.addEventListener('touchmove', (e) => {
+      if (!active) return;
+      const t = e.touches[0];
+      if (Math.abs(t.clientX-startX) > TAP_MOVE_THRESHOLD || Math.abs(t.clientY-startY) > TAP_MOVE_THRESHOLD){
+        moved = true;
+        if (opts.onCancel) opts.onCancel(e);
+      }
+    }, { passive:true });
+
+    el.addEventListener('touchend', (e) => {
+      if (active && !moved){
+        e.preventDefault();
+        handler(e);
+      } else if (opts.onCancel){
+        opts.onCancel(e);
+      }
+      active = false;
+    }, { passive:false });
+
+    el.addEventListener('touchcancel', () => {
+      active = false;
+      if (opts.onCancel) opts.onCancel();
+    }, { passive:true });
+
+    // Mouse (desktop) - click already only fires on a clean press+release
+    el.addEventListener('click', e => e.stopPropagation());
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if (opts.onStart) opts.onStart(e);
+    });
+    el.addEventListener('mouseup', (e) => {
+      handler(e);
+    });
+    if (opts.onCancel){
+      el.addEventListener('mouseup', opts.onCancel);
+      el.addEventListener('mouseleave', opts.onCancel);
+    }
+  }
+
   // ── Toggle controls ───────────────────────────────────────────────────────
 
   // DEG / RAD
   const btnDegRad = document.getElementById('btn-deg-rad');
-  btnDegRad.addEventListener('touchstart', (e) => {
-    e.stopPropagation(); e.preventDefault();
+  onTap(btnDegRad, () => {
+    if (!sciOpen) return;
     angleMode = angleMode === 'deg' ? 'rad' : 'deg';
     badgeAngle.textContent = angleMode.toUpperCase();
     badgeAngle.className   = 'badge ' + angleMode;
     btnDegRad.textContent  = angleMode.toUpperCase();
     btnDegRad.classList.toggle('rad-mode', angleMode === 'rad');
-  }, { passive:false });
-  btnDegRad.addEventListener('click', e => e.stopPropagation());
+  });
 
   // 2nd
   const btnSecond = document.getElementById('btn-second');
-  btnSecond.addEventListener('touchstart', (e) => {
-    e.stopPropagation(); e.preventDefault();
+  onTap(btnSecond, () => {
+    if (!sciOpen) return;
     secondMode = !secondMode;
     btnSecond.classList.toggle('active', secondMode);
     badgeSecond.classList.toggle('active', secondMode);
-    document.querySelectorAll('.key.sci').forEach(btn => btn.classList.toggle('second-active', secondMode));
-  }, { passive:false });
-  btnSecond.addEventListener('click', e => e.stopPropagation());
+    document.querySelectorAll('.key.sci[data-second-action]').forEach(btn => btn.classList.toggle('second-active', secondMode));
+  });
 
   // SCI toggle
   const btnSci  = document.getElementById('btn-sci');
   const sciKeys = document.getElementById('sci-keys');
   let sciOpen   = false;
-  function toggleSci(e){
-    if(e){ e.stopPropagation(); e.preventDefault(); }
+  function toggleSci(){
     sciOpen = !sciOpen;
     sciKeys.classList.toggle('open', sciOpen);
     btnSci.classList.toggle('active', sciOpen);
+
+    btnDegRad.classList.toggle('sci-visible', sciOpen);
+    btnSecond.classList.toggle('sci-visible', sciOpen);
+    document.querySelectorAll('.key.sci').forEach(btn => btn.classList.toggle('sci-active', sciOpen));
+
+    if (!sciOpen){
+      // closing SCI: also turn off 2nd mode since its keys are now hidden
+      secondMode = false;
+      btnSecond.classList.remove('active');
+      badgeSecond.classList.remove('active');
+      document.querySelectorAll('.key.sci').forEach(b => b.classList.remove('second-active'));
+    }
   }
-  btnSci.addEventListener('touchstart', toggleSci, { passive:false });
-  btnSci.addEventListener('click', e => e.stopPropagation());
+  onTap(btnSci, toggleSci);
 
   // History toggle
   const btnHist     = document.getElementById('btn-hist');
   const histPanel   = document.getElementById('history-panel');
   let histOpen = false;
-  btnHist.addEventListener('touchstart', (e) => {
-    e.stopPropagation(); e.preventDefault();
+  onTap(btnHist, () => {
     histOpen = !histOpen;
     histPanel.classList.toggle('open', histOpen);
     btnHist.classList.toggle('active', histOpen);
-  }, { passive:false });
-  btnHist.addEventListener('click', e => e.stopPropagation());
-
-  // Also allow mouse click for desktop
-  [btnDegRad, btnSecond, btnSci, btnHist].forEach(btn => {
-    btn.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      btn.dispatchEvent(new TouchEvent('touchstart', { bubbles:true, cancelable:true }));
-    });
   });
 
   // ── Key handler ───────────────────────────────────────────────────────────
 
-  function handleKeyAction(btn, e){
-    e.stopPropagation(); e.preventDefault();
-
+  function handleKeyAction(btn){
     // Resolve 2nd-mode action
     let action = btn.dataset.action;
     let value  = btn.dataset.value;
@@ -1200,11 +1370,7 @@
     if (secondMode && btn.dataset.secondAction){
       action = btn.dataset.secondAction;
       value  = btn.dataset.secondValue;
-      // turn off 2nd mode after use (Samsung behavior)
-      secondMode = false;
-      document.getElementById('btn-second').classList.remove('active');
-      badgeSecond.classList.remove('active');
-      document.querySelectorAll('.key.sci').forEach(b => b.classList.remove('second-active'));
+      // 2nd mode stays on after use until the user taps "2nd" again
     }
 
     if      (action === 'digit')     inputDigit(value);
@@ -1223,15 +1389,43 @@
 
   // Backspace
   const bsBtn = document.getElementById('btn-backspace');
-  bsBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); backspace(); }, { passive:false });
-  bsBtn.addEventListener('click', e => e.stopPropagation());
-  bsBtn.addEventListener('mousedown', (e) => { e.preventDefault(); backspace(); });
+  let bsHoldTimeout  = null;
+  let bsRepeatInterval = null;
+  let bsFiredOnce = false;
+
+  function bsStopRepeat(){
+    clearTimeout(bsHoldTimeout);
+    clearInterval(bsRepeatInterval);
+    bsHoldTimeout = null;
+    bsRepeatInterval = null;
+    bsFiredOnce = false;
+  }
+  function bsStartRepeat(){
+    bsStopRepeat();
+    bsFiredOnce = false;
+    // If held past the threshold, start deleting even before release —
+    // this only happens once we already know it isn't a scroll gesture,
+    // since onTap's touchmove cancellation would have fired onCancel first.
+    bsHoldTimeout = setTimeout(() => {
+      bsFiredOnce = true;
+      backspace();
+      bsRepeatInterval = setInterval(backspace, 60);
+    }, 400);
+  }
+
+  onTap(bsBtn, () => {
+    // Confirmed tap (release without enough movement to count as a scroll).
+    // Only delete once here if the hold-repeat hasn't already kicked in.
+    if (!bsFiredOnce) backspace();
+    bsStopRepeat();
+  }, {
+    onStart: bsStartRepeat,
+    onCancel: bsStopRepeat
+  });
 
   // All keys (touch + mouse)
   document.querySelectorAll('.key').forEach((btn) => {
-    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
-    btn.addEventListener('click', e => e.stopPropagation());
-    btn.addEventListener('mousedown', (e) => { e.preventDefault(); handleKeyAction(btn, e); });
+    onTap(btn, () => handleKeyAction(btn));
   });
 
   // Keyboard
