@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minesweeper</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :focus { outline: none; }
+    button, div { -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:                  #F4F1EA;
+      --panel:               #FDFAF4;
+      --panel-border:        #DDD8CC;
+      --stat-bg:             #EDE9DF;
+      --cell:                #D8D2C4;
+      --cell-border:         #C4BEB0;
+      --cell-hover:          #C8C2B2;
+      --cell-hover-border:   #8B7355;
+      --cell-revealed:       #EDE9DF;
+      --cell-revealed-border:#D0C8BA;
+      --cell-flag:           #FDF3DC;
+      --cell-flag-border:    #C8960A;
+      --cell-mine:           #F5E0DC;
+      --cell-mine-border:    #C0504A;
+      --text:                #2C2416;
+      --text-muted:          #7A6E5C;
+      --text-tip:            #A09484;
+      --btn-border:          #C8C2B2;
+      --btn-hover:           #EDE9DF;
+      --btn-hover-border:    #8B7355;
+      --accent:              #6B5744;
+      --accent-text:         #FDFAF4;
+      --flag-on-bg:          #C8960A;
+      --flag-on-text:        #FDFAF4;
+      --toggle-bg:           #EDE9DF;
+      --input-bg:            #FDFAF4;
+      --modal-overlay:       rgba(44,36,22,0.35);
+    }
+
+    body.dark {
+      --bg:                  #1a1a2e;
+      --panel:               #16213e;
+      --panel-border:        #2a2a4a;
+      --stat-bg:             #0f3460;
+      --cell:                #1e2a4a;
+      --cell-border:         #2a2a4a;
+      --cell-hover:          #2a3a6a;
+      --cell-hover-border:   #4a4aaa;
+      --cell-revealed:       #0d1a33;
+      --cell-revealed-border:#1a2244;
+      --cell-flag:           #2a1a0a;
+      --cell-flag-border:    #aa6610;
+      --cell-mine:           #4a1010;
+      --cell-mine-border:    #aa2222;
+      --text:                #e8e8f0;
+      --text-muted:          #8888aa;
+      --text-tip:            #555577;
+      --btn-border:          #3a3a5c;
+      --btn-hover:           #2a2a4a;
+      --btn-hover-border:    #6c6caa;
+      --accent:              #4a4aaa;
+      --accent-text:         #ffffff;
+      --flag-on-bg:          #aa8810;
+      --flag-on-text:        #ffffff;
+      --toggle-bg:           #2a2a4a;
+      --input-bg:            #0f1a33;
+      --modal-overlay:       rgba(0,0,0,0.55);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 620px;
+      margin-bottom: 1.25rem;
+    }
+    h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+
+    #theme-toggle {
+      background: var(--toggle-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    #theme-toggle:hover { opacity: 0.8; }
+
+    #ms-diff {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 620px;
+    }
+    #ms-diff button {
+      font-size: 13px;
+      padding: 5px 15px;
+      border-radius: 20px;
+      border: 1.5px solid var(--btn-border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    #ms-diff button:hover { border-color: var(--btn-hover-border); color: var(--text); }
+    #ms-diff button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+    #ms-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 1.25rem 1.25rem 1rem;
+      width: 100%;
+      max-width: 620px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    #ms-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #ms-info { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .ms-stat {
+      background: var(--stat-bg);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+
+    #flag-toggle {
+      font-size: 13px;
+      padding: 5px 13px;
+      border-radius: 8px;
+      border: 1.5px solid var(--btn-border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    #flag-toggle:hover { background: var(--btn-hover); }
+    #flag-toggle.on { background: var(--flag-on-bg); border-color: var(--flag-on-bg); color: var(--flag-on-text); }
+
+    #ms-restart {
+      font-size: 13px;
+      padding: 5px 13px;
+      border-radius: 8px;
+      border: 1.5px solid var(--btn-border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    #ms-restart:hover { background: var(--btn-hover); border-color: var(--btn-hover-border); }
+
+    #ms-status {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      min-height: 22px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    /* Board wrapper: scrollable when board is bigger than panel */
+    #ms-board-wrap {
+      overflow: auto;
+      margin: 0 auto 0.75rem;
+      max-width: 100%;
+      /* hide scrollbar on iOS but keep functional */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #ms-board {
+      display: grid;
+      width: fit-content;
+      touch-action: pan-x pan-y; /* allow scroll, handled in JS */
+    }
+
+    .cell {
+      border-radius: 4px;
+      border: 1px solid var(--cell-border);
+      background: var(--cell);
+      cursor: pointer;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .cell:hover:not(.revealed):not(.flagged) { background: var(--cell-hover); border-color: var(--cell-hover-border); }
+    .cell.revealed   { background: var(--cell-revealed); cursor: default; border-color: var(--cell-revealed-border); }
+    .cell.flagged    { background: var(--cell-flag); border-color: var(--cell-flag-border); }
+    .cell.mine-hit   { background: var(--cell-mine); border-color: var(--cell-mine-border); }
+
+    .n1 { color: #1a56bb; } .n2 { color: #1a7a32; } .n3 { color: #bb2222; }
+    .n4 { color: #6622aa; } .n5 { color: #cc5500; } .n6 { color: #0a8080; }
+    .n7 { color: #aa1166; } .n8 { color: #888888; }
+
+    #ms-tip {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tip);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Custom mode modal ── */
+    #custom-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--modal-overlay);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    #custom-modal.open { display: flex; }
+
+    #custom-box {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 320px;
+    }
+    #custom-box h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .custom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      gap: 12px;
+    }
+    .custom-row label {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .custom-row input {
+      width: 80px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--btn-border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    #custom-error {
+      font-size: 12px;
+      color: #bb2222;
+      min-height: 18px;
+      margin-bottom: 0.75rem;
+    }
+
+    #custom-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    #custom-actions button {
+      font-size: 13px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--btn-border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    #custom-actions button:hover { background: var(--btn-hover); }
+    #custom-actions button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    #custom-actions button.primary:hover { opacity: 0.85; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="top-bar">
+    <h1>💣 Minesweeper</h1>
+    <button id="theme-toggle" onclick="toggleTheme()">🌙 Gelap</button>
+  </div>
+
+  <div id="ms-diff">
+    <button onclick="setDiff('mudah')"  class="active" id="btn-mudah">Mudah (9×9)</button>
+    <button onclick="setDiff('sedang')" id="btn-sedang">Sedang (16×16)</button>
+    <button onclick="openCustom()"      id="btn-custom">Kustom</button>
+  </div>
+
+  <div id="ms-panel">
+    <div id="ms-header">
+      <div id="ms-info">
+        <div class="ms-stat">💣 <span id="mine-count">10</span></div>
+        <div class="ms-stat">⏱ <span id="timer-val">0</span>s</div>
+        <button id="flag-toggle" onclick="toggleFlag()">🚩 Bendera</button>
+      </div>
+      <button id="ms-restart" onclick="initGame()">🔄 Ulang</button>
+    </div>
+    <div id="ms-status"></div>
+    <div id="ms-board-wrap">
+      <div id="ms-board"></div>
+    </div>
+    <p id="ms-tip">Klik kanan (PC) atau aktifkan Bendera untuk tandai ranjau</p>
+  </div>
+
+  <!-- Custom modal -->
+  <div id="custom-modal">
+    <div id="custom-box">
+      <h2>⚙️ Mode Kustom</h2>
+      <div class="custom-row">
+        <label>Baris</label>
+        <input type="number" id="c-rows" value="16" min="2" max="50" />
+      </div>
+      <div class="custom-row">
+        <label>Kolom</label>
+        <input type="number" id="c-cols" value="16" min="2" max="50" />
+      </div>
+      <div class="custom-row">
+        <label>Jumlah ranjau</label>
+        <input type="number" id="c-mines" value="40" min="1" max="9999" />
+      </div>
+      <div id="custom-error"></div>
+      <div id="custom-actions">
+        <button onclick="closeCustom()">Batal</button>
+        <button class="primary" onclick="applyCustom()">Mulai</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Theme ─────────────────────────────────────────────
+    let dark = false;
+    function toggleTheme() {
+      dark = !dark;
+      document.body.classList.toggle('dark', dark);
+      document.getElementById('theme-toggle').textContent = dark ? '☀️ Terang' : '🌙 Gelap';
+    }
+
+    // ── Flag mode ─────────────────────────────────────────
+    let flagMode = false;
+    function toggleFlag() {
+      flagMode = !flagMode;
+      document.getElementById('flag-toggle').classList.toggle('on', flagMode);
+    }
+
+    // ── Difficulty ────────────────────────────────────────
+    const DIFFS = {
+      mudah:  { rows: 9,  cols: 9,  mines: 10 },
+      sedang: { rows: 16, cols: 16, mines: 40 },
+    };
+
+    let cfg = { ...DIFFS.mudah };
+    let board = [], revealed = [], flagged = [];
+    let gameOver = false, gameWon = false, firstClick = true;
+    let timerInterval = null, seconds = 0;
+
+    function setDiff(d) {
+      cfg = { ...DIFFS[d] };
+      document.querySelectorAll('#ms-diff button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + d).classList.add('active');
+      initGame();
+    }
+
+    // ── Custom modal ──────────────────────────────────────
+    function openCustom() {
+      document.getElementById('custom-error').textContent = '';
+      document.getElementById('custom-modal').classList.add('open');
+    }
+    function closeCustom() {
+      document.getElementById('custom-modal').classList.remove('open');
+    }
+    function applyCustom() {
+      const rows  = parseInt(document.getElementById('c-rows').value)  || 0;
+      const cols  = parseInt(document.getElementById('c-cols').value)  || 0;
+      const mines = parseInt(document.getElementById('c-mines').value) || 0;
+      const maxMines = rows * cols - 9; // leave room for safe first click
+      const errEl = document.getElementById('custom-error');
+
+      if (rows < 2 || rows > 50 || cols < 2 || cols > 50) {
+        errEl.textContent = 'Baris dan kolom harus antara 2–50.'; return;
+      }
+      if (mines < 1 || mines > maxMines) {
+        errEl.textContent = `Ranjau harus antara 1–${maxMines}.`; return;
+      }
+      errEl.textContent = '';
+      cfg = { rows, cols, mines };
+      document.querySelectorAll('#ms-diff button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-custom').classList.add('active');
+      closeCustom();
+      initGame();
+    }
+
+    // ── Game init ─────────────────────────────────────────
+    function initGame() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      flagMode = false;
+      document.getElementById('flag-toggle').classList.remove('on');
+      document.getElementById('timer-val').textContent = '0';
+      document.getElementById('ms-status').textContent = '';
+      gameOver = false; gameWon = false; firstClick = true;
+      board    = Array.from({ length: cfg.rows }, () => Array(cfg.cols).fill(0));
+      revealed = Array.from({ length: cfg.rows }, () => Array(cfg.cols).fill(false));
+      flagged  = Array.from({ length: cfg.rows }, () => Array(cfg.cols).fill(false));
+      document.getElementById('mine-count').textContent = cfg.mines;
+      renderBoard();
+    }
+
+    function placeMines(er, ec) {
+      let placed = 0;
+      while (placed < cfg.mines) {
+        const r = Math.floor(Math.random() * cfg.rows);
+        const c = Math.floor(Math.random() * cfg.cols);
+        if (board[r][c] === -1) continue;
+        if (Math.abs(r - er) <= 1 && Math.abs(c - ec) <= 1) continue;
+        board[r][c] = -1; placed++;
+      }
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++) {
+          if (board[r][c] === -1) continue;
+          let n = 0;
+          for (let dr = -1; dr <= 1; dr++)
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = r+dr, nc = c+dc;
+              if (nr>=0 && nr<cfg.rows && nc>=0 && nc<cfg.cols && board[nr][nc]===-1) n++;
+            }
+          board[r][c] = n;
+        }
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('timer-val').textContent = seconds;
+      }, 1000);
+    }
+
+    // ── Render ────────────────────────────────────────────
+    function getCellSize() {
+      const panel     = document.getElementById('ms-panel');
+      const available = panel.clientWidth - 40; // panel padding ~20px each side
+      // For big grids: use 1px gap to maximise cell size; for small ones use 2px
+      const gap  = cfg.cols > 20 ? 1 : cfg.cols > 12 ? 2 : 3;
+      const fit  = Math.floor((available - (cfg.cols - 1) * gap) / cfg.cols);
+      const size = Math.min(30, Math.max(16, fit));
+      return { size, gap };
+    }
+
+    function renderBoard() {
+      const el   = document.getElementById('ms-board');
+      const wrap = document.getElementById('ms-board-wrap');
+      const { size, gap } = getCellSize();
+      const totalW = cfg.cols * size + (cfg.cols - 1) * gap;
+
+      el.style.gridTemplateColumns = `repeat(${cfg.cols}, ${size}px)`;
+      el.style.gap = gap + 'px';
+      el.style.width = totalW + 'px';
+      el.innerHTML = '';
+
+      const fontSize = Math.max(9, size - 14) + 'px';
+      const radius   = size < 20 ? '2px' : '4px';
+
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style.cssText = `width:${size}px;height:${size}px;font-size:${fontSize};border-radius:${radius}`;
+          if (revealed[r][c]) {
+            cell.classList.add('revealed');
+            if (board[r][c] === -1) { cell.textContent = '💣'; cell.classList.add('mine-hit'); }
+            else if (board[r][c] > 0) { cell.textContent = board[r][c]; cell.classList.add('n'+board[r][c]); }
+          } else if (flagged[r][c]) {
+            cell.classList.add('flagged');
+            cell.textContent = '🚩';
+          }
+          attachCellEvents(cell, r, c);
+          el.appendChild(cell);
+        }
+    }
+
+    // ── Cell events ───────────────────────────────────────
+    // pointerup fires the action; cancels if finger moved >8px (scroll)
+    function attachCellEvents(cell, r, c) {
+      let startX = 0, startY = 0, moved = false;
+
+      cell.addEventListener('pointerdown', (e) => {
+        if (e.button === 2) return;
+        startX = e.clientX; startY = e.clientY; moved = false;
+      });
+      cell.addEventListener('pointermove', (e) => {
+        if (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8) moved = true;
+      });
+      cell.addEventListener('pointerup', (e) => {
+        if (e.button === 2 || moved) return;
+        e.preventDefault();
+        if (flagMode) handleFlag(r, c);
+        else          handleClick(r, c);
+      });
+      cell.addEventListener('contextmenu', (e) => { e.preventDefault(); handleFlag(r, c); });
+    }
+
+    // ── Game logic ────────────────────────────────────────
+    function handleClick(r, c) {
+      if (gameOver || gameWon || flagged[r][c] || revealed[r][c]) return;
+      if (firstClick) { firstClick = false; placeMines(r, c); startTimer(); }
+      if (board[r][c] === -1) {
+        revealed[r][c] = true;
+        gameOver = true;
+        clearInterval(timerInterval);
+        revealAllMines();
+        renderBoard();
+        document.getElementById('ms-status').textContent = '💥 Boom! Kamu kena ranjau. Game over!';
+        return;
+      }
+      floodFill(r, c);
+      renderBoard();
+      checkWin();
+    }
+
+    function handleFlag(r, c) {
+      if (gameOver || gameWon || revealed[r][c]) return;
+      flagged[r][c] = !flagged[r][c];
+      document.getElementById('mine-count').textContent =
+        cfg.mines - flagged.flat().filter(Boolean).length;
+      renderBoard();
+    }
+
+    function floodFill(r, c) {
+      if (r < 0 || r >= cfg.rows || c < 0 || c >= cfg.cols) return;
+      if (revealed[r][c] || flagged[r][c]) return;
+      revealed[r][c] = true;
+      if (board[r][c] === 0)
+        for (let dr = -1; dr <= 1; dr++)
+          for (let dc = -1; dc <= 1; dc++)
+            floodFill(r+dr, c+dc);
+    }
+
+    function revealAllMines() {
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++)
+          if (board[r][c] === -1) revealed[r][c] = true;
+    }
+
+    function checkWin() {
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++)
+          if (!revealed[r][c] && board[r][c] !== -1) return;
+      gameWon = true;
+      clearInterval(timerInterval);
+      document.getElementById('ms-status').textContent =
+        '🎉 Selamat! Kamu menang dalam ' + seconds + ' detik!';
+    }
+
+    initGame();
+  </script>
+</body>
+</html>
