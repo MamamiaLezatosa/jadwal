@@ -15,10 +15,11 @@
     --dim: #8a8578;
     --accent: #2f8a5e;
     --op: #c4791f;
+    --mem: #6b4fbb;
+    --second: #1a6ba0;
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-
   html{ background:var(--bg); }
 
   body{
@@ -31,7 +32,7 @@
   }
 
   .card{
-    width:min(340px,100%);
+    width:min(360px,100%);
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:22px;
@@ -39,36 +40,67 @@
     box-shadow:0 24px 60px -24px rgba(0,0,0,0.18);
   }
 
+  /* ── Display ── */
   .display{
     background:var(--bg);
     border:1px solid var(--line);
     border-radius:16px;
-    padding:14px 18px 18px;
-    margin-bottom:16px;
+    padding:10px 14px 14px;
+    margin-bottom:14px;
     overflow:hidden;
     position:relative;
     cursor:text;
     user-select:none;
   }
 
+  .display-status{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:4px;
+    min-height:20px;
+  }
+
+  .status-left{
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+
+  .badge{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    padding:2px 6px;
+    border-radius:6px;
+    line-height:1.4;
+  }
+
+  .badge.deg{ background:color-mix(in srgb,var(--op) 15%,var(--panel)); color:var(--op); border:1px solid color-mix(in srgb,var(--op) 30%,var(--line)); }
+  .badge.rad{ background:color-mix(in srgb,var(--second) 15%,var(--panel)); color:var(--second); border:1px solid color-mix(in srgb,var(--second) 30%,var(--line)); }
+  .badge.mem{ background:color-mix(in srgb,var(--mem) 15%,var(--panel)); color:var(--mem); border:1px solid color-mix(in srgb,var(--mem) 30%,var(--line)); display:none; }
+  .badge.mem.active{ display:inline-block; }
+  .badge.second{ background:color-mix(in srgb,var(--second) 15%,var(--panel)); color:var(--second); border:1px solid color-mix(in srgb,var(--second) 30%,var(--line)); display:none; }
+  .badge.second.active{ display:inline-block; }
+
   .display-top{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    min-height:24px;
+    min-height:22px;
     margin-bottom:2px;
   }
 
   .display .expression{
     font-family:'JetBrains Mono',monospace;
-    font-size:13px;
+    font-size:12px;
     color:var(--dim);
     white-space:nowrap;
     overflow-x:auto;
     letter-spacing:0.02em;
     flex:1;
     text-align:right;
-    padding-right:8px;
+    padding-right:6px;
   }
 
   .btn-backspace{
@@ -86,18 +118,11 @@
     white-space:nowrap;
     text-align:right;
     line-height:1.15;
-    /* extra bottom padding so the handle doesn't get clipped */
     padding-bottom:28px;
     margin-bottom:-28px;
   }
 
-  #hidden-input{
-    position:absolute;
-    opacity:0;
-    width:1px; height:1px;
-    top:0; left:0;
-    pointer-events:none;
-  }
+  #hidden-input{ position:absolute; opacity:0; width:1px; height:1px; top:0; left:0; pointer-events:none; }
 
   .current{
     font-family:'JetBrains Mono',monospace;
@@ -108,11 +133,9 @@
     transition:font-size 0.15s ease;
   }
 
-  /* Blinking cursor bar */
   .caret{
     display:inline-block;
-    width:2px;
-    height:1em;
+    width:2px; height:1em;
     background:var(--accent);
     vertical-align:text-bottom;
     margin:0 1px;
@@ -122,51 +145,96 @@
   @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0} }
   .caret.hidden{ display:none; }
 
-  /* ── Draggable teardrop handle ───────────────────────── */
   #cursor-handle{
     position:absolute;
-    /* positioned via JS */
     display:none;
-    width:28px;
-    height:28px;
+    width:28px; height:28px;
     transform:translateX(-50%);
     touch-action:none;
-    cursor:grab;
-    z-index:10;
+    cursor:grab; z-index:10;
   }
   #cursor-handle.visible{ display:block; }
   #cursor-handle:active{ cursor:grabbing; }
 
-  /* ── Landscape / short screens ───────────────────────── */
-  @media (max-height: 500px) and (orientation: landscape){
-    body{ padding:8px 16px; align-items:flex-start; }
-    .card{
-      width:100%;
-      max-width:520px;
-      display:grid;
-      grid-template-columns:1fr 1.15fr;
-      gap:10px;
-      padding:12px;
-      border-radius:18px;
-    }
-    .display{
-      margin-bottom:0;
-      padding:10px 14px 12px;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-    }
-    .current-wrap{ padding-bottom:20px; margin-bottom:-20px; }
-    button.key{ padding:8px 0; font-size:15px; border-radius:11px; }
-    button.key.func{ font-size:13px; }
-    .keys{ gap:6px; }
+  /* ── History panel ── */
+  .history-panel{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height 0.25s ease, opacity 0.2s ease;
+    opacity:0;
+    margin-bottom:0;
   }
+  .history-panel.open{
+    max-height:140px;
+    opacity:1;
+    margin-bottom:12px;
+  }
+  .history-inner{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    max-height:140px;
+    overflow-y:auto;
+    padding:8px 12px;
+  }
+  .history-empty{
+    font-size:12px;
+    color:var(--dim);
+    text-align:center;
+    padding:8px 0;
+  }
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:5px 0;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    gap:8px;
+  }
+  .history-item:last-child{ border-bottom:none; }
+  .history-item:hover .history-result{ color:var(--accent); }
+  .history-expr{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--dim);
+    flex:1;
+    text-align:left;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .history-result{
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    flex-shrink:0;
+    transition:color 0.15s;
+  }
+  .history-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .btn-clear-hist{
+    font-size:11px;
+    color:var(--dim);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:2px 8px;
+    cursor:pointer;
+    outline:none;
+  }
+  .btn-clear-hist:hover{ border-color:var(--dim); }
 
-  /* Keys */
+  /* ── Keys ── */
   .keys{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:8px;
+    gap:7px;
   }
 
   button.key{
@@ -175,11 +243,61 @@
     border-radius:14px;
     font-family:'JetBrains Mono',monospace;
     font-size:17px; font-weight:500;
-    padding:14px 0;
+    padding:13px 0;
     cursor:pointer; outline:none;
     transition:transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+    position:relative;
+    overflow:hidden;
   }
   button.key:active{ transform:scale(0.95); }
+
+  button.key .label-primary{
+    display:block;
+    font-size:inherit;
+    line-height:1;
+    transition:opacity 0.18s, font-size 0.18s;
+  }
+  button.key .label-second{
+    display:block;
+    font-size:9px;
+    font-weight:600;
+    color:var(--second);
+    letter-spacing:0.04em;
+    line-height:1;
+    margin-top:2px;
+    opacity:0.7;
+    transition:opacity 0.18s, font-size 0.18s, color 0.18s, margin 0.18s;
+  }
+
+  /* 2nd mode active: swap label sizes & prominence */
+  button.key.sci.second-active .label-primary{
+    font-size:9px;
+    opacity:0.5;
+    color:var(--dim);
+  }
+  button.key.sci.second-active .label-second{
+    font-size:13px;
+    opacity:1;
+    color:var(--second);
+    margin-top:0;
+    order:-1;
+  }
+  /* Use flex column-reverse to put label-second on top */
+  button.key.sci.second-active{
+    display:flex;
+    flex-direction:column-reverse;
+    align-items:center;
+    justify-content:center;
+  }
+  button.key.sci:not(.second-active){
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  /* Fix superscript/subscript inside key buttons */
+  button.key sup{ font-size:0.58em; vertical-align:super; line-height:0; position:relative; top:-0.1em; }
+  button.key sub{ font-size:0.58em; vertical-align:sub; line-height:0; }
 
   button.key.op{
     background:color-mix(in srgb,var(--op) 12%,var(--panel));
@@ -189,7 +307,7 @@
   }
   button.key.op:hover{ border-color:var(--op); }
 
-  button.key.func{ color:var(--dim); font-weight:600; font-size:15px; }
+  button.key.func{ color:var(--dim); font-weight:600; font-size:14px; }
   button.key.func:hover{ border-color:var(--dim); }
 
   button.key.equals{
@@ -198,118 +316,141 @@
   }
   button.key.equals:hover{ filter:brightness(1.05); }
 
-  button.key.zero{ grid-column:span 2; }
-  button.key sup{ font-size:0.6em; vertical-align:super; line-height:0; }
-  button.key sub{ font-size:0.6em; vertical-align:sub; line-height:0; }
-
-  /* Scientific toggle pill */
-  .sci-toggle{
-    display:flex; justify-content:flex-end;
-    margin-bottom:10px;
+  button.key.mem-key{
+    background:color-mix(in srgb,var(--mem) 10%,var(--panel));
+    color:var(--mem);
+    border-color:color-mix(in srgb,var(--mem) 25%,var(--line));
+    font-size:13px; font-weight:700;
   }
-  .btn-sci{
+  button.key.mem-key:hover{ border-color:var(--mem); }
+
+  button.key.zero{ grid-column:span 2; }
+
+  /* ── Top controls row ── */
+  .top-controls{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    gap:6px;
+  }
+
+  .pill-btn{
     background:none;
     border:1px solid var(--line);
     border-radius:20px;
     color:var(--dim);
     font-family:'Space Grotesk',sans-serif;
-    font-size:12px; font-weight:500;
-    padding:4px 12px;
+    font-size:11px; font-weight:600;
+    padding:4px 10px;
     cursor:pointer; outline:none;
     letter-spacing:0.04em;
     transition:background 0.15s, color 0.15s, border-color 0.15s;
     -webkit-tap-highlight-color:transparent;
+    white-space:nowrap;
   }
-  .btn-sci.active{
+  .pill-btn.active{
     background:var(--accent);
     border-color:var(--accent);
     color:#fff;
   }
+  .pill-btn.deg-rad-btn{
+    font-size:11px;
+  }
+  .pill-btn.deg-rad-btn.rad-mode{
+    background:color-mix(in srgb,var(--second) 15%,transparent);
+    border-color:var(--second);
+    color:var(--second);
+  }
+  .pill-btn.second-btn.active{
+    background:var(--second);
+    border-color:var(--second);
+  }
+  .pill-btn.hist-btn.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
 
-  /* Scientific keys panel */
+  /* ── Scientific keys panel ── */
   .sci-keys{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:8px;
+    gap:7px;
     overflow:hidden;
     max-height:0;
     opacity:0;
     margin-bottom:0;
-    transition:max-height 0.25s ease, opacity 0.2s ease, margin-bottom 0.25s ease;
+    transition:max-height 0.28s ease, opacity 0.22s ease, margin-bottom 0.28s ease;
   }
   .sci-keys.open{
-    max-height:300px;
+    max-height:400px;
     opacity:1;
-    margin-bottom:8px;
+    margin-bottom:7px;
   }
+
   button.key.sci{
     color:var(--accent);
     border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
     background:color-mix(in srgb,var(--accent) 6%,var(--panel));
-    font-size:13px; font-weight:600;
-    padding:11px 0;
+    font-size:12px; font-weight:700;
+    padding:9px 0;
   }
   button.key.sci:active{ transform:scale(0.95); }
+  button.key.sci .label-second{ color:var(--second); }
 
-  .right-col{ display:contents; }
-
-  @media (orientation:landscape) and (max-height:500px){
+  /* ── Landscape ── */
+  @media (max-height:500px) and (orientation:landscape){
     body{ padding:6px 10px; align-items:center; }
     .card{
-      width:100%;
-      max-width:680px;
-      padding:8px;
-      border-radius:14px;
+      width:100%; max-width:720px;
+      padding:8px; border-radius:14px;
       display:grid;
-      grid-template-columns:1fr 1.55fr;
-      gap:8px;
-      align-items:stretch;
+      grid-template-columns:1fr 1.6fr;
+      gap:8px; align-items:stretch;
     }
-    .display{
-      margin-bottom:0;
-      padding:10px 12px;
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-    }
-    .current-wrap{ padding-bottom:20px; margin-bottom:-20px; }
-    .right-col{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width:0;
-    }
-    .sci-toggle{ margin-bottom:0; }
+    .display{ margin-bottom:0; padding:8px 12px; display:flex; flex-direction:column; justify-content:flex-end; }
+    .current-wrap{ padding-bottom:18px; margin-bottom:-18px; }
+    .right-col{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+    .top-controls{ margin-bottom:0; }
     .sci-keys{ gap:4px; margin-bottom:0 !important; }
-    .sci-keys.open{ max-height:150px; }
+    .sci-keys.open{ max-height:200px; }
     .keys{ gap:4px; flex:1; }
-    button.key{ padding:6px 0; font-size:13px; border-radius:9px; }
-    button.key.sci{ padding:5px 0; font-size:11px; }
-    button.key.func{ font-size:12px; }
-    .btn-sci{ font-size:11px; padding:3px 9px; }
-    .display .expression{ font-size:11px; }
+    button.key{ padding:5px 0; font-size:12px; border-radius:9px; }
+    button.key.sci{ font-size:10px; padding:4px 0; }
+    button.key.func{ font-size:11px; }
+    .pill-btn{ font-size:10px; padding:3px 8px; }
+    .history-panel.open{ max-height:80px; }
+  }
+
+  .right-col{ display:contents; }
+  @media (max-height:500px) and (orientation:landscape){
+    .right-col{ display:flex; flex-direction:column; gap:4px; min-width:0; }
   }
 </style>
 </head>
 <body>
 
 <div class="card">
+  <!-- Display -->
   <div class="display" id="display">
+    <div class="display-status">
+      <div class="status-left">
+        <span class="badge deg" id="badge-angle">DEG</span>
+        <span class="badge mem" id="badge-mem">M</span>
+        <span class="badge second" id="badge-second">2nd</span>
+      </div>
+    </div>
     <div class="display-top">
       <div class="expression" id="expression">&nbsp;</div>
       <button class="btn-backspace" id="btn-backspace" aria-label="Backspace">⌫</button>
     </div>
     <div class="current-wrap" id="current-wrap">
       <span class="current" id="current-before"></span><span class="caret hidden" id="caret"></span><span class="current" id="current-after">0</span>
-      <!-- Teardrop cursor handle -->
       <svg id="cursor-handle" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- stem line from top of circle down to point -->
         <line x1="14" y1="10" x2="14" y2="28" stroke="#2f8a5e" stroke-width="2" stroke-linecap="round"/>
-        <!-- filled circle -->
         <circle cx="14" cy="9" r="8" fill="#2f8a5e"/>
-        <!-- left arrow -->
         <polyline points="11,6 8,9 11,12" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        <!-- right arrow -->
         <polyline points="17,6 20,9 17,12" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
@@ -317,34 +458,81 @@
   </div>
 
   <div class="right-col">
-  <div class="sci-toggle">
-    <button class="btn-sci" id="btn-sci">SCI</button>
+
+  <!-- History panel -->
+  <div class="history-panel" id="history-panel">
+    <div class="history-inner" id="history-inner">
+      <p class="history-empty" id="history-empty">Belum ada riwayat</p>
+    </div>
   </div>
 
+  <!-- Top controls -->
+  <div class="top-controls">
+    <button class="pill-btn deg-rad-btn" id="btn-deg-rad">DEG</button>
+    <button class="pill-btn second-btn" id="btn-second">2nd</button>
+    <button class="pill-btn" id="btn-sci">SCI</button>
+    <button class="pill-btn hist-btn" id="btn-hist">Hist</button>
+  </div>
+
+  <!-- Scientific panel -->
   <div class="sci-keys" id="sci-keys">
-    <button class="key sci" data-action="sci-func" data-value="sin">sin</button>
-    <button class="key sci" data-action="sci-func" data-value="cos">cos</button>
-    <button class="key sci" data-action="sci-func" data-value="tan">tan</button>
-    <button class="key sci" data-action="sci-func" data-value="log">log</button>
+    <!-- Row 1: trig -->
+    <button class="key sci" data-action="sci-func" data-value="sin" data-second-action="sci-func" data-second-value="asin">
+      <span class="label-primary">sin</span><span class="label-second">sin⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="cos" data-second-action="sci-func" data-second-value="acos">
+      <span class="label-primary">cos</span><span class="label-second">cos⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="tan" data-second-action="sci-func" data-second-value="atan">
+      <span class="label-primary">tan</span><span class="label-second">tan⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="log" data-second-action="sci-func" data-second-value="log2">
+      <span class="label-primary">log</span><span class="label-second">log₂</span>
+    </button>
 
-    <button class="key sci" data-action="sci-func" data-value="asin">sin<sup>-1</sup></button>
-    <button class="key sci" data-action="sci-func" data-value="acos">cos<sup>-1</sup></button>
-    <button class="key sci" data-action="sci-func" data-value="atan">tan<sup>-1</sup></button>
-    <button class="key sci" data-action="sci-func" data-value="ln">ln</button>
+    <!-- Row 2 -->
+    <button class="key sci" data-action="sci-func" data-value="sinh" data-second-action="sci-func" data-second-value="asinh">
+      <span class="label-primary">sinh</span><span class="label-second">sinh⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="cosh" data-second-action="sci-func" data-second-value="acosh">
+      <span class="label-primary">cosh</span><span class="label-second">cosh⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="tanh" data-second-action="sci-func" data-second-value="atanh">
+      <span class="label-primary">tanh</span><span class="label-second">tanh⁻¹</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="ln" data-second-action="sci-func" data-second-value="exp">
+      <span class="label-primary">ln</span><span class="label-second">eˣ</span>
+    </button>
 
-    <button class="key sci" data-action="sci-const" data-value="π">π</button>
-    <button class="key sci" data-action="sci-const" data-value="e">e</button>
-    <button class="key sci" data-action="sci-func" data-value="abs">|x|</button>
-    <button class="key sci" data-action="sci-func" data-value="fact">n!</button>
+    <!-- Row 3 -->
+    <button class="key sci" data-action="sci-const" data-value="π" data-second-action="sci-func" data-second-value="cbrt">
+      <span class="label-primary">π</span><span class="label-second">∛x</span>
+    </button>
+    <button class="key sci" data-action="sci-const" data-value="e" data-second-action="sci-action" data-second-value="reciprocal">
+      <span class="label-primary">e</span><span class="label-second">1/x</span>
+    </button>
+    <button class="key sci" data-action="sci-action" data-value="square" data-second-action="sci-func" data-second-value="sqrt">
+      <span class="label-primary">x²</span><span class="label-second">√x</span>
+    </button>
+    <button class="key sci" data-action="sci-func" data-value="abs" data-second-action="sci-func" data-second-value="fact">
+      <span class="label-primary">|x|</span><span class="label-second">n!</span>
+    </button>
+
+    <!-- Row 4: memory -->
+    <button class="key sci mem-key" data-action="mem" data-value="mc">MC</button>
+    <button class="key sci mem-key" data-action="mem" data-value="mr">MR</button>
+    <button class="key sci mem-key" data-action="mem" data-value="m+">M+</button>
+    <button class="key sci mem-key" data-action="mem" data-value="m-">M−</button>
   </div>
 
+  <!-- Main keypad -->
   <div class="keys">
-    <button class="key func" data-action="clear">AC</button>
+    <button class="key func" data-action="clear"><span class="label-primary">AC</span></button>
     <button class="key func" data-action="paren" data-value="(">(</button>
     <button class="key func" data-action="paren" data-value=")">)</button>
     <button class="key op"   data-action="operator" data-value="÷">÷</button>
 
-    <button class="key func" data-action="percent">%</button>
+    <button class="key func" data-action="percent"><span class="label-primary">%</span></button>
     <button class="key func" data-action="operator" data-value="^">x<sup>y</sup></button>
     <button class="key func" data-action="sqrt">√</button>
     <button class="key op"   data-action="operator" data-value="×">×</button>
@@ -367,6 +555,7 @@
     <button class="key zero" data-action="digit" data-value="0">0</button>
     <button class="key" data-action="decimal">,</button>
   </div>
+
   </div><!-- /right-col -->
 </div>
 
@@ -378,21 +567,30 @@
   const displayEl    = document.getElementById('display');
   const wrapEl       = document.getElementById('current-wrap');
   const handleEl     = document.getElementById('cursor-handle');
+  const badgeAngle   = document.getElementById('badge-angle');
+  const badgeMem     = document.getElementById('badge-mem');
+  const badgeSecond  = document.getElementById('badge-second');
 
-  let isTouchDevice = false;
-  window.addEventListener('touchstart', () => { isTouchDevice = true; }, { once: true, passive: true });
+  let isTouchDevice  = false;
+  window.addEventListener('touchstart', () => { isTouchDevice = true; }, { once:true, passive:true });
 
   let expression    = '';
   let cursor        = 0;
   let justEvaluated = false;
   let caretVisible  = false;
 
-  // ── Display ───────────────────────────────────────────────────────────────
+  // State
+  let angleMode   = 'deg';   // 'deg' | 'rad'
+  let secondMode  = false;
+  let memory      = 0;
+  let memHasValue = false;
+  let history     = [];
+
+  // ── Display ──────────────────────────────────────────────────────────────
 
   function showCaret(){
     caretEl.classList.remove('hidden');
     caretVisible = true;
-    // position handle after layout settles
     setTimeout(positionHandle, 0);
   }
 
@@ -412,19 +610,15 @@
       afterEl.textContent  = expr.slice(cursor) || '';
       if (expr === '') afterEl.textContent = '';
     }
-
     if (caretVisible){
       setTimeout(() => {
         caretEl.scrollIntoView({ block:'nearest', inline:'nearest' });
         positionHandle();
       }, 0);
     }
-
     if (expression === '') expressionEl.textContent = '\u00A0';
-
-    // Scale font size based on expression length
-    const len = expression.length || 1;
-    const size = Math.max(14, Math.min(36, Math.round(36 - (len - 1) * 1.5)));
+    const len  = expression.length || 1;
+    const size = Math.max(14, Math.min(36, Math.round(36 - (len - 1) * 1.4)));
     beforeEl.style.fontSize = size + 'px';
     afterEl.style.fontSize  = size + 'px';
     caretEl.style.height    = size + 'px';
@@ -436,28 +630,22 @@
     if (!caretVisible || !isTouchDevice){ handleEl.classList.remove('visible'); return; }
     const caretRect = caretEl.getBoundingClientRect();
     const wrapRect  = wrapEl.getBoundingClientRect();
-    // X = caret center relative to wrap, accounting for scroll
     const x = caretRect.left - wrapRect.left + wrapEl.scrollLeft + caretRect.width / 2;
-    // Y = just below the text baseline; caret bottom relative to wrap top
     const y = caretRect.bottom - wrapRect.top;
     handleEl.style.left = x + 'px';
     handleEl.style.top  = y + 'px';
     handleEl.classList.add('visible');
   }
 
-  // ── Handle drag (touch + mouse) ───────────────────────────────────────────
+  // ── Handle drag ───────────────────────────────────────────────────────────
 
   let dragging = false;
 
-  function getClientXFromEvent(e){
-    return e.touches ? e.touches[0].clientX : e.clientX;
-  }
+  function getClientXFromEvent(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
   function onDragStart(e){
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     dragging = true;
-    // pause blink so it's solid while dragging
     caretEl.style.animation = 'none';
     caretEl.style.opacity   = '1';
     document.addEventListener('touchmove', onDragMove, { passive:false });
@@ -469,15 +657,11 @@
   function onDragMove(e){
     if (!dragging) return;
     e.preventDefault();
-    const clientX = getClientXFromEvent(e);
-    const newCursor = getCursorFromX(clientX);
-    if (newCursor !== cursor){
-      cursor = newCursor;
-      updateDisplay(true);
-    }
+    const newCursor = getCursorFromX(getClientXFromEvent(e));
+    if (newCursor !== cursor){ cursor = newCursor; updateDisplay(true); }
   }
 
-  function onDragEnd(e){
+  function onDragEnd(){
     dragging = false;
     caretEl.style.animation = '';
     caretEl.style.opacity   = '';
@@ -490,7 +674,7 @@
   handleEl.addEventListener('touchstart', onDragStart, { passive:false });
   handleEl.addEventListener('mousedown',  onDragStart);
 
-  // ── Cursor position from X coordinate ────────────────────────────────────
+  // ── Cursor from X ─────────────────────────────────────────────────────────
 
   function measureTextWidth(str, refEl){
     const span = document.createElement('span');
@@ -505,19 +689,14 @@
 
   function getCursorFromX(clientX){
     if (expression === '') return 0;
-    const expr = expression;
-    const len  = expr.length;
-
-    const wrapRect  = wrapEl.getBoundingClientRect();
-    const totalW    = measureTextWidth(expr, beforeEl);
+    const expr = expression, len = expr.length;
+    const wrapRect   = wrapEl.getBoundingClientRect();
+    const totalW     = measureTextWidth(expr, beforeEl);
     const scrollLeft = wrapEl.scrollLeft;
-    // text is right-aligned: text starts at wrapRect.right - totalW + scrollLeft
     const textStartX = wrapRect.right - totalW + scrollLeft;
-    const relX = clientX - textStartX;
-
+    const relX       = clientX - textStartX;
     if (relX <= 0) return 0;
     if (relX >= totalW) return len;
-
     let lo = 0, hi = len;
     while (lo < hi){
       const mid = Math.floor((lo + hi) / 2);
@@ -527,23 +706,16 @@
     return lo;
   }
 
-  function getCursorFromClick(e){
-    return getCursorFromX(e.clientX);
-  }
-
   wrapEl.addEventListener('click', (e) => {
     if (e.target === handleEl) return;
-    if (justEvaluated) return;
-    if (expression === '') return;
-    cursor = getCursorFromClick(e);
-    showCaret();
-    updateDisplay(true);
+    if (justEvaluated || expression === '') return;
+    cursor = getCursorFromX(e.clientX);
+    showCaret(); updateDisplay(true);
   });
 
   document.addEventListener('click', (e) => {
-    if (!displayEl.contains(e.target) && !e.target.classList.contains('key') && e.target.id !== 'btn-backspace'){
-      hideCaret();
-      updateDisplay();
+    if (!displayEl.contains(e.target) && !e.target.closest('.key') && e.target.id !== 'btn-backspace'){
+      hideCaret(); updateDisplay();
     }
   });
 
@@ -569,6 +741,7 @@
       hideCaret();
     }
   }
+
   function inputDigit(d){
     activateCursor(false);
     const after = charAfterCursor();
@@ -603,7 +776,6 @@
     if (expression === '' && op !== '−') return;
     if (expression === ''){ insert('0'); }
     const before = charAtCursor();
-    const after  = charAfterCursor();
     if (isOperator(before)){
       expression = expression.slice(0, cursor-1) + expression.slice(cursor);
       cursor--;
@@ -618,15 +790,13 @@
     activateCursor(false);
     if (p === '('){
       const before = charAtCursor();
-      if (expression !== '' && (isDigitOrDot(before) || before === ')'))
-        insert('×');
+      if (expression !== '' && (isDigitOrDot(before) || before === ')')) insert('×');
       insert('(');
     } else {
       const opens  = (expression.match(/\(/g)||[]).length;
       const closes = (expression.match(/\)/g)||[]).length;
       const before = charAtCursor();
-      if (opens > closes && !isOperator(before) && before !== '(')
-        insert(')');
+      if (opens > closes && !isOperator(before) && before !== '(') insert(')');
     }
     if (!caretVisible) cursor = expression.length;
     updateDisplay(true);
@@ -635,8 +805,7 @@
   function inputSqrt(){
     activateCursor(false);
     const before = charAtCursor();
-    if (expression !== '' && (isDigitOrDot(before) || before === ')'))
-      insert('×');
+    if (expression !== '' && (isDigitOrDot(before) || before === ')')) insert('×');
     insert('√(');
     if (!caretVisible) cursor = expression.length;
     updateDisplay(true);
@@ -654,8 +823,7 @@
   function inputSciFunc(name){
     activateCursor(false);
     const before = charAtCursor();
-    if (expression !== '' && (isDigitOrDot(before) || before === ')'))
-      insert('×');
+    if (expression !== '' && (isDigitOrDot(before) || before === ')')) insert('×');
     insert(name + '(');
     if (!caretVisible) cursor = expression.length;
     updateDisplay(true);
@@ -664,14 +832,67 @@
   function inputSciConst(val){
     activateCursor(false);
     const before = charAtCursor();
-    if (expression !== '' && (isDigitOrDot(before) || before === ')' || before === 'π' || before === 'e'))
-      insert('×');
-    // store π and e as their numeric values with the symbol for display
-    if (val === 'π'){ insert('π'); }
-    else if (val === 'e'){ insert('e'); }
+    if (expression !== '' && (isDigitOrDot(before) || before === ')' || before === 'π' || before === 'e')) insert('×');
+    insert(val);
     if (!caretVisible) cursor = expression.length;
     updateDisplay(true);
   }
+
+  function inputSciAction(val){
+    // Actions that wrap the current expression or last number
+    if (val === 'square'){
+      // append ^2
+      activateCursor(false);
+      const before = charAtCursor();
+      if (expression !== '' && (isDigitOrDot(before) || before === ')')) {
+        insert('^2');
+        if (!caretVisible) cursor = expression.length;
+        updateDisplay(true);
+      }
+    } else if (val === 'reciprocal'){
+      // wrap expression so far in 1/(...)
+      activateCursor(false);
+      if (expression !== ''){
+        expression = '1÷(' + expression + ')';
+        cursor = expression.length;
+        updateDisplay(true);
+      }
+    }
+  }
+
+  // ── Memory ────────────────────────────────────────────────────────────────
+
+  function handleMemory(cmd){
+    if (cmd === 'mc'){
+      memory = 0; memHasValue = false;
+      badgeMem.classList.remove('active');
+    } else if (cmd === 'mr'){
+      if (!memHasValue) return;
+      activateCursor(false);
+      const before = charAtCursor();
+      if (expression !== '' && (isDigitOrDot(before) || before === ')')) insert('×');
+      const memStr = formatNumber(memory).replace(',','.');
+      insert(memStr.includes('.') ? memStr.replace('.',',') : memStr);
+      if (!caretVisible) cursor = expression.length;
+      updateDisplay(true);
+    } else if (cmd === 'm+' || cmd === 'm-'){
+      // evaluate current expression first
+      let val = null;
+      if (justEvaluated){
+        // result is in afterEl
+        val = parseFloat(afterEl.textContent.replace(',','.'));
+      } else if (expression !== ''){
+        val = evaluate(expression);
+      }
+      if (val !== null && isFinite(val)){
+        memory = (memHasValue ? memory : 0) + (cmd === 'm+' ? val : -val);
+        memHasValue = true;
+        badgeMem.classList.add('active');
+      }
+    }
+  }
+
+  // ── Clear / Backspace ─────────────────────────────────────────────────────
 
   function clearAll(){
     expression = '';
@@ -687,7 +908,7 @@
     if (expression === '') return;
     const pos = caretVisible ? cursor : expression.length;
     if (pos === 0) return;
-    const funcMatch = expression.slice(0, pos).match(/(sin|cos|tan|asin|acos|atan|log|ln|abs|fact|√)\($/) ;
+    const funcMatch = expression.slice(0, pos).match(/(sinh|cosh|tanh|asinh|acosh|atanh|asin|acos|atan|sin|cos|tan|log2|log|ln|exp|cbrt|abs|fact|√)\($/) ;
     if (funcMatch){
       const del = funcMatch[0].length;
       expression = expression.slice(0, pos-del) + expression.slice(pos);
@@ -719,7 +940,7 @@
       } else if (/[a-z]/.test(ch)){
         let fname = '';
         while (i < expr.length && /[a-z]/.test(expr[i])){ fname += expr[i]; i++; }
-        const validFuncs = ['sin','cos','tan','asin','acos','atan','log','ln','abs','fact'];
+        const validFuncs = ['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','asinh','acosh','atanh','log','log2','ln','exp','abs','fact','cbrt'];
         if (validFuncs.includes(fname)) tokens.push({ type:'func', name:fname });
       } else if (ch === '('){ tokens.push({ type:'lparen' }); i++;
       } else if (ch === ')'){ tokens.push({ type:'rparen' }); i++;
@@ -731,7 +952,7 @@
     return tokens;
   }
 
-  const prec = { '+'  :1, '−':1, '×':2, '÷':2, '^':3 };
+  const prec = { '+':1, '−':1, '×':2, '÷':2, '^':3 };
   const rightAssoc = { '^':true };
 
   function shuntingYard(tokens){
@@ -752,14 +973,17 @@
         ops.push(tok);
       } else if (tok.type==='lparen'){ ops.push(tok);
       } else if (tok.type==='rparen'){
-        while (ops.length&&ops[ops.length-1].type!=='lparen') output.push(ops.pop());
+        while (ops.length && ops[ops.length-1].type !== 'lparen') output.push(ops.pop());
         if (ops.length) ops.pop();
-        if (ops.length&&ops[ops.length-1].type==='func') output.push(ops.pop());
+        if (ops.length && ops[ops.length-1].type === 'func') output.push(ops.pop());
       }
     }
     while (ops.length) output.push(ops.pop());
     return output;
   }
+
+  function toRad(v){ return angleMode === 'deg' ? v * Math.PI / 180 : v; }
+  function fromRad(v){ return angleMode === 'deg' ? v * 180 / Math.PI : v; }
 
   function evalRPN(rpn){
     const stack=[];
@@ -767,23 +991,30 @@
       if (tok.type==='num'){ stack.push(tok.val); }
       else if (tok.type==='func'){
         const v=stack.pop();
-        const d=Math.PI/180;
         switch(tok.name){
           case 'sqrt':  stack.push(Math.sqrt(v)); break;
-          case 'sin':   stack.push(Math.sin(v*d)); break;
-          case 'cos':   stack.push(Math.cos(v*d)); break;
-          case 'tan':   stack.push(Math.tan(v*d)); break;
-          case 'asin':  stack.push(Math.asin(v)/d); break;
-          case 'acos':  stack.push(Math.acos(v)/d); break;
-          case 'atan':  stack.push(Math.atan(v)/d); break;
+          case 'cbrt':  stack.push(Math.cbrt(v)); break;
+          case 'sin':   stack.push(Math.sin(toRad(v))); break;
+          case 'cos':   stack.push(Math.cos(toRad(v))); break;
+          case 'tan':   stack.push(Math.tan(toRad(v))); break;
+          case 'asin':  stack.push(fromRad(Math.asin(v))); break;
+          case 'acos':  stack.push(fromRad(Math.acos(v))); break;
+          case 'atan':  stack.push(fromRad(Math.atan(v))); break;
+          case 'sinh':  stack.push(Math.sinh(v)); break;
+          case 'cosh':  stack.push(Math.cosh(v)); break;
+          case 'tanh':  stack.push(Math.tanh(v)); break;
+          case 'asinh': stack.push(Math.asinh(v)); break;
+          case 'acosh': stack.push(Math.acosh(v)); break;
+          case 'atanh': stack.push(Math.atanh(v)); break;
           case 'log':   stack.push(Math.log10(v)); break;
+          case 'log2':  stack.push(Math.log2(v)); break;
           case 'ln':    stack.push(Math.log(v)); break;
+          case 'exp':   stack.push(Math.exp(v)); break;
           case 'abs':   stack.push(Math.abs(v)); break;
           case 'fact':  { let r=1,n=Math.round(v); for(let k=2;k<=n;k++) r*=k; stack.push(r); } break;
           default: stack.push(v);
         }
-      }
-      else if (tok.type==='op'){
+      } else if (tok.type==='op'){
         const b=stack.pop(), a=stack.pop();
         switch(tok.op){
           case '+': stack.push(a+b); break;
@@ -804,7 +1035,7 @@
       const fixed=[];
       for (let i=0;i<tokens.length;i++){
         const tok=tokens[i];
-        if (tok.type==='op'&&tok.op==='−'){
+        if (tok.type==='op' && tok.op==='−'){
           const prev=fixed[fixed.length-1];
           if (!prev||prev.type==='lparen'||prev.type==='op') fixed.push({type:'num',val:0});
         }
@@ -817,95 +1048,213 @@
   function formatNumber(num){
     if (num===null||num===undefined) return 'Error';
     if (!isFinite(num)) return num>0?'Error: ÷0':'Error';
-    return (Math.round(num*1e10)/1e10).toString().replace('.',',');
+    const rounded = Math.round(num*1e10)/1e10;
+    // Use scientific notation for very large/small numbers
+    if (Math.abs(rounded) >= 1e12 || (Math.abs(rounded) < 1e-7 && rounded !== 0)){
+      return rounded.toExponential(6).replace('e+','×10^').replace('e-','×10^−').replace('.',',');
+    }
+    return rounded.toString().replace('.',',');
   }
+
+  // ── History ───────────────────────────────────────────────────────────────
+
+  function addHistory(expr, result){
+    history.unshift({ expr, result });
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const inner = document.getElementById('history-inner');
+    const empty = document.getElementById('history-empty');
+    if (history.length === 0){
+      empty.style.display = 'block';
+      // remove old items
+      inner.querySelectorAll('.history-item,.history-header').forEach(el=>el.remove());
+      return;
+    }
+    empty.style.display = 'none';
+    inner.querySelectorAll('.history-item,.history-header').forEach(el=>el.remove());
+
+    // header
+    const hdr = document.createElement('div');
+    hdr.className = 'history-header';
+    hdr.innerHTML = `<span style="font-size:11px;color:var(--dim);font-weight:600;">Riwayat</span><button class="btn-clear-hist" id="btn-clear-history">Hapus</button>`;
+    inner.prepend(hdr);
+    document.getElementById('btn-clear-history').addEventListener('click', (e) => {
+      e.stopPropagation();
+      history = [];
+      renderHistory();
+    });
+
+    history.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `<span class="history-expr">${item.expr} =</span><span class="history-result">${item.result}</span>`;
+      div.addEventListener('click', () => {
+        expression = item.result.replace(',','').replace(/×10\^[−-]?\d+/,''); // simplified recall
+        // better: recall the numeric result
+        expression = item.result;
+        cursor = expression.length;
+        justEvaluated = false;
+        hideCaret();
+        expressionEl.textContent = item.expr + ' =';
+        beforeEl.textContent = '';
+        afterEl.textContent = item.result;
+        justEvaluated = true;
+      });
+      inner.appendChild(div);
+    });
+  }
+
+  // ── Equals ────────────────────────────────────────────────────────────────
 
   function equals(){
-    if (expression==='') return;
-    const opens=(expression.match(/\(/g)||[]).length;
-    const closes=(expression.match(/\)/g)||[]).length;
-    let expr=expression;
-    for (let i=0;i<opens-closes;i++) expr+=')';
-    const result=evaluate(expr);
-    const resultStr=formatNumber(result);
-    expressionEl.textContent=expression+' =';
-    expression=resultStr.includes('Error')?'':resultStr;
-    cursor=expression.length;
-    justEvaluated=true;
+    if (expression === '') return;
+    const opens  = (expression.match(/\(/g)||[]).length;
+    const closes = (expression.match(/\)/g)||[]).length;
+    let expr = expression;
+    for (let i=0;i<opens-closes;i++) expr += ')';
+    const result    = evaluate(expr);
+    const resultStr = formatNumber(result);
+    const exprLabel = expression + (opens > closes ? ')'.repeat(opens-closes) : '');
+    expressionEl.textContent = exprLabel + ' =';
+    if (!resultStr.includes('Error')){
+      addHistory(exprLabel, resultStr);
+    }
+    expression = resultStr.includes('Error') ? '' : resultStr;
+    cursor = expression.length;
+    justEvaluated = true;
     hideCaret();
-    beforeEl.textContent='';
-    afterEl.textContent=resultStr;
+    beforeEl.textContent = '';
+    afterEl.textContent  = resultStr;
   }
 
-  // ── Event wiring ──────────────────────────────────────────────────────────
+  // ── Toggle controls ───────────────────────────────────────────────────────
 
-  function handleKeyAction(btn, e){
-    e.stopPropagation();
-    e.preventDefault();
-    const action=btn.dataset.action, value=btn.dataset.value;
-    if      (action==='digit')    inputDigit(value);
-    else if (action==='sci-func')  inputSciFunc(value);
-    else if (action==='sci-const') inputSciConst(value);
-    else if (action==='decimal')  inputDecimal();
-    else if (action==='clear')    clearAll();
-    else if (action==='percent')  applyPercent();
-    else if (action==='operator') inputOperator(value);
-    else if (action==='paren')    inputParen(value);
-    else if (action==='sqrt')     inputSqrt();
-    else if (action==='equals')   equals();
-  }
+  // DEG / RAD
+  const btnDegRad = document.getElementById('btn-deg-rad');
+  btnDegRad.addEventListener('touchstart', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    angleMode = angleMode === 'deg' ? 'rad' : 'deg';
+    badgeAngle.textContent = angleMode.toUpperCase();
+    badgeAngle.className   = 'badge ' + angleMode;
+    btnDegRad.textContent  = angleMode.toUpperCase();
+    btnDegRad.classList.toggle('rad-mode', angleMode === 'rad');
+  }, { passive:false });
+  btnDegRad.addEventListener('click', e => e.stopPropagation());
 
-  const bsBtn = document.getElementById('btn-backspace');
-  bsBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); backspace(); }, { passive:false });
-  bsBtn.addEventListener('click', (e) => { e.stopPropagation(); }); // absorb ghost click
+  // 2nd
+  const btnSecond = document.getElementById('btn-second');
+  btnSecond.addEventListener('touchstart', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    secondMode = !secondMode;
+    btnSecond.classList.toggle('active', secondMode);
+    badgeSecond.classList.toggle('active', secondMode);
+    document.querySelectorAll('.key.sci').forEach(btn => btn.classList.toggle('second-active', secondMode));
+  }, { passive:false });
+  btnSecond.addEventListener('click', e => e.stopPropagation());
 
-  document.querySelectorAll('.key').forEach((btn) => {
-    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
-    btn.addEventListener('click', (e) => { e.stopPropagation(); }); // absorb ghost click
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key>='0'&&e.key<='9') inputDigit(e.key);
-    else if (e.key==='.'||e.key===',') inputDecimal();
-    else if (e.key==='+') inputOperator('+');
-    else if (e.key==='-') inputOperator('−');
-    else if (e.key==='*') inputOperator('×');
-    else if (e.key==='/'){ e.preventDefault(); inputOperator('÷'); }
-    else if (e.key==='^') inputOperator('^');
-    else if (e.key==='(') inputParen('(');
-    else if (e.key===')') inputParen(')');
-    else if (e.key==='Enter'||e.key==='=') equals();
-    else if (e.key==='Backspace') backspace();
-    else if (e.key==='Escape') clearAll();
-    else if (e.key==='%') applyPercent();
-    else if (e.key==='ArrowLeft'&&caretVisible){ cursor=Math.max(0,cursor-1); updateDisplay(true); }
-    else if (e.key==='ArrowRight'&&caretVisible){ cursor=Math.min(expression.length,cursor+1); updateDisplay(true); }
-  });
-
-  // ── Sci toggle ───────────────────────────────────────────────────────────
+  // SCI toggle
   const btnSci  = document.getElementById('btn-sci');
   const sciKeys = document.getElementById('sci-keys');
   let sciOpen   = false;
-
   function toggleSci(e){
     if(e){ e.stopPropagation(); e.preventDefault(); }
     sciOpen = !sciOpen;
     sciKeys.classList.toggle('open', sciOpen);
     btnSci.classList.toggle('active', sciOpen);
-    btnSci.textContent = sciOpen ? 'SCI ✕' : 'SCI';
   }
-
   btnSci.addEventListener('touchstart', toggleSci, { passive:false });
-  btnSci.addEventListener('click', (e) => e.stopPropagation());
+  btnSci.addEventListener('click', e => e.stopPropagation());
 
-  // Wire sci buttons
-  document.querySelectorAll('.key.sci').forEach((btn) => {
-    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
-    btn.addEventListener('click', (e) => e.stopPropagation());
+  // History toggle
+  const btnHist     = document.getElementById('btn-hist');
+  const histPanel   = document.getElementById('history-panel');
+  let histOpen = false;
+  btnHist.addEventListener('touchstart', (e) => {
+    e.stopPropagation(); e.preventDefault();
+    histOpen = !histOpen;
+    histPanel.classList.toggle('open', histOpen);
+    btnHist.classList.toggle('active', histOpen);
+  }, { passive:false });
+  btnHist.addEventListener('click', e => e.stopPropagation());
+
+  // Also allow mouse click for desktop
+  [btnDegRad, btnSecond, btnSci, btnHist].forEach(btn => {
+    btn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      btn.dispatchEvent(new TouchEvent('touchstart', { bubbles:true, cancelable:true }));
+    });
   });
 
+  // ── Key handler ───────────────────────────────────────────────────────────
+
+  function handleKeyAction(btn, e){
+    e.stopPropagation(); e.preventDefault();
+
+    // Resolve 2nd-mode action
+    let action = btn.dataset.action;
+    let value  = btn.dataset.value;
+
+    if (secondMode && btn.dataset.secondAction){
+      action = btn.dataset.secondAction;
+      value  = btn.dataset.secondValue;
+      // turn off 2nd mode after use (Samsung behavior)
+      secondMode = false;
+      document.getElementById('btn-second').classList.remove('active');
+      badgeSecond.classList.remove('active');
+      document.querySelectorAll('.key.sci').forEach(b => b.classList.remove('second-active'));
+    }
+
+    if      (action === 'digit')     inputDigit(value);
+    else if (action === 'sci-func')  inputSciFunc(value);
+    else if (action === 'sci-const') inputSciConst(value);
+    else if (action === 'sci-action') inputSciAction(value);
+    else if (action === 'mem')       handleMemory(value);
+    else if (action === 'decimal')   inputDecimal();
+    else if (action === 'clear')     clearAll();
+    else if (action === 'percent')   applyPercent();
+    else if (action === 'operator')  inputOperator(value);
+    else if (action === 'paren')     inputParen(value);
+    else if (action === 'sqrt')      inputSqrt();
+    else if (action === 'equals')    equals();
+  }
+
+  // Backspace
+  const bsBtn = document.getElementById('btn-backspace');
+  bsBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); backspace(); }, { passive:false });
+  bsBtn.addEventListener('click', e => e.stopPropagation());
+  bsBtn.addEventListener('mousedown', (e) => { e.preventDefault(); backspace(); });
+
+  // All keys (touch + mouse)
+  document.querySelectorAll('.key').forEach((btn) => {
+    btn.addEventListener('touchstart', (e) => handleKeyAction(btn, e), { passive:false });
+    btn.addEventListener('click', e => e.stopPropagation());
+    btn.addEventListener('mousedown', (e) => { e.preventDefault(); handleKeyAction(btn, e); });
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9') inputDigit(e.key);
+    else if (e.key === '.' || e.key === ',') inputDecimal();
+    else if (e.key === '+') inputOperator('+');
+    else if (e.key === '-') inputOperator('−');
+    else if (e.key === '*') inputOperator('×');
+    else if (e.key === '/') { e.preventDefault(); inputOperator('÷'); }
+    else if (e.key === '^') inputOperator('^');
+    else if (e.key === '(') inputParen('(');
+    else if (e.key === ')') inputParen(')');
+    else if (e.key === 'Enter' || e.key === '=') equals();
+    else if (e.key === 'Backspace') backspace();
+    else if (e.key === 'Escape') clearAll();
+    else if (e.key === '%') applyPercent();
+    else if (e.key === 'ArrowLeft'  && caretVisible){ cursor = Math.max(0, cursor-1); updateDisplay(true); }
+    else if (e.key === 'ArrowRight' && caretVisible){ cursor = Math.min(expression.length, cursor+1); updateDisplay(true); }
+  });
+
+  renderHistory();
   updateDisplay();
 </script>
-
 </body>
 </html>
