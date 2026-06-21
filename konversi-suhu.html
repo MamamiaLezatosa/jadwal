@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konversi Suhu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg: #f5f3ee;
+    --panel: #ffffff;
+    --line: #e2ddd2;
+    --ink: #1c1d1f;
+    --dim: #8a8578;
+    --accent: #2f8a5e;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html, body{
+    height:100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .card{
+    width: min(360px, 90vw);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 26px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,0.15);
+  }
+
+  h1{
+    font-size: 22px;
+    margin-bottom: 24px;
+    text-align:center;
+  }
+
+  .field{
+    margin-bottom: 16px;
+  }
+
+  .field label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform:uppercase;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+
+  .field input{
+    width:100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 18px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .field input:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Konversi Suhu</h1>
+
+  <div class="field">
+    <label for="celsius">Celsius (°C)</label>
+    <input type="number" id="celsius" placeholder="0">
+  </div>
+
+  <div class="field">
+    <label for="fahrenheit">Fahrenheit (°F)</label>
+    <input type="number" id="fahrenheit" placeholder="32">
+  </div>
+
+  <div class="field">
+    <label for="kelvin">Kelvin (K)</label>
+    <input type="number" id="kelvin" placeholder="273.15">
+  </div>
+</div>
+
+<script>
+  const c = document.getElementById('celsius');
+  const f = document.getElementById('fahrenheit');
+  const k = document.getElementById('kelvin');
+
+  function fromCelsius(val){
+    f.value = (val * 9/5 + 32).toFixed(2);
+    k.value = (val + 273.15).toFixed(2);
+  }
+  function fromFahrenheit(val){
+    const celsius = (val - 32) * 5/9;
+    c.value = celsius.toFixed(2);
+    k.value = (celsius + 273.15).toFixed(2);
+  }
+  function fromKelvin(val){
+    const celsius = val - 273.15;
+    c.value = celsius.toFixed(2);
+    f.value = (celsius * 9/5 + 32).toFixed(2);
+  }
+
+  c.addEventListener('input', () => { if (c.value !== '') fromCelsius(parseFloat(c.value)); });
+  f.addEventListener('input', () => { if (f.value !== '') fromFahrenheit(parseFloat(f.value)); });
+  k.addEventListener('input', () => { if (k.value !== '') fromKelvin(parseFloat(k.value)); });
+</script>
+
+</body>
+</html>
