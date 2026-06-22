@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wordle</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :focus { outline: none; }
+    button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
+
+    :root {
+      --bg:           #F4F1EA;
+      --panel:        #FDFAF4;
+      --panel-border: #DDD8CC;
+      --stat-bg:      #EDE9DF;
+      --text:         #2C2416;
+      --text-muted:   #7A6E5C;
+      --btn-border:   #C8C2B2;
+      --btn-hover:    #EDE9DF;
+      --btn-hover-border: #8B7355;
+      --accent:       #6B5744;
+      --accent-text:  #FDFAF4;
+      --modal-overlay: rgba(44,36,22,0.35);
+
+      --tile-empty:   #FDFAF4;
+      --tile-empty-border: #C8C2B2;
+      --tile-filled-border: #8B7355;
+      --tile-correct: #5a8a5e;
+      --tile-present: #c4791f;
+      --tile-absent:  #8a8578;
+
+      --key-bg:       #EDE9DF;
+      --key-border:   #C8C2B2;
+      --key-text:     #2C2416;
+    }
+
+    body.dark {
+      --bg:           #1a1a2e;
+      --panel:        #16213e;
+      --panel-border: #2a2a4a;
+      --stat-bg:      #0f3460;
+      --text:         #e8e8f0;
+      --text-muted:   #8888aa;
+      --btn-border:   #3a3a5c;
+      --btn-hover:    #2a2a4a;
+      --btn-hover-border: #6c6caa;
+      --accent:       #4a4aaa;
+      --accent-text:  #ffffff;
+      --modal-overlay: rgba(0,0,0,0.55);
+
+      --tile-empty:   #16213e;
+      --tile-empty-border: #2a2a4a;
+      --tile-filled-border: #6c6caa;
+      --tile-correct: #3a7a4a;
+      --tile-present: #aa6610;
+      --tile-absent:  #3a3a5c;
+
+      --key-bg:       #0f3460;
+      --key-border:   #2a2a4a;
+      --key-text:     #e8e8f0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 2rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Top bar ── */
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 500px;
+      padding: 18px 0 14px;
+      border-bottom: 1px solid var(--panel-border);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Georgia', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    #theme-toggle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--btn-border);
+      background: var(--panel);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.2s ease, background 0.3s ease, transform 0.15s ease;
+    }
+    #theme-toggle:hover { border-color: var(--accent); }
+    #theme-toggle:active { transform: scale(0.92); }
+    #theme-toggle svg { width: 19px; height: 19px; }
+    #theme-toggle .icon-sun  { display: none; }
+    #theme-toggle .icon-moon { display: block; }
+    body.dark #theme-toggle .icon-sun  { display: block; }
+    body.dark #theme-toggle .icon-moon { display: none; }
+
+    /* ── Message ── */
+    #message {
+      height: 28px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Grid ── */
+    #grid {
+      display: grid;
+      grid-template-rows: repeat(6, 1fr);
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .grid-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .tile {
+      width: 58px;
+      height: 58px;
+      border: 2px solid var(--tile-empty-border);
+      border-radius: 6px;
+      background: var(--tile-empty);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Georgia', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--text);
+      transition: border-color 0.1s, background 0.1s;
+      user-select: none;
+      padding: 0;
+    }
+
+    .tile.filled {
+      border-color: var(--tile-filled-border);
+    }
+
+    .tile.pop {
+      animation: pop 0.1s ease;
+    }
+
+    .tile.correct  { background: var(--tile-correct); border-color: var(--tile-correct); color: #fff; }
+    .tile.present  { background: var(--tile-present); border-color: var(--tile-present); color: #fff; }
+    .tile.absent   { background: var(--tile-absent);  border-color: var(--tile-absent);  color: #fff; }
+
+    .tile.shake-row { animation: shake 0.4s ease; }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-6px); }
+      40%     { transform: translateX(6px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
+    }
+
+    /* ── Keyboard ── */
+    #keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      max-width: 500px;
+      padding: 0;
+    }
+
+    .key-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .key {
+      height: 80px;
+      flex: 1;
+      max-width: 80px;
+      min-width: 0;
+      padding: 0 4px;
+      border-radius: 8px;
+      border: 1.5px solid var(--key-border);
+      background: var(--key-bg);
+      color: var(--key-text);
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      letter-spacing: 0.04em;
+      user-select: none;
+    }
+
+    .key:hover { border-color: var(--btn-hover-border); }
+    .key:active { transform: scale(0.93); }
+    .key.wide { flex: 1.6; max-width: 120px; font-size: 14px; }
+
+    .key.correct { background: var(--tile-correct); border-color: var(--tile-correct); color: #fff; }
+    .key.present { background: var(--tile-present); border-color: var(--tile-present); color: #fff; }
+    .key.absent  { background: var(--tile-absent);  border-color: var(--tile-absent);  color: #fff; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--modal-overlay);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 24px 50px -12px rgba(0,0,0,0.2);
+    }
+
+    .modal h2 {
+      font-family: 'Georgia', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .modal .answer {
+      font-family: 'Georgia', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      margin: 12px 0 20px;
+    }
+
+    .modal button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--btn-border);
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .modal button:hover { opacity: 0.88; }
+    .modal button:active { transform: scale(0.97); }
+
+    /* loading state */
+    #loading {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 40px;
+    }
+
+    @media (max-width: 400px) {
+      .tile { width: 52px; height: 52px; font-size: 1.5rem; }
+      .key  { height: 50px; min-width: 30px; font-size: 12px; }
+      .key.wide { min-width: 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="top-bar">
+  <h1>Wordle</h1>
+  <button id="theme-toggle" aria-label="Toggle theme" onclick="toggleTheme()">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </button>
+</div>
+
+<div id="loading">Loading word list…</div>
+
+<div id="game" style="display:none; width:100%; max-width:500px; display:none; flex-direction:column; align-items:center;">
+  <div id="message"></div>
+
+  <div id="grid"></div>
+
+  <div id="keyboard">
+    <div class="key-row" id="krow-1"></div>
+    <div class="key-row" id="krow-2"></div>
+    <div class="key-row" id="krow-3"></div>
+  </div>
+</div>
+
+<!-- End modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">—</h2>
+    <p id="modal-body"></p>
+    <div class="answer" id="modal-answer"></div>
+    <button onclick="newGame()">New Game</button>
+  </div>
+</div>
+
+<script>
+  // ── Theme ──────────────────────────────────────────────────
+  let dark = false;
+  function toggleTheme() {
+    dark = !dark;
+    document.body.classList.toggle('dark', dark);
+  }
+
+  // ── Word list ──────────────────────────────────────────────
+  const DICT_URL = 'https://gist.githubusercontent.com/dracos/dd0668f281e685bad51479e5acaadb93/raw/6bfa15d263d6d5b63840a8e5b64e04b382fdb079/valid-wordle-words.txt';
+
+  let wordList = [];
+
+  async function loadWords() {
+    const res  = await fetch(DICT_URL);
+    const text = await res.text();
+    wordList   = text.trim().split('\n').map(w => w.trim().toLowerCase()).filter(w => w.length === 5);
+    document.getElementById('loading').style.display = 'none';
+    const game = document.getElementById('game');
+    game.style.display = 'flex';
+    newGame();
+  }
+
+  // ── Game state ─────────────────────────────────────────────
+  let answer   = '';
+  let guesses  = [];   // array of strings
+  let current  = '';   // letters typed so far
+  let gameOver = false;
+
+  const ROWS = 6;
+  const COLS = 5;
+
+  const KEY_ROWS = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['Enter','z','x','c','v','b','n','m','⌫'],
+  ];
+
+  function newGame() {
+    answer   = wordList[Math.floor(Math.random() * wordList.length)];
+    guesses  = [];
+    current  = '';
+    gameOver = false;
+    document.getElementById('modal').classList.remove('open');
+    setMessage('');
+    buildGrid();
+    buildKeyboard();
+  }
+
+  // ── Grid ───────────────────────────────────────────────────
+  function buildGrid() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    tileCache = [];
+    for (let r = 0; r < ROWS; r++) {
+      const row = document.createElement('div');
+      row.className = 'grid-row';
+      row.id = 'row-' + r;
+      tileCache[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.id = 'tile-' + r + '-' + c;
+        tileCache[r][c] = tile;
+        row.appendChild(tile);
+      }
+      grid.appendChild(row);
+    }
+  }
+
+  // Cache of tile elements per row, built in buildGrid
+  let tileCache = [];
+
+  function renderCurrentRow() {
+    const r = guesses.length;
+    const row = tileCache[r];
+    if (!row) return;
+    for (let c = 0; c < COLS; c++) {
+      const tile = row[c];
+      const letter = current[c] || '';
+      const newText = letter.toUpperCase();
+      if (tile.textContent === newText) continue;
+      const wasEmpty = tile.textContent === '' && letter !== '';
+      tile.textContent = newText;
+      tile.className = 'tile' + (letter ? ' filled' : '');
+      if (wasEmpty) {
+        tile.classList.add('pop');
+        tile.addEventListener('animationend', () => tile.classList.remove('pop'), { once: true });
+      }
+    }
+  }
+
+  function revealRow(r, word, result) {
+    for (let c = 0; c < COLS; c++) {
+      const tile = document.getElementById(`tile-${r}-${c}`);
+      setTimeout(() => {
+        tile.classList.remove('filled');
+        tile.classList.add(result[c]);
+      }, c * 100);
+    }
+  }
+
+  function shakeRow(r) {
+    const row = document.getElementById('row-' + r);
+    row.querySelectorAll('.tile').forEach(t => {
+      t.classList.add('shake-row');
+      t.addEventListener('animationend', () => t.classList.remove('shake-row'), { once: true });
+    });
+  }
+
+  // ── Keyboard ───────────────────────────────────────────────
+  function buildKeyboard() {
+    KEY_ROWS.forEach((keys, i) => {
+      const row = document.getElementById('krow-' + (i + 1));
+      row.innerHTML = '';
+      keys.forEach(k => {
+        const btn = document.createElement('button');
+        btn.className = 'key' + (k.length > 1 ? ' wide' : '');
+        btn.textContent = k.toUpperCase() === 'ENTER' ? 'Enter' : k.toUpperCase();
+        btn.dataset.key = k;
+        btn.id = 'key-' + k;
+        let _moved = false, _sx = 0, _sy = 0;
+        btn.addEventListener('pointerdown', (e) => { _sx = e.clientX; _sy = e.clientY; _moved = false; });
+        btn.addEventListener('pointermove', (e) => { if (Math.abs(e.clientX-_sx)>8||Math.abs(e.clientY-_sy)>8) _moved=true; });
+        btn.addEventListener('pointerup',   (e) => { if (!_moved) { e.preventDefault(); handleKey(k); } });
+        row.appendChild(btn);
+      });
+    });
+  }
+
+  function updateKeyColors(word, result) {
+    const priority = { correct: 3, present: 2, absent: 1 };
+    word.split('').forEach((letter, i) => {
+      const btn = document.getElementById('key-' + letter);
+      if (!btn) return;
+      const current = btn.dataset.state || '';
+      if ((priority[result[i]] || 0) > (priority[current] || 0)) {
+        btn.classList.remove('correct', 'present', 'absent');
+        btn.classList.add(result[i]);
+        btn.dataset.state = result[i];
+      }
+    });
+  }
+
+  // ── Input ──────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Enter')     handleKey('Enter');
+    else if (e.key === 'Backspace') handleKey('⌫');
+    else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());
+  });
+
+  function handleKey(k) {
+    if (gameOver) return;
+    if (k === '⌫' || k === 'Backspace') {
+      current = current.slice(0, -1);
+      renderCurrentRow();
+    } else if (k === 'Enter') {
+      submitGuess();
+    } else if (/^[a-z]$/.test(k) && current.length < COLS) {
+      current += k;
+      renderCurrentRow();
+    }
+  }
+
+  // ── Scoring ────────────────────────────────────────────────
+  function scoreGuess(guess, answer) {
+    const result = Array(COLS).fill('absent');
+    const ansArr = answer.split('');
+    const gArr   = guess.split('');
+    const used   = Array(COLS).fill(false);
+
+    // Pass 1: correct
+    for (let i = 0; i < COLS; i++) {
+      if (gArr[i] === ansArr[i]) {
+        result[i] = 'correct';
+        used[i]   = true;
+        ansArr[i] = null;
+      }
+    }
+    // Pass 2: present
+    for (let i = 0; i < COLS; i++) {
+      if (result[i] === 'correct') continue;
+      const idx = ansArr.indexOf(gArr[i]);
+      if (idx !== -1) {
+        result[i]    = 'present';
+        ansArr[idx]  = null;
+      }
+    }
+    return result;
+  }
+
+  // ── Submit ─────────────────────────────────────────────────
+  function submitGuess() {
+    if (current.length < COLS) {
+      setMessage('Not enough letters');
+      setTimeout(() => setMessage(''), 1200);
+      shakeRow(guesses.length);
+      return;
+    }
+    if (!wordList.includes(current)) {
+      setMessage('Not in word list');
+      setTimeout(() => setMessage(''), 1200);
+      shakeRow(guesses.length);
+      return;
+    }
+
+    const word   = current;
+    const result = scoreGuess(word, answer);
+    const r      = guesses.length;
+
+    guesses.push(word);
+    current = '';
+
+    revealRow(r, word, result);
+
+    const delay = COLS * 80 + 300;
+
+    setTimeout(() => {
+      updateKeyColors(word, result);
+
+      const won = result.every(s => s === 'correct');
+      if (won) {
+        gameOver = true;
+        const msgs = ['Genius!','Magnificent!','Impressive!','Splendid!','Great!','Phew!'];
+        setTimeout(() => showModal(true, msgs[r] || 'Nice!'), 200);
+      } else if (guesses.length === ROWS) {
+        gameOver = true;
+        setTimeout(() => showModal(false, ''), 200);
+      }
+    }, delay);
+  }
+
+  // ── Modal ──────────────────────────────────────────────────
+  function showModal(won, msg) {
+    document.getElementById('modal-title').textContent   = won ? msg : 'Game Over';
+    document.getElementById('modal-body').textContent    = won
+      ? `You got it in ${guesses.length} ${guesses.length === 1 ? 'guess' : 'guesses'}!`
+      : 'Better luck next time.';
+    document.getElementById('modal-answer').textContent  = answer.toUpperCase();
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function setMessage(msg) {
+    document.getElementById('message').textContent = msg;
+  }
+
+  // ── Boot ───────────────────────────────────────────────────
+  loadWords().catch(() => {
+    document.getElementById('loading').textContent = 'Failed to load word list. Check your connection.';
+  });
+</script>
+</body>
+</html>
