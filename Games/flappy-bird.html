@@ -3,82 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Flappy Bird V2</title>
+<title>Flappy Bird</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-html,body{margin:0;height:100%;overflow:hidden;background:#000}
-body{font-family:"Press Start 2P",cursive}
-#game{display:block;width:100vw;height:100vh;image-rendering:pixelated}
-#pause{
-position:fixed;
-top:max(12px,env(safe-area-inset-top));
-right:12px;
-width:56px;
-height:56px;
-padding:0;
-border:none;
-background:none;
-z-index:1000;
-}
-#pause img{
-width:100%;
-height:100%;
-image-rendering:pixelated;
-}
+html,body{margin:0;height:100%;overflow:hidden;background:#70c5ce}
+canvas{display:block;width:100vw;height:100vh;touch-action:none}
+#pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:10}
+#pause img{width:100%;height:100%;image-rendering:pixelated}
 </style>
 </head>
 <body>
-<button id="pause"><img src="../Assets/Flappy Bird/sprites/pause.png" alt="Pause"></button>
-<canvas id="game" width="288" height="512"></canvas>
+<button id="pause"><img id="pauseIcon" src="../Assets/Flappy Bird/sprites/pause.png"></button>
+<canvas id="game"></canvas>
 <script>
-const BASE_W=288,BASE_H=512;
-const c=document.getElementById('game'),ctx=c.getContext('2d');
-function resize(){
- const topOffset = 90;
- const availableWidth = window.innerWidth;
- const availableHeight = window.innerHeight - topOffset;
+const A="../Assets/Flappy Bird/";
+const cv=document.getElementById("game"),ctx=cv.getContext("2d");
+function I(p){let i=new Image();i.src=A+"sprites/"+p;return i;}
+const bg=I("background-day.png"), base=I("base.png"), pipe=I("pipe-green.png");
+const msg=I("message.png"), over=I("gameover.png");
+const birds=[I("yellowbird-downflap.png"),I("yellowbird-midflap.png"),I("yellowbird-upflap.png")];
+const digits=[0,1,2,3,4,5,6,7,8,9].map(n=>I(n+".png"));
+const wing=new Audio(A+"audio/wing.wav"), point=new Audio(A+"audio/point.wav"), hit=new Audio(A+"audio/hit.wav");
 
- c.style.position='absolute';
- c.style.left='0px';
- c.style.top=topOffset+'px';
- c.style.width=availableWidth+'px';
- c.style.height=availableHeight+'px';
+let W,H,paused=false;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+addEventListener("resize",resize);resize();
 
- document.body.style.background='#70c5ce';
+let bird,pipes,score,state,frame,bx,best=+localStorage.fbBest||0;
+function reset(){bird={x:W*0.25,y:H*0.4,vy:0};pipes=[];score=0;frame=0;bx=0;state="ready";}
+reset();
+
+function flap(){
+ if(paused)return;
+ if(state==="dead"){reset();state="play";return;}
+ if(state==="ready")state="play";
+ bird.vy=-H*0.012;
+ wing.currentTime=0; wing.play().catch(()=>{});
 }
-addEventListener('resize',resize);resize();
+cv.addEventListener("pointerdown",flap);
 
-let paused=false;
-document.getElementById('pause').onclick=()=>{
+document.getElementById("pause").onclick=()=>{
  paused=!paused;
- document.getElementById('pause').textContent=paused?'▶':'⏸';
+ document.getElementById("pauseIcon").src=paused?
+ "../Assets/Flappy Bird/sprites/play.png":
+ "../Assets/Flappy Bird/sprites/pause.png";
 };
 
-ctx.fillStyle="#fff";
-ctx.textAlign="center";
+function spawn(){
+ const gap=H*0.22;
+ const top=80+Math.random()*(H*0.4);
+ pipes.push({x:W+80,top,gap,p:false});
+}
+
+function dead(){
+ if(state==="dead")return;
+ state="dead";
+ hit.play().catch(()=>{});
+ if(score>best){best=score;localStorage.fbBest=best;}
+}
+
+function update(){
+ if(paused)return;
+ frame++;
+ if(state!=="play")return;
+
+ bird.vy+=0.0009*H;
+ bird.y+=bird.vy;
+
+ if(frame%110===0)spawn();
+
+ for(const p of pipes){
+  p.x-=W*0.004;
+  if(!p.p && p.x+52<bird.x){p.p=true;score++;point.play().catch(()=>{});}
+  if(bird.x+20>p.x && bird.x-20<p.x+80){
+    if(bird.y-18<p.top || bird.y+18>p.top+p.gap) dead();
+  }
+ }
+
+ pipes=pipes.filter(p=>p.x>-120);
+ if(bird.y<0 || bird.y>H-120) dead();
+}
+
+function drawScore(){
+ let s=String(score), x=W/2-(s.length*24)/2;
+ for(const c of s){ctx.drawImage(digits[+c],x,40,24,36);x+=24;}
+}
 
 function draw(){
- ctx.clearRect(0,0,BASE_W,BASE_H);
- ctx.fillStyle="#70c5ce";
- ctx.fillRect(0,0,BASE_W,BASE_H);
+ ctx.clearRect(0,0,W,H);
+ ctx.drawImage(bg,0,0,W,H);
 
- ctx.fillStyle="#fff";
- ctx.font='16px "Press Start 2P"';
- ctx.fillText('FLAPPY BIRD V2',BASE_W/2,120);
-
- ctx.font='10px "Press Start 2P"';
- ctx.fillText('Drop in your asset version here',BASE_W/2,180);
-
- if(paused){
-   ctx.fillStyle='rgba(0,0,0,.5)';
-   ctx.fillRect(0,0,BASE_W,BASE_H);
-   ctx.fillStyle='#fff';
-   ctx.font='18px "Press Start 2P"';
-   ctx.fillText('PAUSED',BASE_W/2,256);
+ for(const p of pipes){
+   ctx.save();
+   ctx.translate(p.x+40,p.top);
+   ctx.scale(1,-1);
+   ctx.drawImage(pipe,-40,0,80,H);
+   ctx.restore();
+   ctx.drawImage(pipe,p.x,p.top+p.gap,80,H);
  }
- requestAnimationFrame(draw);
+
+ let b=birds[Math.floor(frame/8)%3];
+ ctx.drawImage(b,bird.x-25,bird.y-18,50,36);
+
+ ctx.drawImage(base,bx,H-112,W+10,112);
+
+ if(state==="ready") ctx.drawImage(msg,W/2-92,H*0.22);
+ if(state!=="ready") drawScore();
+
+ if(state==="dead"){
+   ctx.drawImage(over,W/2-96,H*0.25);
+ }
+
+ requestAnimationFrame(loop);
 }
-draw();
+
+function loop(){update();draw();}
+loop();
 </script>
 </body>
 </html>
