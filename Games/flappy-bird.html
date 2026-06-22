@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>Flappy Bird Enhanced</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000}
-canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-tap-highlight-color:transparent;}
+canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-tap-highlight-color:transparent;will-change:transform;}
 #pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;}
 #pause img{width:100%;height:100%;image-rendering:pixelated}
 #settings-btn{position:fixed;top:12px;left:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
@@ -152,6 +151,12 @@ const ready=img("message.png");
 const gameOver=img("gameover.png");
 const board=img("medal_scoreboard.png");
 const medals={10:img("badge_bronze.png"),50:img("badge_silver.png"),100:img("badge_gold.png"),150:img("badge_platinum.png")};
+
+// Cached natural dimensions (filled once images load, avoids per-frame property lookups)
+let _baseH=96, _baseW=336, _bgW=288, _bgH=512, _bgScale=1;
+base.onload=()=>{ _baseH=base.naturalHeight; _baseW=base.naturalWidth; };
+bgDay.onload=()=>{ _bgW=bgDay.naturalWidth; _bgH=bgDay.naturalHeight; };
+let _pipeH=320;
 let birdIdx=+(localStorage.fbBirdIdx||0);
 let pipeIdx=+(localStorage.fbPipeIdx||0);
 let birds, pipe;
@@ -182,15 +187,17 @@ const die=new Audio(A+"audio/die.wav");
 const swoosh=new Audio(A+"audio/swoosh.wav");
 
 let W,H,paused=false,frame=0,groundX=0,bgX=0,nightBlend=0;
-const DPR = window.devicePixelRatio || 1;
+// Cap DPR at 1.5 — low-end phones often report 2–3 but can't fill that many pixels at 60fps
+const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
 function resize(){
   W = innerWidth;
   H = innerHeight;
-  cv.width  = W * DPR;
-  cv.height = H * DPR;
+  cv.width  = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
   cv.style.width  = W + "px";
   cv.style.height = H + "px";
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = false;
 }
 addEventListener("resize",resize);resize();
 
@@ -254,12 +261,14 @@ document.getElementById('lb-close').addEventListener('pointerup',(e)=>{
 });
 
 function reset(){
- const baseH = base.naturalHeight || 96;
- bird={x:W*0.28,y:(H - baseH)*0.45,vy:0};
+ bird={x:W*0.28,y:(H - _baseH)*0.45,vy:0};
  pipes=[]; score=0; state='menu'; frame=0; bgX=0; nightBlend=0;
  menuTime=Date.now();
 }
 reset();
+// Initial button state (called once; subsequently called only on state transitions)
+function _initUI(){ updatePauseBtn(); }
+// Defer until updatePauseBtn is defined later in the script
 
 function flap(){
  if(rotateBlocking)return;
@@ -269,6 +278,7 @@ function flap(){
  if(state==="ready"){
    if(Date.now() - readyTime < 500) return;
    state="play";
+   updatePauseBtn();
  }
  const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
  bird.vy = -4.0 * speedMult;
@@ -291,7 +301,7 @@ cv.addEventListener("pointerup",e=>{
    if(Date.now() - menuTime < 600) return;
    const {startX,startY,startW,startH,lbX,lbY,lbW,lbH}=menuUI;
    if(x>=startX && x<=startX+startW && y>=startY && y<=startY+startH){
-     state='ready'; readyTime=Date.now(); playSound(swoosh); return;
+     state='ready'; readyTime=Date.now(); playSound(swoosh); updatePauseBtn(); return;
    }
    if(x>=lbX && x<=lbX+lbW && y>=lbY && y<=lbY+lbH){
      showLeaderboard(); return;
@@ -302,9 +312,9 @@ cv.addEventListener("pointerup",e=>{
    if(Date.now() - deadTime < 800) return;
    const {okX,okY,okW,okH,menuX,menuY,menuW,menuH}=deadUI;
    if(x>=okX && x<=okX+okW && y>=okY && y<=okY+okH){
-     playSound(swoosh); reset(); state='ready'; readyTime=Date.now();
+     playSound(swoosh); reset(); state='ready'; readyTime=Date.now(); updatePauseBtn();
    } else if(x>=menuX && x<=menuX+menuW && y>=menuY && y<=menuY+menuH){
-     playSound(swoosh); reset(); state='menu';
+     playSound(swoosh); reset(); state='menu'; updatePauseBtn();
    }
    return;
  }
@@ -349,6 +359,8 @@ settingsBtn.onclick=()=>{
 function applyCustomization(){
   birds = birdVariants[birdIdx];
   pipe  = pipeVariants[pipeIdx];
+  if(pipe.complete && pipe.naturalHeight) _pipeH=pipe.naturalHeight;
+  else pipe.onload=()=>{ _pipeH=pipe.naturalHeight||320; };
   localStorage.fbBirdIdx = birdIdx;
   localStorage.fbPipeIdx = pipeIdx;
 }
@@ -498,10 +510,9 @@ document.getElementById('confirm-no').addEventListener('pointerup',e=>{
 });
 
 function spawnPipe(){
- const baseH = base.naturalHeight || 96;
  const gap = Math.max(120, Math.min(H * 0.30, 200));
  const minTop = Math.max(60, H * 0.10);
- const maxTop = H - baseH - gap - Math.max(60, H * 0.10);
+ const maxTop = H - _baseH - gap - Math.max(60, H * 0.10);
  const top = minTop + Math.random() * Math.max(0, maxTop - minTop);
  pipes.push({x:W+90,top,gap,scored:false});
 }
@@ -514,6 +525,7 @@ function kill(){
  setTimeout(()=>playSound(die),120);
  if(score>best){best=score;localStorage.fbBest=best;isNewBest=true;}else{isNewBest=false;}
  saveScore(score);
+ updatePauseBtn();
 }
 
 function update(){
@@ -554,8 +566,7 @@ function update(){
 
    pipes=pipes.filter(p=>p.x>-80);
 
-   const baseH = base.naturalHeight || 96;
-   if(bird.y<0 || bird.y>H-baseH-14){
+   if(bird.y<0 || bird.y>H-_baseH-14){
       kill();
    }
 
@@ -563,8 +574,7 @@ function update(){
  }
 
  if(state==="ready"||state==="menu"){
-   const baseH = base.naturalHeight || 96;
-   bird.y = (H - baseH) * 0.45 + Math.sin(frame/15)*8;
+   bird.y = (H - _baseH) * 0.45 + Math.sin(frame/15)*8;
  }
  if(state==="ready"||state==="menu") groundX=(groundX-1.5)%48;
  if(state!=="dead") bgX=(bgX-0.5);
@@ -600,12 +610,10 @@ function getMedal(){
 }
 
 function draw(){
- ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
- ctx.imageSmoothingEnabled = false;
  ctx.clearRect(0,0,W,H);
  // Draw background with day→night crossfade
- const bgScale = H / (bgDay.naturalHeight || 512);
- const bgW = (bgDay.naturalWidth || 288) * bgScale;
+ const bgScale = H / _bgH;
+ const bgW = _bgW * bgScale;
  const bxOff = ((bgX % bgW) + bgW) % bgW;
  // Draw day layer
  ctx.globalAlpha = 1;
@@ -618,7 +626,7 @@ function draw(){
  }
 
  for(const p of pipes){
-   const pw=64, ph=pipe.naturalHeight||320;
+   const pw=64, ph=_pipeH;
    // Top pipe: flip so cap faces down, bottom of image at p.top
    ctx.save();
    ctx.translate(p.x+pw/2, p.top);
@@ -638,8 +646,8 @@ function draw(){
 }
  ctx.restore();
 
- const baseW = base.naturalWidth || 336;
- const baseH = base.naturalHeight || 96;
+ const baseW = _baseW;
+ const baseH = _baseH;
  for(let x=groundX;x<W+baseW;x+=baseW){
    ctx.drawImage(base,x,H-baseH,baseW,baseH);
  }
@@ -752,12 +760,15 @@ function draw(){
    }
  }
  // Pause overlay
-
- updatePauseBtn();
- requestAnimationFrame(loop);
 }
 
-function loop(){update();draw();}
+let rafId = null;
+function loop(){
+  update();
+  draw();
+  rafId = requestAnimationFrame(loop);
+}
+_initUI();
 loop();
 </script>
 </body>
