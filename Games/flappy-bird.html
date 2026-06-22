@@ -174,16 +174,23 @@ function getMedal(){
 
 function draw(){
  ctx.clearRect(0,0,W,H);
- ctx.drawImage(bg,0,0,W,H);
+ // Draw background proportionally scaled to fill height, centered
+ const bgScale = H / bg.naturalHeight || 1;
+ const bgW = (bg.naturalWidth || 288) * bgScale;
+ for (let bx = 0; bx < W; bx += bgW) {
+   ctx.drawImage(bg, bx, 0, bgW, H);
+ }
 
  for(const p of pipes){
+   const pw=52, ph=pipe.naturalHeight||320;
+   // Top pipe (flipped)
    ctx.save();
-   ctx.translate(p.x+26,p.top);
+   ctx.translate(p.x+pw/2, p.top);
    ctx.scale(1,-1);
-   ctx.drawImage(pipe,-26,0,52,H);
+   ctx.drawImage(pipe,-pw/2,0,pw,ph);
    ctx.restore();
-
-   ctx.drawImage(pipe,p.x,p.top+p.gap,52,H);
+   // Bottom pipe
+   ctx.drawImage(pipe,p.x,p.top+p.gap,pw,ph);
  }
 
  const birdFrame=birds[Math.floor(frame/8)%3];
@@ -195,8 +202,10 @@ function draw(){
 }
  ctx.restore();
 
- for(let x=groundX;x<W+48;x+=48){
-   ctx.drawImage(base,x,H-96,48,96);
+ const baseW = base.naturalWidth || 336;
+ const baseH = base.naturalHeight || 96;
+ for(let x=groundX;x<W+baseW;x+=baseW){
+   ctx.drawImage(base,x,H-baseH,baseW,baseH);
  }
 
 
