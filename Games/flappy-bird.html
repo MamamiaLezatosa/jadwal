@@ -166,9 +166,8 @@ function drawNumber(n,y){
 }
 
 // Draw score using score-N.png, right-aligned to x
-function drawScoreNumber(n,x,y){
+function drawScoreNumber(n,x,y,size=18){
  const s=String(n);
- const size=18;
  const total=s.length*size;
  let sx=x-total;
  for(const ch of s){
@@ -242,25 +241,29 @@ function draw(){
  if(state==="dead"){
    ctx.drawImage(gameOver,W/2-96,H*0.18);
 
-   // Board dimensions (natural ~238x90, displayed scaled)
-   const bw=238, bh=90;
+   // Board centered, scaled to fit screen width nicely
+   const bw=Math.min(238, W*0.7);
+   const bh=bw*(90/238);
    const bx=W/2-bw/2;
    const by=H*0.32;
    ctx.drawImage(board,bx,by,bw,bh);
 
    const medal=getMedal();
    if(medal){
-     // Medal sits in the left pocket of the scoreboard
-     ctx.drawImage(medal,bx+16,by+18,52,52);
+     // Medal sits inside the left pocket area of the board
+     const mSize=bh*0.65;
+     ctx.drawImage(medal, bx+bw*0.12, by+(bh-mSize)/2, mSize, mSize);
    }
 
-   // Score & best: right-aligned inside the right half of the board
-   const numRight=bx+bw-12;
-   drawScoreNumber(score, numRight, by+12);
-   drawScoreNumber(best,  numRight, by+52);
+   // Score & best: right-aligned in the right half of the board
+   const numRight = bx + bw - bw*0.06;
+   const scoreY = by + bh*0.08;
+   const bestY   = by + bh*0.54;
+   drawScoreNumber(score, numRight, scoreY, bh*0.35);
+   drawScoreNumber(best,  numRight, bestY,  bh*0.35);
 
-   ctx.drawImage(okBtn,W/2-120,H*0.68,100,40);
-   ctx.drawImage(menuBtn,W/2+20,H*0.68,100,40);
+   ctx.drawImage(okBtn,  W/2-120, H*0.68, 100, 40);
+   ctx.drawImage(menuBtn,W/2+20,  H*0.68, 100, 40);
  }
  requestAnimationFrame(loop);
 }
