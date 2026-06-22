@@ -30,6 +30,14 @@ const medals={10:img("badge_bronze.png"),20:img("badge_silver.png"),30:img("badg
 const birds=[img("yellowbird-downflap.png"),img("yellowbird-midflap.png"),img("yellowbird-upflap.png")];
 const nums=[0,1,2,3,4,5,6,7,8,9].map(n=>img(n+".png"));
 
+/* V3 menu assets */
+const titleLogo=img("menu-title.png");
+const startBtn=img("start-button.png");
+const leaderBtn=img("leaderboard-button.png");
+const okBtn=img("ok.png");
+const menuBtn=img("menu.png");
+
+
 const wing=new Audio(A+"audio/wing.wav");
 const point=new Audio(A+"audio/point.wav");
 const hit=new Audio(A+"audio/hit.wav");
@@ -45,20 +53,44 @@ let bird,pipes,score,state;
 
 function reset(){
  bird={x:W*0.28,y:H*0.42,vy:0};
- pipes=[]; score=0; state="ready"; frame=0;
+ pipes=[]; score=0; state='menu'; frame=0;
 }
 reset();
 
 function flap(){
  if(paused)return;
- if(state==="dead"){swoosh.play().catch(()=>{}); reset(); return;}
+ if(state==="menu") return;
+ if(state==="dead"){swoosh.play().catch(()=>{}); reset(); state='ready'; return;}
  if(state==="ready"){state="play";}
  bird.vy=-Math.max(8,H*0.011);
  wing.currentTime=0;
  wing.play().catch(()=>{});
 }
 
-cv.addEventListener("pointerdown",flap);
+
+cv.addEventListener("pointerdown",e=>{
+ const x=e.offsetX,y=e.offsetY;
+ if(state==='menu'){
+   if(y>H*0.62 && y<H*0.78){
+      state='ready';
+      swoosh.play().catch(()=>{});
+      return;
+   }
+   if(y>H*0.78){
+      alert('High Score: '+best);
+      return;
+   }
+ }
+ if(state==='dead'){
+   if(y>H*0.68 && y<H*0.80){
+      if(x<W/2){ reset(); state='ready'; }
+      else { reset(); state='menu'; }
+      return;
+   }
+ }
+ flap();
+});
+
 addEventListener("keydown",e=>{if(e.code==="Space")flap();});
 
 document.getElementById("pause").onclick=()=>{
@@ -115,9 +147,10 @@ function update(){
    groundX=(groundX-2)%48;
  }
 
- if(state==="ready"){
+ if(state==="ready"||state==="menu"){
    bird.y += Math.sin(frame/15)*0.5;
  }
+ groundX=(groundX-1)%48;
 }
 
 function drawNumber(n,y){
@@ -163,9 +196,19 @@ function draw(){
    ctx.drawImage(base,x,H-112,48,112);
  }
 
+
+ if(state==="menu"){
+   ctx.drawImage(titleLogo,W/2-140,H*0.15,280,90);
+   const bf=birds[Math.floor(frame/8)%3];
+   ctx.drawImage(bf,W/2-24,H*0.33,48,34);
+   ctx.drawImage(startBtn,W/2-110,H*0.62,220,70);
+   ctx.drawImage(leaderBtn,W/2-110,H*0.78,220,70);
+ }
+
  if(state==="ready"){
    ctx.drawImage(ready,W/2-92,H*0.18);
  }
+
 
  if(state!=="ready"){
    drawNumber(score,40);
@@ -184,6 +227,9 @@ function draw(){
    ctx.font="20px sans-serif";
    ctx.fillText(score,W/2+55,H*0.40);
    ctx.fillText(best,W/2+55,H*0.47);
+
+   ctx.drawImage(okBtn,W/2-120,H*0.68,100,40);
+   ctx.drawImage(menuBtn,W/2+20,H*0.68,100,40);
  }
  requestAnimationFrame(loop);
 }
