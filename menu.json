@@ -11,8 +11,8 @@
       "name": "Tools",
       "path": "Tools",
       "files": [
-        { "name": "Konversi Satuan", "path": "konversi-satuan.html", "icon": "📐" },
-        { "name": "Kalkulator", "path": "kalkulator.html", "icon": "🧮" }
+        { "name": "Konversi Satuan", "path": "konversi-satuan.html", "icon": "konversi-satuan.png" },
+        { "name": "Kalkulator", "path": "kalkulator.html", "icon": "kalkulator.png" }
       ]
     }
   ]
