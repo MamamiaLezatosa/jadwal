@@ -361,6 +361,7 @@
       <div id="ms-info">
         <div class="ms-stat">💣 <span id="mine-count">10</span></div>
         <div class="ms-stat">⏱ <span id="timer-val">0</span>s</div>
+        <div class="ms-stat">🏆 <span id="best-val">—</span></div>
         <button id="flag-toggle" onclick="toggleFlag()">🚩 Bendera</button>
       </div>
       <button id="ms-restart" onclick="initGame()">🔄 Ulang</button>
@@ -398,10 +399,12 @@
 
   <script>
     // ── Theme ─────────────────────────────────────────────
-    let dark = false;
+    let dark = localStorage.getItem('ms_dark') === '1';
+    document.body.classList.toggle('dark', dark);
     function toggleTheme() {
       dark = !dark;
       document.body.classList.toggle('dark', dark);
+      localStorage.setItem('ms_dark', dark ? '1' : '0');
     }
 
     // ── Flag mode ─────────────────────────────────────────
@@ -417,13 +420,32 @@
       sedang: { rows: 16, cols: 16, mines: 40 },
     };
 
-    let cfg = { ...DIFFS.mudah };
+    // ── Best times (per "rows:cols:mines" key) ────────────
+    let bestTimes = {};
+    try { bestTimes = JSON.parse(localStorage.getItem('ms_best') || '{}'); } catch(e) {}
+
+    function getBestKey() { return `${cfg.rows}:${cfg.cols}:${cfg.mines}`; }
+
+    function updateBestDisplay() {
+      const b = bestTimes[getBestKey()];
+      document.getElementById('best-val').textContent = b != null ? b + 's' : '—';
+    }
+
+    // ── Restore last difficulty ───────────────────────────
+    let currentDiff = localStorage.getItem('ms_diff') || 'mudah';
+    let cfg = { ...(DIFFS[currentDiff] || DIFFS.mudah) };
+    if (currentDiff === 'custom') {
+      try { const sc = JSON.parse(localStorage.getItem('ms_custom_cfg')); if (sc) cfg = sc; } catch(e) {}
+    }
+
     let board = [], revealed = [], flagged = [];
     let gameOver = false, gameWon = false, firstClick = true;
     let timerInterval = null, seconds = 0;
 
     function setDiff(d) {
       cfg = { ...DIFFS[d] };
+      currentDiff = d;
+      localStorage.setItem('ms_diff', d);
       document.querySelectorAll('#ms-diff button').forEach(b => b.classList.remove('active'));
       document.getElementById('btn-' + d).classList.add('active');
       initGame();
@@ -452,6 +474,9 @@
       }
       errEl.textContent = '';
       cfg = { rows, cols, mines };
+      currentDiff = 'custom';
+      localStorage.setItem('ms_diff', 'custom');
+      localStorage.setItem('ms_custom_cfg', JSON.stringify(cfg));
       document.querySelectorAll('#ms-diff button').forEach(b => b.classList.remove('active'));
       document.getElementById('btn-custom').classList.add('active');
       closeCustom();
@@ -471,6 +496,7 @@
       revealed = Array.from({ length: cfg.rows }, () => Array(cfg.cols).fill(false));
       flagged  = Array.from({ length: cfg.rows }, () => Array(cfg.cols).fill(false));
       document.getElementById('mine-count').textContent = cfg.mines;
+      updateBestDisplay();
       renderBoard();
     }
 
@@ -615,10 +641,19 @@
           if (!revealed[r][c] && board[r][c] !== -1) return;
       gameWon = true;
       clearInterval(timerInterval);
+      const key = getBestKey();
+      if (bestTimes[key] == null || seconds < bestTimes[key]) {
+        bestTimes[key] = seconds;
+        localStorage.setItem('ms_best', JSON.stringify(bestTimes));
+        updateBestDisplay();
+      }
       document.getElementById('ms-status').textContent =
         '🎉 Selamat! Kamu menang dalam ' + seconds + ' detik!';
     }
 
+    // Restore active difficulty button
+    document.querySelectorAll('#ms-diff button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + (DIFFS[currentDiff] ? currentDiff : 'custom')).classList.add('active');
     initGame();
   </script>
 </body>
