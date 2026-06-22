@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flappy Bird Classic</title>
+<style>
+body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh}
+canvas{image-rendering:pixelated;max-width:100vw;max-height:100vh}
+</style>
+</head>
+<body>
+<canvas id="c" width="288" height="512"></canvas>
+<script>
+const ASSET="../Assets/Flappy Bird/";
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+
+function img(n){const i=new Image();i.src=ASSET+"sprites/"+n;return i;}
+const bg=img("background-day.png");
+const base=img("base.png");
+const pipe=img("pipe-green.png");
+const ready=img("message.png");
+const gameover=img("gameover.png");
+const birds=[img("yellowbird-downflap.png"),img("yellowbird-midflap.png"),img("yellowbird-upflap.png")];
+const digits=[0,1,2,3,4,5,6,7,8,9].map(n=>img(n+".png"));
+
+const wing=new Audio(ASSET+"audio/wing.wav");
+const hit=new Audio(ASSET+"audio/hit.wav");
+const point=new Audio(ASSET+"audio/point.wav");
+const dieS=new Audio(ASSET+"audio/die.wav");
+
+let bird,pipes,score,state,frame,baseX,best=+localStorage.fbBest||0;
+
+function reset(){
+ bird={x:60,y:220,vy:0};
+ pipes=[];score=0;frame=0;baseX=0;state="ready";
+}
+reset();
+
+function flap(){
+ if(state==="dead"){reset();state="play";return;}
+ if(state==="ready") state="play";
+ if(state!=="play") return;
+ bird.vy=-7.5;
+ wing.currentTime=0; wing.play().catch(()=>{});
+}
+
+addEventListener("keydown",e=>{if(e.code==="Space") flap();});
+cv.addEventListener("pointerdown",flap);
+
+function spawn(){
+ let gap=120;
+ let top=60+Math.random()*180;
+ pipes.push({x:340,top,passed:false,gap});
+}
+
+function update(){
+ frame++;
+ if(state!=="play") return;
+
+ bird.vy+=0.42;
+ bird.y+=bird.vy;
+
+ if(frame%95===0) spawn();
+
+ for(let i=pipes.length-1;i>=0;i--){
+   let p=pipes[i];
+   p.x-=2;
+
+   if(!p.passed && p.x+52<bird.x){
+      p.passed=true; score++;
+      point.currentTime=0; point.play().catch(()=>{});
+   }
+
+   if(bird.x+17>p.x && bird.x-17<p.x+52){
+      if(bird.y-12<p.top || bird.y+12>p.top+p.gap) dead();
+   }
+
+   if(p.x<-70) pipes.splice(i,1);
+ }
+
+ if(bird.y<0 || bird.y>400) dead();
+ baseX=(baseX-2)%336;
+}
+
+function dead(){
+ if(state==="dead") return;
+ state="dead";
+ hit.play().catch(()=>{});
+ setTimeout(()=>dieS.play().catch(()=>{}),100);
+ if(score>best){best=score;localStorage.fbBest=best;}
+}
+
+function drawNum(num,y){
+ let s=String(num),w=s.length*24;
+ let x=(288-w)/2;
+ for(let ch of s){
+   ctx.drawImage(digits[+ch],x,y);
+   x+=24;
+ }
+}
+
+function draw(){
+ ctx.clearRect(0,0,288,512);
+ ctx.drawImage(bg,0,0);
+
+ for(let p of pipes){
+   ctx.save();
+   ctx.translate(p.x+26,p.top);
+   ctx.scale(1,-1);
+   ctx.drawImage(pipe,-26,0);
+   ctx.restore();
+
+   ctx.drawImage(pipe,p.x,p.top+p.gap);
+ }
+
+ let f=Math.floor(frame/8)%3;
+ ctx.save();
+ ctx.translate(bird.x,bird.y);
+ ctx.rotate(Math.max(-0.5,Math.min(1,bird.vy*0.08)));
+ ctx.drawImage(birds[f],-17,-12);
+ ctx.restore();
+
+ ctx.drawImage(base,baseX,400);
+ ctx.drawImage(base,baseX+336,400);
+
+ if(state==="ready"){
+   ctx.drawImage(ready,50,120);
+ }
+ if(state==="play" || state==="dead") drawNum(score,40);
+
+ if(state==="dead"){
+   ctx.drawImage(gameover,40,120);
+   ctx.fillStyle="#fff";
+   ctx.font="16px sans-serif";
+   ctx.fillText("Best: "+best,105,220);
+   ctx.fillText("Tap to restart",90,260);
+ }
+ requestAnimationFrame(draw);
+}
+
+(function loop(){update();setTimeout(loop,1000/60)})();
+draw();
+</script>
+</body>
+</html>
