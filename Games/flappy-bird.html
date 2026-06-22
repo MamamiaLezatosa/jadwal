@@ -3,24 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>Flappy Bird Enhanced</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000}
-canvas{display:block;width:100vw;height:100vh;touch-action:none}
+canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;}
 #pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:20}
 #pause img{width:100%;height:100%;image-rendering:pixelated}
+#lb-overlay{display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;}
+#lb-overlay.show{display:flex;}
+#lb-box{background:#ded89a;border:4px solid #8b6914;border-radius:10px;padding:18px 22px;width:min(320px,82vw);font-family:'Press Start 2P',monospace,sans-serif;image-rendering:pixelated;}
+#lb-box h2{margin:0 0 14px;color:#c84c0c;font-size:13px;text-align:center;letter-spacing:1px;}
+#lb-list{list-style:none;margin:0;padding:0;}
+#lb-list li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #b8a86a;color:#5a3a00;font-size:11px;}
+#lb-list li:last-child{border-bottom:none;}
+#lb-list li.gold{color:#c84c0c;}
+#lb-close{display:block;margin:14px auto 0;background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:11px;padding:8px 22px;border-radius:5px;cursor:pointer;}
 </style>
 </head>
 <body>
 <button id="pause"><img id="pauseIcon" src="../Assets/Flappy Bird/sprites/pause.png"></button>
+<div id="lb-overlay">
+  <div id="lb-box">
+    <h2>🏆 LEADERBOARD</h2>
+    <ul id="lb-list"></ul>
+    <button id="lb-close">OK</button>
+  </div>
+</div>
 <canvas id="game"></canvas>
 <script>
 const A="../Assets/Flappy Bird/";
 const cv=document.getElementById("game"),ctx=cv.getContext("2d");
 
 function img(n){const i=new Image();i.src=A+"sprites/"+n;return i;}
-const backgrounds=[img("background-day.png"),img("background-night.png")];
-const bg=backgrounds[Math.random()<0.5?0:1];
+const bgDay=img("background-day.png");
+const bgNight=img("background-night.png");
 const base=img("base.png");
 const pipe=img("pipe-green.png");
 const ready=img("message.png");
@@ -45,17 +62,55 @@ const hit=new Audio(A+"audio/hit.wav");
 const die=new Audio(A+"audio/die.wav");
 const swoosh=new Audio(A+"audio/swoosh.wav");
 
-let W,H,paused=false,frame=0,groundX=0;
-function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+let W,H,paused=false,frame=0,groundX=0,bgX=0,nightBlend=0;
+const DPR = window.devicePixelRatio || 1;
+function resize(){
+  W = innerWidth;
+  H = innerHeight;
+  cv.width  = W * DPR;
+  cv.height = H * DPR;
+  cv.style.width  = W + "px";
+  cv.style.height = H + "px";
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
 addEventListener("resize",resize);resize();
 
 // Shared layout for dead screen buttons (set during draw, read during input)
 const deadUI = { okX:0, okY:0, okW:100, okH:40, menuX:0, menuY:0, menuW:100, menuH:40 };
+const menuUI = { startX:0, startY:0, startW:180, startH:113, lbX:0, lbY:0, lbW:180, lbH:113 };
+let deadTime = 0;
+let best=+localStorage.fbBest||0;
 let bird,pipes,score,state;
+
+// Leaderboard: store top 10 scores
+function loadScores(){
+  try{ return JSON.parse(localStorage.fbScores||'[]'); }catch(e){ return []; }
+}
+function saveScore(s){
+  if(s===0) return;
+  const scores=loadScores();
+  if(scores.length>=10 && s<=scores[scores.length-1]) return;
+  scores.push(s);
+  scores.sort((a,b)=>b-a);
+  localStorage.fbScores=JSON.stringify(scores.slice(0,10));
+}
+function showLeaderboard(){
+  const scores=loadScores();
+  const list=document.getElementById('lb-list');
+  list.innerHTML=scores.length
+    ? scores.map((s,i)=>`<li class="${i===0?'gold':''}">#${i+1} <span>${s}</span></li>`).join('')
+    : '<li style="justify-content:center;color:#888">No scores yet!</li>';
+  document.getElementById('lb-overlay').classList.add('show');
+  paused=true;
+}
+document.getElementById('lb-close').onclick=()=>{
+  document.getElementById('lb-overlay').classList.remove('show');
+  paused=false;
+};
 
 function reset(){
  bird={x:W*0.28,y:H*0.42,vy:0};
- pipes=[]; score=0; state='menu'; frame=0;
+ pipes=[]; score=0; state='menu'; frame=0; bgX=0; nightBlend=0;
 }
 reset();
 
@@ -64,7 +119,8 @@ function flap(){
  if(state==="menu") return;
  if(state==="dead") return;
  if(state==="ready"){state="play";}
- bird.vy=-6.8;
+ const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
+ bird.vy = -4.0 * speedMult;
  wing.currentTime=0;
  wing.play().catch(()=>{});
 }
@@ -73,17 +129,17 @@ function flap(){
 cv.addEventListener("pointerdown",e=>{
  const x=e.offsetX,y=e.offsetY;
  if(state==='menu'){
-   if(y>H*0.62 && y<H*0.78){
-      state='ready';
-      swoosh.play().catch(()=>{});
-      return;
+   const {startX,startY,startW,startH,lbX,lbY,lbW,lbH}=menuUI;
+   if(x>=startX && x<=startX+startW && y>=startY && y<=startY+startH){
+     state='ready'; swoosh.play().catch(()=>{}); return;
    }
-   if(y>H*0.78){
-      alert('High Score: '+best);
-      return;
+   if(x>=lbX && x<=lbX+lbW && y>=lbY && y<=lbY+lbH){
+     showLeaderboard(); return;
    }
+   return;
  }
  if(state==='dead'){
+   if(Date.now() - deadTime < 800) return;
    const {okX,okY,okW,okH,menuX,menuY,menuW,menuH}=deadUI;
    if(x>=okX && x<=okX+okW && y>=okY && y<=okY+okH){
      swoosh.play().catch(()=>{}); reset(); state='ready';
@@ -97,23 +153,42 @@ cv.addEventListener("pointerdown",e=>{
 
 addEventListener("keydown",e=>{if(e.code==="Space")flap();});
 
+const pauseBtn = document.getElementById("pause");
+function updatePauseBtn(){
+  pauseBtn.style.display = (state==="play"||state==="ready") ? "block" : "none";
+}
+
 document.getElementById("pause").onclick=()=>{
- paused=!paused;
- document.getElementById("pauseIcon").src=A+"sprites/"+(paused?"play.png":"pause.png");
+ if(state==="play"){
+   paused=!paused;
+   if(paused){
+     document.getElementById("pauseIcon").src=A+"sprites/play.png";
+   } else {
+     state="ready";
+     document.getElementById("pauseIcon").src=A+"sprites/pause.png";
+   }
+ } else if(state==="ready"){
+   paused=false;
+   document.getElementById("pauseIcon").src=A+"sprites/pause.png";
+ }
 };
 
 function spawnPipe(){
  const gap=Math.max(180,H*0.24);
- const top=60+Math.random()*(H*0.45);
+ const minTop = 120;
+ const maxTop = H*0.50;
+ const top=minTop+Math.random()*(maxTop-minTop);
  pipes.push({x:W+90,top,gap,scored:false});
 }
 
 function kill(){
  if(state==="dead")return;
  state="dead";
+ deadTime = Date.now();
  hit.play().catch(()=>{});
  setTimeout(()=>die.play().catch(()=>{}),120);
  if(score>best){best=score;localStorage.fbBest=best;}
+ saveScore(score);
 }
 
 function update(){
@@ -121,22 +196,31 @@ function update(){
  frame++;
 
  if(state==="play"){
-   bird.vy+=0.24;
-   bird.vy=Math.min(bird.vy,6);
-   bird.y+=bird.vy;
+   // Speed multiplier: smoothly increases with score
+   // 0→1 at score 0→50 (5%), 50→100 (+10%), 100→150 (+15%)
+   const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
 
-   if(frame%95===0)spawnPipe();
+   bird.vy += 0.14 * speedMult;
+   bird.vy = Math.min(bird.vy, 4.0 * speedMult);
+   bird.y += bird.vy;
+
+   // Day/night cycle: alternates every 60 score points, stays at each state long, transitions fast
+   const cycle = Math.floor(score / 60);
+   const targetNight = (cycle % 2 === 1) ? 1 : 0;
+   nightBlend += (targetNight - nightBlend) * 0.04;
+
+   if(frame%140===0)spawnPipe();
 
    for(const p of pipes){
-      p.x-=3.2;
+      p.x -= 2.5 * speedMult;
 
-      if(!p.scored && p.x+52<bird.x){
+      if(!p.scored && p.x+64<bird.x){
         p.scored=true;
         score++;
         point.play().catch(()=>{});
       }
 
-      if(bird.x+18>p.x && bird.x-18<p.x+52){
+      if(bird.x+18>p.x && bird.x-18<p.x+64){
          if(bird.y-14<p.top || bird.y+14>p.top+p.gap){
            kill();
          }
@@ -149,13 +233,14 @@ function update(){
       kill();
    }
 
-   groundX=(groundX-2)%48;
+   groundX=(groundX - 2.5 * speedMult)%48;
  }
 
  if(state==="ready"||state==="menu"){
    bird.y += Math.sin(frame/15)*0.5;
  }
- groundX=(groundX-1)%48;
+ if(state!=="dead") groundX=(groundX-0)%48;
+ if(state!=="dead") bgX=(bgX-0.5);
 }
 
 function drawNumber(n,y){
@@ -188,21 +273,29 @@ function getMedal(){
 }
 
 function draw(){
+ ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+ ctx.imageSmoothingEnabled = false;
  ctx.clearRect(0,0,W,H);
- // Draw background proportionally scaled to fill height, centered
- const bgScale = H / bg.naturalHeight || 1;
- const bgW = (bg.naturalWidth || 288) * bgScale;
- for (let bx = 0; bx < W; bx += bgW) {
-   ctx.drawImage(bg, bx, 0, bgW, H);
+ // Draw background with day→night crossfade
+ const bgScale = H / (bgDay.naturalHeight || 512);
+ const bgW = (bgDay.naturalWidth || 288) * bgScale;
+ // Draw day layer
+ ctx.globalAlpha = 1;
+ for(let bx=0;bx<W;bx+=bgW) ctx.drawImage(bgDay, bx, 0, bgW, H);
+ // Blend night layer on top
+ if(nightBlend > 0){
+   ctx.globalAlpha = nightBlend;
+   for(let bx=0;bx<W;bx+=bgW) ctx.drawImage(bgNight, bx, 0, bgW, H);
+   ctx.globalAlpha = 1;
  }
 
  for(const p of pipes){
-   const pw=52, ph=pipe.naturalHeight||320;
-   // Top pipe (flipped)
+   const pw=64, ph=pipe.naturalHeight||320;
+   // Top pipe: flip so cap faces down, bottom of image at p.top
    ctx.save();
    ctx.translate(p.x+pw/2, p.top);
    ctx.scale(1,-1);
-   ctx.drawImage(pipe,-pw/2,0,pw,ph);
+   ctx.drawImage(pipe,-pw/2,0,pw,Math.max(ph, p.top+ph));
    ctx.restore();
    // Bottom pipe
    ctx.drawImage(pipe,p.x,p.top+p.gap,pw,ph);
@@ -228,8 +321,12 @@ function draw(){
    ctx.drawImage(titleLogo,W/2-120,H*0.15,240,72);
    const bf=birds[Math.floor(frame/8)%3];
    ctx.drawImage(bf,W/2-24,H*0.33,48,34);
-   ctx.drawImage(startBtn,W/2-90,H*0.62,180,58);
-   ctx.drawImage(leaderBtn,W/2-90,H*0.78,180,58);
+   const btnW=135, btnH=85;
+   const startY=H*0.52, lbY=startY+btnH+12;
+   menuUI.startX=W/2-btnW/2; menuUI.startY=startY; menuUI.startW=btnW; menuUI.startH=btnH;
+   menuUI.lbX=W/2-btnW/2;    menuUI.lbY=lbY;       menuUI.lbW=btnW;   menuUI.lbH=btnH;
+   ctx.drawImage(startBtn, W/2-btnW/2, startY, btnW, btnH);
+   ctx.drawImage(leaderBtn,W/2-btnW/2, lbY,    btnW, btnH);
  }
 
  if(state==="ready"){
@@ -244,24 +341,24 @@ function draw(){
  if(state==="dead"){
    ctx.drawImage(gameOver,W/2-96,H*0.18);
 
-   // Board: use a generous fixed size relative to screen
-   const bw = Math.min(W*0.82, 320);
-   const bh = bw * (90/238);  // preserve aspect ratio
+   // Board: bigger and slightly taller than natural aspect ratio
+   const bw = Math.min(W*0.88, 360);
+   const bh = bw * (110/238);  // slightly taller than natural 90/238
    const bx = W/2 - bw/2;
-   const by = H*0.34;
+   const by = H*0.32;
    ctx.drawImage(board, bx, by, bw, bh);
 
    const medal = getMedal();
    if(medal){
-     const mSize = bh * 0.72;
-     ctx.drawImage(medal, bx + bw*0.10, by + (bh - mSize)/2, mSize, mSize);
+     const mSize = bh * 0.406;
+     ctx.drawImage(medal, bx + bw*0.13 - 3, by + (bh - mSize)/2 + bh*0.08 - 3, mSize, mSize);
    }
 
-   // Score digits: small fixed size, right-aligned inside right column
-   const digitH = 14;
-   const numRight = bx + bw*0.94;
-   drawScoreNumber(score, numRight, by + bh*0.12, digitH);
-   drawScoreNumber(best,  numRight, by + bh*0.58, digitH);
+   // Score digits: fit inside right column with padding
+   const digitH = 16;
+   const numRight = bx + bw - bw*0.12;
+   drawScoreNumber(score, numRight, by + bh*0.28, digitH);
+   drawScoreNumber(best,  numRight, by + bh*0.65, digitH);
 
    // Buttons
    const btnY  = by + bh + 16;
@@ -274,6 +371,24 @@ function draw(){
    ctx.drawImage(okBtn,   okX,   btnY, btnW, btnH);
    ctx.drawImage(menuBtn, menuX, btnY, btnW, btnH);
  }
+ // Pause overlay
+ if(paused){
+   ctx.fillStyle="rgba(0,0,0,0.55)";
+   ctx.fillRect(0,0,W,H);
+   ctx.font="bold 20px 'Press Start 2P', monospace";
+   ctx.textAlign="center";
+   ctx.fillStyle="#fff";
+   ctx.shadowColor="#f5a623";
+   ctx.shadowBlur=12;
+   ctx.fillText("PAUSED",W/2,H/2-14);
+   ctx.font="11px 'Press Start 2P', monospace";
+   ctx.fillStyle="#f5d76e";
+   ctx.fillText("tap play to resume",W/2,H/2+18);
+   ctx.shadowBlur=0;
+   ctx.textAlign="left";
+ }
+
+ updatePauseBtn();
  requestAnimationFrame(loop);
 }
 
