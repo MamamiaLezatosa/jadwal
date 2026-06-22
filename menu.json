@@ -6,7 +6,8 @@
       "files": [
         { "name": "Minesweeper", "path": "minesweeper.html", "icon": "minesweeper.png" },
         { "name": "Worlde", "path": "wordle.html", "icon": "wordle.png" },
-        { "name": "Snake", "path": "snake.html", "icon": "snake.png" }
+        { "name": "Snake", "path": "snake.html", "icon": "snake.png" },
+        { "name": "Flappy Bird", "path": "flappy-bird.html", "icon": "flappy-bird.png" }
       ]
     },
     {
