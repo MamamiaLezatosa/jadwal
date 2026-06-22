@@ -49,7 +49,8 @@ let W,H,paused=false,frame=0,groundX=0;
 function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
 addEventListener("resize",resize);resize();
 
-let best=+localStorage.fbBest||0;
+// Shared layout for dead screen buttons (set during draw, read during input)
+const deadUI = { okX:0, okY:0, okW:100, okH:40, menuX:0, menuY:0, menuW:100, menuH:40 };
 let bird,pipes,score,state;
 
 function reset(){
@@ -61,7 +62,7 @@ reset();
 function flap(){
  if(paused)return;
  if(state==="menu") return;
- if(state==="dead"){swoosh.play().catch(()=>{}); reset(); state='ready'; return;}
+ if(state==="dead") return;
  if(state==="ready"){state="play";}
  bird.vy=-6.8;
  wing.currentTime=0;
@@ -83,11 +84,13 @@ cv.addEventListener("pointerdown",e=>{
    }
  }
  if(state==='dead'){
-   if(y>H*0.68 && y<H*0.80){
-      if(x<W/2){ reset(); state='ready'; }
-      else { reset(); state='menu'; }
-      return;
+   const {okX,okY,okW,okH,menuX,menuY,menuW,menuH}=deadUI;
+   if(x>=okX && x<=okX+okW && y>=okY && y<=okY+okH){
+     swoosh.play().catch(()=>{}); reset(); state='ready';
+   } else if(x>=menuX && x<=menuX+menuW && y>=menuY && y<=menuY+menuH){
+     swoosh.play().catch(()=>{}); reset(); state='menu';
    }
+   return;
  }
  flap();
 });
@@ -241,29 +244,35 @@ function draw(){
  if(state==="dead"){
    ctx.drawImage(gameOver,W/2-96,H*0.18);
 
-   // Board centered, scaled to fit screen width nicely
-   const bw=Math.min(238, W*0.7);
-   const bh=bw*(90/238);
-   const bx=W/2-bw/2;
-   const by=H*0.32;
-   ctx.drawImage(board,bx,by,bw,bh);
+   // Board: use a generous fixed size relative to screen
+   const bw = Math.min(W*0.82, 320);
+   const bh = bw * (90/238);  // preserve aspect ratio
+   const bx = W/2 - bw/2;
+   const by = H*0.34;
+   ctx.drawImage(board, bx, by, bw, bh);
 
-   const medal=getMedal();
+   const medal = getMedal();
    if(medal){
-     // Medal sits inside the left pocket area of the board
-     const mSize=bh*0.65;
-     ctx.drawImage(medal, bx+bw*0.12, by+(bh-mSize)/2, mSize, mSize);
+     const mSize = bh * 0.72;
+     ctx.drawImage(medal, bx + bw*0.10, by + (bh - mSize)/2, mSize, mSize);
    }
 
-   // Score & best: right-aligned in the right half of the board
-   const numRight = bx + bw - bw*0.06;
-   const scoreY = by + bh*0.08;
-   const bestY   = by + bh*0.54;
-   drawScoreNumber(score, numRight, scoreY, bh*0.35);
-   drawScoreNumber(best,  numRight, bestY,  bh*0.35);
+   // Score digits: small fixed size, right-aligned inside right column
+   const digitH = 14;
+   const numRight = bx + bw*0.94;
+   drawScoreNumber(score, numRight, by + bh*0.12, digitH);
+   drawScoreNumber(best,  numRight, by + bh*0.58, digitH);
 
-   ctx.drawImage(okBtn,  W/2-120, H*0.68, 100, 40);
-   ctx.drawImage(menuBtn,W/2+20,  H*0.68, 100, 40);
+   // Buttons
+   const btnY  = by + bh + 16;
+   const btnH  = 44;
+   const btnW  = 110;
+   const okX   = W/2 - btnW - 10;
+   const menuX = W/2 + 10;
+   deadUI.okX=okX; deadUI.okY=btnY; deadUI.okW=btnW; deadUI.okH=btnH;
+   deadUI.menuX=menuX; deadUI.menuY=btnY; deadUI.menuW=btnW; deadUI.menuH=btnH;
+   ctx.drawImage(okBtn,   okX,   btnY, btnW, btnH);
+   ctx.drawImage(menuBtn, menuX, btnY, btnW, btnH);
  }
  requestAnimationFrame(loop);
 }
