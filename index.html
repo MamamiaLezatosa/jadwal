@@ -333,6 +333,65 @@
   .drawer-crumb svg{ width: 15px; height: 15px; }
   .drawer-crumb.hidden{ display:none; }
 
+  /* SEARCH BAR */
+  .drawer-search{
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  .drawer-search input{
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .drawer-search input::placeholder{ color: var(--dim); }
+  .drawer-search input:focus{ border-color: var(--amber); outline: none; }
+
+  .drawer-search .search-icon{
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dim);
+    pointer-events: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .drawer-search .search-clear{
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    padding: 2px;
+    display: none;
+    line-height: 1;
+    border-radius: 4px;
+  }
+
+  .drawer-search .search-clear:hover{ color: var(--ink); }
+  .drawer-search .search-clear svg{ width: 13px; height: 13px; }
+
+  .search-folder-label{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 2px 4px 6px;
+  }
+
   .drawer-list{
     display:flex;
     flex-direction:column;
@@ -922,6 +981,14 @@
       Kembali
     </button>
 
+    <div class="drawer-search" id="drawerSearch">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="drawerSearchInput" placeholder="Cari…" autocomplete="off" spellcheck="false">
+      <button class="search-clear" id="drawerSearchClear" type="button" aria-label="Hapus pencarian">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
     <div class="drawer-list" id="drawerList"></div>
 
     <div class="drawer-footnote">Daftar item diatur lewat <strong>menu.json</strong> di root repo.</div>
@@ -1207,6 +1274,10 @@
   let menuLoadError = false;
   let currentFolder = null; // null = root
 
+  const drawerSearch = document.getElementById('drawerSearch');
+  const drawerSearchInput = document.getElementById('drawerSearchInput');
+  const drawerSearchClear = document.getElementById('drawerSearchClear');
+
   async function loadMenu(){
     try {
       const res = await fetch('menu.json', { cache: 'no-store' });
@@ -1223,6 +1294,7 @@
     currentFolder = null;
     drawerTitle.textContent = 'Menu';
     drawerBack.classList.add('hidden');
+    drawerSearch.style.display = '';
     drawerList.innerHTML = '';
 
     if (menuLoadError){
@@ -1254,6 +1326,7 @@
     currentFolder = folder;
     drawerTitle.textContent = folder.name || folder.path;
     drawerBack.classList.remove('hidden');
+    drawerSearch.style.display = 'none';
     drawerList.innerHTML = '';
 
     const files = folder.files || [];
@@ -1297,6 +1370,8 @@
 
   function openDrawer(){
     drawerOverlay.classList.add('is-open');
+    drawerSearchInput.value = '';
+    drawerSearchClear.style.display = 'none';
     if (!menuData) {
       drawerList.innerHTML = `<div class="drawer-empty">Memuat menu…</div>`;
       loadMenu().then(renderRoot);
@@ -1321,9 +1396,82 @@
     playerFrame.src = 'about:blank';
   }
 
+  function renderSearchResults(query){
+    drawerList.innerHTML = '';
+    const q = query.trim().toLowerCase();
+    if (!q){
+      renderRoot();
+      return;
+    }
+
+    drawerTitle.textContent = 'Menu';
+    drawerBack.classList.add('hidden');
+
+    const folders = (menuData && menuData.folders) || [];
+    let totalFound = 0;
+
+    folders.forEach((folder) => {
+      const files = (folder.files || []).filter(file =>
+        (file.name || file.path).toLowerCase().includes(q)
+      );
+      if (files.length === 0) return;
+
+      // Folder label
+      const label = document.createElement('div');
+      label.className = 'search-folder-label';
+      label.textContent = folder.name || folder.path;
+      drawerList.appendChild(label);
+
+      files.forEach((file) => {
+        const btn = document.createElement('button');
+        btn.className = 'drawer-item file';
+
+        let iconHTML;
+        if (file.icon && /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(file.icon)){
+          iconHTML = `<img src="Icons/${file.icon}" alt="" class="item-icon-img">`;
+        } else if (file.icon){
+          iconHTML = `<span class="item-icon-emoji">${escapeHtml(file.icon)}</span>`;
+        } else {
+          iconHTML = fileIconSVG;
+        }
+
+        btn.innerHTML = `
+          <span class="item-icon">${iconHTML}</span>
+          <span>${escapeHtml(file.name || file.path)}</span>
+        `;
+        const fullPath = `${folder.path.replace(/\/$/, '')}/${file.path}`;
+        btn.addEventListener('click', () => openApp(file.name || file.path, fullPath));
+        drawerList.appendChild(btn);
+        totalFound++;
+      });
+    });
+
+    if (totalFound === 0){
+      drawerList.innerHTML = `<div class="drawer-empty">Tidak ada hasil untuk "<strong>${escapeHtml(query)}</strong>".</div>`;
+    }
+  }
+
+  drawerSearchInput.addEventListener('input', () => {
+    const val = drawerSearchInput.value;
+    drawerSearchClear.style.display = val ? 'block' : 'none';
+    renderSearchResults(val);
+  });
+
+  drawerSearchClear.addEventListener('click', () => {
+    drawerSearchInput.value = '';
+    drawerSearchClear.style.display = 'none';
+    renderRoot();
+    drawerSearchInput.focus();
+  });
+
+
   launcherToggle.addEventListener('click', openDrawer);
   drawerClose.addEventListener('click', closeDrawer);
-  drawerBack.addEventListener('click', renderRoot);
+  drawerBack.addEventListener('click', () => {
+    drawerSearchInput.value = '';
+    drawerSearchClear.style.display = 'none';
+    renderRoot();
+  });
 
   drawerOverlay.addEventListener('click', (e) => {
     if (e.target === drawerOverlay) closeDrawer();
