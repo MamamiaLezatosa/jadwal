@@ -29,6 +29,7 @@ const board=img("medal_scoreboard.png");
 const medals={10:img("badge_bronze.png"),20:img("badge_silver.png"),30:img("badge_gold.png"),40:img("badge_platinum.png")};
 const birds=[img("yellowbird-downflap.png"),img("yellowbird-midflap.png"),img("yellowbird-upflap.png")];
 const nums=[0,1,2,3,4,5,6,7,8,9].map(n=>img(n+".png"));
+const scoreNums=[0,1,2,3,4,5,6,7,8,9].map(n=>img("score-"+n+".png"));
 
 /* V3 menu assets */
 const titleLogo=img("menu-title.png");
@@ -164,6 +165,18 @@ function drawNumber(n,y){
  }
 }
 
+// Draw score using score-N.png, right-aligned to x
+function drawScoreNumber(n,x,y){
+ const s=String(n);
+ const size=18;
+ const total=s.length*size;
+ let sx=x-total;
+ for(const ch of s){
+   ctx.drawImage(scoreNums[+ch],sx,y,size,size*1.4);
+   sx+=size;
+ }
+}
+
 function getMedal(){
  if(score>=40)return medals[40];
  if(score>=30)return medals[30];
@@ -228,17 +241,23 @@ function draw(){
 
  if(state==="dead"){
    ctx.drawImage(gameOver,W/2-96,H*0.18);
-   ctx.drawImage(board,W/2-119,H*0.30);
+
+   // Board dimensions (natural ~238x90, displayed scaled)
+   const bw=238, bh=90;
+   const bx=W/2-bw/2;
+   const by=H*0.32;
+   ctx.drawImage(board,bx,by,bw,bh);
 
    const medal=getMedal();
    if(medal){
-      ctx.drawImage(medal,W/2-90,H*0.35,44,44);
+     // Medal sits in the left pocket of the scoreboard
+     ctx.drawImage(medal,bx+16,by+18,52,52);
    }
 
-   ctx.fillStyle="#000";
-   ctx.font="20px sans-serif";
-   ctx.fillText(score,W/2+55,H*0.40);
-   ctx.fillText(best,W/2+55,H*0.47);
+   // Score & best: right-aligned inside the right half of the board
+   const numRight=bx+bw-12;
+   drawScoreNumber(score, numRight, by+12);
+   drawScoreNumber(best,  numRight, by+52);
 
    ctx.drawImage(okBtn,W/2-120,H*0.68,100,40);
    ctx.drawImage(menuBtn,W/2+20,H*0.68,100,40);
