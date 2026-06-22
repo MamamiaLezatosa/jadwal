@@ -7,9 +7,13 @@
 <title>Flappy Bird Enhanced</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000}
-canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;}
-#pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:20}
+canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-tap-highlight-color:transparent;}
+#pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;}
 #pause img{width:100%;height:100%;image-rendering:pixelated}
+#settings-btn{position:fixed;top:12px;left:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
+#settings-btn img{width:100%;height:100%;image-rendering:pixelated}
+#customize-btn{position:fixed;top:12px;left:76px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
+#customize-btn img{width:100%;height:100%;image-rendering:pixelated}
 #lb-overlay{display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;}
 #lb-overlay.show{display:flex;}
 #lb-box{background:#ded89a;border:4px solid #8b6914;border-radius:10px;padding:18px 22px;width:min(320px,82vw);font-family:'Press Start 2P',monospace,sans-serif;image-rendering:pixelated;}
@@ -18,17 +22,122 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:
 #lb-list li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #b8a86a;color:#5a3a00;font-size:11px;}
 #lb-list li:last-child{border-bottom:none;}
 #lb-list li.gold{color:#c84c0c;}
-#lb-close{display:block;margin:14px auto 0;background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:11px;padding:8px 22px;border-radius:5px;cursor:pointer;}
+#lb-close{display:block;margin:14px auto 0;background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:11px;padding:8px 22px;border-radius:5px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;}
+#rotate-overlay{display:none;position:fixed;inset:0;z-index:100;background:#78c8f0;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+#rotate-overlay.show{display:flex;}
+#rotate-phone{font-size:72px;animation:rotateBounce 1.4s ease-in-out infinite;}
+@keyframes rotateBounce{0%,100%{transform:rotate(-20deg);}50%{transform:rotate(20deg);}}
+#rotate-text{font-family:'Press Start 2P',monospace;font-size:11px;color:#5a3a00;text-align:center;line-height:2;text-shadow:1px 1px 0 rgba(255,255,255,0.5);}
+#pause-overlay{display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,0.62);align-items:center;justify-content:center;}
+#pause-overlay.show{display:flex;}
+#pause-box{background:#ded89a;border:4px solid #8b6914;border-radius:10px;padding:20px 24px;width:min(300px,80vw);font-family:'Press Start 2P',monospace;image-rendering:pixelated;}
+#pause-box h2{margin:0 0 18px;color:#c84c0c;font-size:13px;text-align:center;letter-spacing:1px;}
+.pause-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.pause-label{color:#5a3a00;font-size:10px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:#b8a86a;border-radius:12px;border:2px solid #8b6914;cursor:pointer;transition:background .2s;}
+.toggle input:checked+.toggle-track{background:#e07020;}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;border:2px solid #8b6914;transition:left .2s;pointer-events:none;}
+.toggle input:checked~.toggle-thumb{left:22px;}
+#volume-row{overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .25s ease,margin-bottom .25s ease;margin-bottom:0;}
+#volume-row.visible{max-height:50px;opacity:1;margin-bottom:14px;}
+#volume-row .pause-label{white-space:nowrap;}
+#vol-slider{-webkit-appearance:none;appearance:none;flex:1;margin-left:12px;height:8px;border-radius:4px;background:#b8a86a;border:2px solid #8b6914;outline:none;cursor:pointer;}
+#vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#e07020;border:2px solid #8b4400;cursor:pointer;}
+#vol-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#e07020;border:2px solid #8b4400;cursor:pointer;}
+#reset-btn{display:block;width:100%;margin-top:6px;background:#c0392b;border:3px solid #7b1a10;color:#fff;font-family:inherit;font-size:10px;padding:9px 0;border-radius:5px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;letter-spacing:1px;}
+#reset-btn:active{background:#a93226;}
+#exit-btn{display:block;width:100%;margin-top:8px;background:#5a3a00;border:3px solid #3a2000;color:#fff;font-family:inherit;font-size:10px;padding:9px 0;border-radius:5px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;letter-spacing:1px;}
+#exit-btn:active{background:#3a2000;}
+#pause-resume{display:block;width:100%;margin-top:10px;background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:10px;padding:9px 0;border-radius:5px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;letter-spacing:1px;}
+#confirm-overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;}
+#confirm-overlay.show{display:flex;}
+#confirm-box{background:#ded89a;border:4px solid #8b6914;border-radius:10px;padding:20px 22px;width:min(280px,78vw);font-family:'Press Start 2P',monospace;text-align:center;}
+#confirm-box p{color:#5a3a00;font-size:10px;line-height:1.8;margin:0 0 16px;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.confirm-btns button{flex:1;padding:9px 0;border-radius:5px;font-family:inherit;font-size:10px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;}
+#confirm-yes{background:#c0392b;border:3px solid #7b1a10;color:#fff;}
+#confirm-no{background:#e07020;border:3px solid #8b4400;color:#fff;}
+#customize-overlay{display:none;position:fixed;inset:0;z-index:45;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;}
+#customize-overlay.show{display:flex;}
+#customize-box{background:#ded89a;border:4px solid #8b6914;border-radius:10px;padding:20px 22px;width:min(300px,82vw);font-family:'Press Start 2P',monospace;image-rendering:pixelated;}
+#customize-box h2{margin:0 0 16px;color:#c84c0c;font-size:13px;text-align:center;letter-spacing:1px;}
+.cust-section{margin-bottom:16px;}
+.cust-label{color:#5a3a00;font-size:9px;margin-bottom:8px;letter-spacing:1px;}
+.cust-picker{display:flex;align-items:center;justify-content:center;gap:12px;}
+.cust-arrow{background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:14px;width:32px;height:32px;border-radius:5px;cursor:pointer;outline:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;padding:0;}
+.cust-arrow:active{background:#b85c10;}
+.cust-preview{width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#b8d8f0;border:2px solid #8b6914;border-radius:6px;overflow:hidden;}
+.cust-preview canvas{width:100%;height:100%;image-rendering:pixelated;}
+#cust-close{display:block;width:100%;margin-top:4px;background:#e07020;border:3px solid #8b4400;color:#fff;font-family:inherit;font-size:10px;padding:9px 0;border-radius:5px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent;letter-spacing:1px;}
 </style>
 </head>
 <body>
 <button id="pause"><img id="pauseIcon" src="../Assets/Flappy Bird/sprites/pause.png"></button>
+<button id="settings-btn"><img src="../Assets/Flappy Bird/sprites/settings.png"></button>
+<button id="customize-btn"><img src="../Assets/Flappy Bird/sprites/customize.png"></button>
+<div id="customize-overlay">
+  <div id="customize-box">
+    <h2>CUSTOMIZE</h2>
+    <div class="cust-section">
+      <div class="cust-label">BIRD</div>
+      <div class="cust-picker">
+        <button class="cust-arrow" id="bird-prev">◀</button>
+        <div class="cust-preview"><canvas id="bird-canvas" width="64" height="64"></canvas></div>
+        <button class="cust-arrow" id="bird-next">▶</button>
+      </div>
+    </div>
+    <div class="cust-section">
+      <div class="cust-label">PIPE</div>
+      <div class="cust-picker">
+        <button class="cust-arrow" id="pipe-prev">◀</button>
+        <div class="cust-preview"><canvas id="pipe-canvas" width="64" height="64"></canvas></div>
+        <button class="cust-arrow" id="pipe-next">▶</button>
+      </div>
+    </div>
+    <button id="cust-close">✕ CLOSE</button>
+  </div>
+</div>
 <div id="lb-overlay">
   <div id="lb-box">
-    <h2>🏆 LEADERBOARD</h2>
+    <h2>🏆 HIGH SCORES</h2>
     <ul id="lb-list"></ul>
     <button id="lb-close">OK</button>
   </div>
+</div>
+<div id="pause-overlay">
+  <div id="pause-box">
+    <h2>SETTINGS</h2>
+    <div class="pause-row">
+      <span class="pause-label">SOUND FX</span>
+      <label class="toggle">
+        <input type="checkbox" id="sfx-toggle" checked>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="pause-row" id="volume-row">
+      <span class="pause-label">VOLUME</span>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="1">
+    </div>
+    <button id="reset-btn">RESET HIGH SCORE</button>
+    <button id="exit-btn">EXIT TO MENU</button>
+    <button id="pause-resume">▶ RESUME</button>
+  </div>
+</div>
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <p id="confirm-text">RESET ALL HIGH<br>SCORES?</p>
+    <div class="confirm-btns">
+      <button id="confirm-yes">YES</button>
+      <button id="confirm-no">NO</button>
+    </div>
+  </div>
+</div>
+<div id="rotate-overlay">
+  <div id="rotate-phone">📱</div>
+  <div id="rotate-text">FLIP YOUR PHONE<br>this game is portrait only</div>
 </div>
 <canvas id="game"></canvas>
 <script>
@@ -39,12 +148,13 @@ function img(n){const i=new Image();i.src=A+"sprites/"+n;return i;}
 const bgDay=img("background-day.png");
 const bgNight=img("background-night.png");
 const base=img("base.png");
-const pipe=img("pipe-green.png");
 const ready=img("message.png");
 const gameOver=img("gameover.png");
 const board=img("medal_scoreboard.png");
-const medals={10:img("badge_bronze.png"),20:img("badge_silver.png"),30:img("badge_gold.png"),40:img("badge_platinum.png")};
-const birds=[img("yellowbird-downflap.png"),img("yellowbird-midflap.png"),img("yellowbird-upflap.png")];
+const medals={10:img("badge_bronze.png"),50:img("badge_silver.png"),100:img("badge_gold.png"),150:img("badge_platinum.png")};
+let birdIdx=+(localStorage.fbBirdIdx||0);
+let pipeIdx=+(localStorage.fbPipeIdx||0);
+let birds, pipe;
 const nums=[0,1,2,3,4,5,6,7,8,9].map(n=>img(n+".png"));
 const scoreNums=[0,1,2,3,4,5,6,7,8,9].map(n=>img("score-"+n+".png"));
 
@@ -54,6 +164,15 @@ const startBtn=img("start-button.png");
 const leaderBtn=img("leaderboard-button.png");
 const okBtn=img("ok.png");
 const menuBtn=img("menu.png");
+const newBadge=img("new.png");
+
+/* Customization assets */
+const birdVariants=[
+  [img("yellowbird-downflap.png"),img("yellowbird-midflap.png"),img("yellowbird-upflap.png")],
+  [img("redbird-downflap.png"),  img("redbird-midflap.png"),  img("redbird-upflap.png")],
+  [img("bluebird-downflap.png"), img("bluebird-midflap.png"), img("bluebird-upflap.png")],
+];
+const pipeVariants=[img("pipe-green.png"),img("pipe-red.png")];
 
 
 const wing=new Audio(A+"audio/wing.wav");
@@ -75,11 +194,35 @@ function resize(){
 }
 addEventListener("resize",resize);resize();
 
+// Mobile landscape detection — only block on touch devices
+const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+const rotateOverlay = document.getElementById('rotate-overlay');
+let rotateBlocking = false;
+
+function checkOrientation(){
+  if(!isMobile) return;
+  const isLandscape = window.innerWidth > window.innerHeight;
+  if(isLandscape && !rotateBlocking){
+    rotateBlocking = true;
+    rotateOverlay.classList.add('show');
+    if(state==='play') paused = true;
+  } else if(!isLandscape && rotateBlocking){
+    rotateBlocking = false;
+    rotateOverlay.classList.remove('show');
+    // Don't auto-unpause — let player tap to resume
+  }
+}
+addEventListener('resize', checkOrientation);
+checkOrientation();
+
 // Shared layout for dead screen buttons (set during draw, read during input)
 const deadUI = { okX:0, okY:0, okW:100, okH:40, menuX:0, menuY:0, menuW:100, menuH:40 };
 const menuUI = { startX:0, startY:0, startW:180, startH:113, lbX:0, lbY:0, lbW:180, lbH:113 };
 let deadTime = 0;
+let menuTime = 0;
+let readyTime = 0;
 let best=+localStorage.fbBest||0;
+let isNewBest=false;
 let bird,pipes,score,state;
 
 // Leaderboard: store top 10 scores
@@ -103,35 +246,52 @@ function showLeaderboard(){
   document.getElementById('lb-overlay').classList.add('show');
   paused=true;
 }
-document.getElementById('lb-close').onclick=()=>{
+document.getElementById('lb-close').addEventListener('pointerup',(e)=>{
+  e.currentTarget.blur();
   document.getElementById('lb-overlay').classList.remove('show');
   paused=false;
-};
+  readyTime=Date.now();
+});
 
 function reset(){
- bird={x:W*0.28,y:H*0.42,vy:0};
+ const baseH = base.naturalHeight || 96;
+ bird={x:W*0.28,y:(H - baseH)*0.45,vy:0};
  pipes=[]; score=0; state='menu'; frame=0; bgX=0; nightBlend=0;
+ menuTime=Date.now();
 }
 reset();
 
 function flap(){
+ if(rotateBlocking)return;
  if(paused)return;
  if(state==="menu") return;
  if(state==="dead") return;
- if(state==="ready"){state="play";}
+ if(state==="ready"){
+   if(Date.now() - readyTime < 500) return;
+   state="play";
+ }
  const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
  bird.vy = -4.0 * speedMult;
  wing.currentTime=0;
- wing.play().catch(()=>{});
+ playSound(wing);
 }
 
 
+// pointerdown — flap only during active gameplay (ready / play states)
 cv.addEventListener("pointerdown",e=>{
+ if(rotateBlocking)return;
+ if(state==='ready'||state==='play') flap();
+});
+
+// pointerup — UI button taps on menu and dead screens
+cv.addEventListener("pointerup",e=>{
+ if(rotateBlocking)return;
  const x=e.offsetX,y=e.offsetY;
  if(state==='menu'){
+   if(Date.now() - menuTime < 600) return;
    const {startX,startY,startW,startH,lbX,lbY,lbW,lbH}=menuUI;
    if(x>=startX && x<=startX+startW && y>=startY && y<=startY+startH){
-     state='ready'; swoosh.play().catch(()=>{}); return;
+     state='ready'; readyTime=Date.now(); playSound(swoosh); return;
    }
    if(x>=lbX && x<=lbX+lbW && y>=lbY && y<=lbY+lbH){
      showLeaderboard(); return;
@@ -142,42 +302,207 @@ cv.addEventListener("pointerdown",e=>{
    if(Date.now() - deadTime < 800) return;
    const {okX,okY,okW,okH,menuX,menuY,menuW,menuH}=deadUI;
    if(x>=okX && x<=okX+okW && y>=okY && y<=okY+okH){
-     swoosh.play().catch(()=>{}); reset(); state='ready';
+     playSound(swoosh); reset(); state='ready'; readyTime=Date.now();
    } else if(x>=menuX && x<=menuX+menuW && y>=menuY && y<=menuY+menuH){
-     swoosh.play().catch(()=>{}); reset(); state='menu';
+     playSound(swoosh); reset(); state='menu';
    }
    return;
  }
- flap();
 });
 
 addEventListener("keydown",e=>{if(e.code==="Space")flap();});
 
 const pauseBtn = document.getElementById("pause");
+const settingsBtn = document.getElementById("settings-btn");
+const customizeBtn = document.getElementById("customize-btn");
 function updatePauseBtn(){
   pauseBtn.style.display = (state==="play"||state==="ready") ? "block" : "none";
+  settingsBtn.style.display = (state==="menu") ? "block" : "none";
+  customizeBtn.style.display = (state==="menu") ? "block" : "none";
 }
+
+let sfxEnabled = localStorage.fbSfx !== 'off';
+let sfxVolume = parseFloat(localStorage.fbVol ?? '1');
+
+const allSounds = [wing, point, hit, die, swoosh];
+function applyVolume(v){ allSounds.forEach(s=>s.volume=v); }
+applyVolume(sfxVolume);
+
+function playSound(s){ if(sfxEnabled){ s.currentTime=0; s.play().catch(()=>{}); } }
+
+const volRow = document.getElementById('volume-row');
+const volSlider = document.getElementById('vol-slider');
+volSlider.value = sfxVolume;
+function syncVolRow(){ volRow.classList.toggle('visible', sfxEnabled); }
+syncVolRow();
+
+settingsBtn.onclick=()=>{
+ document.getElementById('sfx-toggle').checked = sfxEnabled;
+ volSlider.value = sfxVolume;
+ syncVolRow();
+ document.getElementById('pause-resume').textContent = '✕ CLOSE';
+ document.getElementById('exit-btn').style.display = 'none';
+ document.getElementById('pause-overlay').classList.add('show');
+};
+
+// Customize overlay logic
+function applyCustomization(){
+  birds = birdVariants[birdIdx];
+  pipe  = pipeVariants[pipeIdx];
+  localStorage.fbBirdIdx = birdIdx;
+  localStorage.fbPipeIdx = pipeIdx;
+}
+applyCustomization();
+
+function drawBirdPreview(){
+  const cv2=document.getElementById('bird-canvas');
+  const c=cv2.getContext('2d');
+  c.imageSmoothingEnabled=false;
+  c.clearRect(0,0,64,64);
+  const src=birdVariants[birdIdx][1]; // midflap
+  const draw=()=>{
+    c.imageSmoothingEnabled=false;
+    // Natural sprite is 34px wide × 24px tall (approx); keep aspect ratio
+    const sw=src.naturalWidth||34, sh=src.naturalHeight||24;
+    const scale=Math.min(64/sw, 64/sh);
+    const dw=sw*scale, dh=sh*scale;
+    c.clearRect(0,0,64,64);
+    c.drawImage(src, (64-dw)/2, (64-dh)/2, dw, dh);
+  };
+  if(src.complete && src.naturalWidth) draw();
+  else src.onload=draw;
+}
+function drawPipePreview(){
+  const cv2=document.getElementById('pipe-canvas');
+  const c=cv2.getContext('2d');
+  c.imageSmoothingEnabled=false;
+  c.clearRect(0,0,64,64);
+  const src=pipeVariants[pipeIdx];
+  const draw=()=>{
+    c.imageSmoothingEnabled=false;
+    c.clearRect(0,0,64,64);
+    const sw=src.naturalWidth||52, sh=src.naturalHeight||320;
+    // Show only the top cap portion (roughly square: sw wide, sw tall)
+    const capH=Math.round(sw*1.2); // cap is slightly taller than wide
+    const scale=Math.min(64/sw, 64/capH);
+    const dw=sw*scale, dh=capH*scale;
+    // drawImage(src, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    c.drawImage(src, 0, 0, sw, capH, (64-dw)/2, (64-dh)/2, dw, dh);
+  };
+  if(src.complete && src.naturalWidth) draw();
+  else src.onload=draw;
+}
+
+customizeBtn.onclick=()=>{
+  drawBirdPreview();
+  drawPipePreview();
+  document.getElementById('customize-overlay').classList.add('show');
+};
+document.getElementById('cust-close').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  document.getElementById('customize-overlay').classList.remove('show');
+});
+document.getElementById('bird-prev').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  birdIdx=(birdIdx-1+birdVariants.length)%birdVariants.length;
+  applyCustomization(); drawBirdPreview();
+});
+document.getElementById('bird-next').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  birdIdx=(birdIdx+1)%birdVariants.length;
+  applyCustomization(); drawBirdPreview();
+});
+document.getElementById('pipe-prev').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  pipeIdx=(pipeIdx-1+pipeVariants.length)%pipeVariants.length;
+  applyCustomization(); drawPipePreview();
+});
+document.getElementById('pipe-next').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  pipeIdx=(pipeIdx+1)%pipeVariants.length;
+  applyCustomization(); drawPipePreview();
+});
 
 document.getElementById("pause").onclick=()=>{
  if(state==="play"){
-   paused=!paused;
-   if(paused){
-     document.getElementById("pauseIcon").src=A+"sprites/play.png";
-   } else {
-     state="ready";
-     document.getElementById("pauseIcon").src=A+"sprites/pause.png";
-   }
- } else if(state==="ready"){
-   paused=false;
+   paused=true;
    document.getElementById("pauseIcon").src=A+"sprites/pause.png";
+   document.getElementById('sfx-toggle').checked = sfxEnabled;
+   volSlider.value = sfxVolume;
+   syncVolRow();
+   document.getElementById('pause-resume').textContent = '▶ RESUME';
+   document.getElementById('exit-btn').style.display = 'block';
+   document.getElementById('pause-overlay').classList.add('show');
  }
 };
 
+document.getElementById('pause-resume').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  document.getElementById('pause-overlay').classList.remove('show');
+  if(state==="play"||state==="ready"){
+    paused=false;
+    state='ready';
+    readyTime=Date.now();
+  }
+  // if state==="menu", just close the overlay — no state change needed
+});
+
+document.getElementById('sfx-toggle').addEventListener('change',function(){
+  sfxEnabled=this.checked;
+  localStorage.fbSfx=sfxEnabled?'on':'off';
+  syncVolRow();
+});
+
+volSlider.addEventListener('input',function(){
+  sfxVolume=parseFloat(this.value);
+  localStorage.fbVol=sfxVolume;
+  applyVolume(sfxVolume);
+});
+
+let confirmAction = null;
+function showConfirm(text, onYes){
+  document.getElementById('confirm-text').innerHTML = text;
+  confirmAction = onYes;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+
+document.getElementById('reset-btn').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  showConfirm('RESET ALL HIGH<br>SCORES?', ()=>{
+    localStorage.removeItem('fbScores');
+    localStorage.removeItem('fbBest');
+    best=0; isNewBest=false;
+  });
+});
+
+document.getElementById('exit-btn').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  showConfirm('EXIT TO<br>MAIN MENU?', ()=>{
+    document.getElementById('pause-overlay').classList.remove('show');
+    paused=false;
+    reset();
+    state='menu';
+  });
+});
+
+document.getElementById('confirm-yes').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  document.getElementById('confirm-overlay').classList.remove('show');
+  if(confirmAction){ confirmAction(); confirmAction=null; }
+});
+
+document.getElementById('confirm-no').addEventListener('pointerup',e=>{
+  e.currentTarget.blur();
+  document.getElementById('confirm-overlay').classList.remove('show');
+  confirmAction=null;
+});
+
 function spawnPipe(){
- const gap=Math.max(180,H*0.24);
- const minTop = 120;
- const maxTop = H*0.50;
- const top=minTop+Math.random()*(maxTop-minTop);
+ const baseH = base.naturalHeight || 96;
+ const gap = Math.max(120, Math.min(H * 0.30, 200));
+ const minTop = Math.max(60, H * 0.10);
+ const maxTop = H - baseH - gap - Math.max(60, H * 0.10);
+ const top = minTop + Math.random() * Math.max(0, maxTop - minTop);
  pipes.push({x:W+90,top,gap,scored:false});
 }
 
@@ -185,9 +510,9 @@ function kill(){
  if(state==="dead")return;
  state="dead";
  deadTime = Date.now();
- hit.play().catch(()=>{});
- setTimeout(()=>die.play().catch(()=>{}),120);
- if(score>best){best=score;localStorage.fbBest=best;}
+ playSound(hit);
+ setTimeout(()=>playSound(die),120);
+ if(score>best){best=score;localStorage.fbBest=best;isNewBest=true;}else{isNewBest=false;}
  saveScore(score);
 }
 
@@ -217,7 +542,7 @@ function update(){
       if(!p.scored && p.x+64<bird.x){
         p.scored=true;
         score++;
-        point.play().catch(()=>{});
+        playSound(point);
       }
 
       if(bird.x+18>p.x && bird.x-18<p.x+64){
@@ -229,7 +554,8 @@ function update(){
 
    pipes=pipes.filter(p=>p.x>-80);
 
-   if(bird.y<0 || bird.y>H-120){
+   const baseH = base.naturalHeight || 96;
+   if(bird.y<0 || bird.y>H-baseH-14){
       kill();
    }
 
@@ -237,9 +563,10 @@ function update(){
  }
 
  if(state==="ready"||state==="menu"){
-   bird.y += Math.sin(frame/15)*0.5;
+   const baseH = base.naturalHeight || 96;
+   bird.y = (H - baseH) * 0.45 + Math.sin(frame/15)*8;
  }
- if(state!=="dead") groundX=(groundX-0)%48;
+ if(state==="ready"||state==="menu") groundX=(groundX-1.5)%48;
  if(state!=="dead") bgX=(bgX-0.5);
 }
 
@@ -265,9 +592,9 @@ function drawScoreNumber(n,x,y,size=18){
 }
 
 function getMedal(){
- if(score>=40)return medals[40];
- if(score>=30)return medals[30];
- if(score>=20)return medals[20];
+ if(score>=150)return medals[150];
+ if(score>=100)return medals[100];
+ if(score>=50)return medals[50];
  if(score>=10)return medals[10];
  return null;
 }
@@ -279,13 +606,14 @@ function draw(){
  // Draw background with day→night crossfade
  const bgScale = H / (bgDay.naturalHeight || 512);
  const bgW = (bgDay.naturalWidth || 288) * bgScale;
+ const bxOff = ((bgX % bgW) + bgW) % bgW;
  // Draw day layer
  ctx.globalAlpha = 1;
- for(let bx=0;bx<W;bx+=bgW) ctx.drawImage(bgDay, bx, 0, bgW, H);
+ for(let bx = bxOff - bgW; bx < W; bx += bgW) ctx.drawImage(bgDay, bx, 0, bgW, H);
  // Blend night layer on top
  if(nightBlend > 0){
    ctx.globalAlpha = nightBlend;
-   for(let bx=0;bx<W;bx+=bgW) ctx.drawImage(bgNight, bx, 0, bgW, H);
+   for(let bx = bxOff - bgW; bx < W; bx += bgW) ctx.drawImage(bgNight, bx, 0, bgW, H);
    ctx.globalAlpha = 1;
  }
 
@@ -318,19 +646,37 @@ function draw(){
 
 
  if(state==="menu"){
-   ctx.drawImage(titleLogo,W/2-120,H*0.15,240,72);
-   const bf=birds[Math.floor(frame/8)%3];
-   ctx.drawImage(bf,W/2-24,H*0.33,48,34);
-   const btnW=135, btnH=85;
-   const startY=H*0.52, lbY=startY+btnH+12;
-   menuUI.startX=W/2-btnW/2; menuUI.startY=startY; menuUI.startW=btnW; menuUI.startH=btnH;
-   menuUI.lbX=W/2-btnW/2;    menuUI.lbY=lbY;       menuUI.lbW=btnW;   menuUI.lbH=btnH;
-   ctx.drawImage(startBtn, W/2-btnW/2, startY, btnW, btnH);
-   ctx.drawImage(leaderBtn,W/2-btnW/2, lbY,    btnW, btnH);
+   const isLandscape = W > H;
+   if(isLandscape){
+     // Landscape: title left, bird center, buttons right
+     const logoW=200, logoH=60;
+     ctx.drawImage(titleLogo, W*0.10, H/2-logoH/2-20, logoW, logoH);
+     const bf=birds[Math.floor(frame/8)%3];
+     ctx.drawImage(bf,W/2-24,H/2-17,48,34);
+     const btnW=120, btnH=75, gap=10;
+     const bx=W*0.65, startY=H/2-btnH-gap/2, lbY=H/2+gap/2;
+     menuUI.startX=bx; menuUI.startY=startY; menuUI.startW=btnW; menuUI.startH=btnH;
+     menuUI.lbX=bx;    menuUI.lbY=lbY;       menuUI.lbW=btnW;   menuUI.lbH=btnH;
+     ctx.drawImage(startBtn,  bx, startY, btnW, btnH);
+     ctx.drawImage(leaderBtn, bx, lbY,    btnW, btnH);
+   } else {
+     // Portrait: stacked layout
+     ctx.drawImage(titleLogo,W/2-120,H*0.15,240,72);
+     const bf=birds[Math.floor(frame/8)%3];
+     ctx.drawImage(bf,W/2-24,H*0.33,48,34);
+     const btnW=135, btnH=85;
+     const startY=H*0.52, lbY=startY+btnH+12;
+     menuUI.startX=W/2-btnW/2; menuUI.startY=startY; menuUI.startW=btnW; menuUI.startH=btnH;
+     menuUI.lbX=W/2-btnW/2;    menuUI.lbY=lbY;       menuUI.lbW=btnW;   menuUI.lbH=btnH;
+     ctx.drawImage(startBtn, W/2-btnW/2, startY, btnW, btnH);
+     ctx.drawImage(leaderBtn,W/2-btnW/2, lbY,    btnW, btnH);
+   }
  }
 
  if(state==="ready"){
-   ctx.drawImage(ready,W/2-92,H*0.18);
+   const rdW = Math.min(184, W*0.5);
+   const rdH = rdW * (267/184);
+   ctx.drawImage(ready, W/2-rdW/2, H*0.12, rdW, Math.min(rdH, H*0.55));
  }
 
 
@@ -339,54 +685,73 @@ function draw(){
  }
 
  if(state==="dead"){
-   ctx.drawImage(gameOver,W/2-96,H*0.18);
+   const isLandscape = W > H;
+   if(isLandscape){
+     // Landscape dead screen: compact horizontal layout
+     const goW=160, goH=40;
+     ctx.drawImage(gameOver, W/2-goW/2, H*0.06, goW, goH);
 
-   // Board: bigger and slightly taller than natural aspect ratio
-   const bw = Math.min(W*0.88, 360);
-   const bh = bw * (110/238);  // slightly taller than natural 90/238
-   const bx = W/2 - bw/2;
-   const by = H*0.32;
-   ctx.drawImage(board, bx, by, bw, bh);
+     const bw = Math.min(W*0.55, 300);
+     const bh = bw * (110/238);
+     const bx = W/2 - bw/2;
+     const by = H*0.28;
+     ctx.drawImage(board, bx, by, bw, bh);
 
-   const medal = getMedal();
-   if(medal){
-     const mSize = bh * 0.406;
-     ctx.drawImage(medal, bx + bw*0.13 - 3, by + (bh - mSize)/2 + bh*0.08 - 3, mSize, mSize);
+     const medal = getMedal();
+     if(medal){
+       const mSize = bh * 0.406;
+       ctx.drawImage(medal, bx + bw*0.13 - 3, by + (bh - mSize)/2 + bh*0.08 - 3, mSize, mSize);
+     }
+
+     const digitH = 14;
+     const numRight = bx + bw - bw*0.12;
+     drawScoreNumber(score, numRight, by + bh*0.28, digitH);
+     drawScoreNumber(best,  numRight, by + bh*0.65, digitH);
+     if(isNewBest){ const nH=digitH*1.2,nW=nH*2; ctx.drawImage(newBadge, numRight-String(best).length*digitH-nW-2, by+bh*0.63, nW, nH); }
+
+     const btnY  = by + bh + 10;
+     const btnH  = 38;
+     const btnW  = 100;
+     const okX   = W/2 - btnW - 8;
+     const menuX = W/2 + 8;
+     deadUI.okX=okX; deadUI.okY=btnY; deadUI.okW=btnW; deadUI.okH=btnH;
+     deadUI.menuX=menuX; deadUI.menuY=btnY; deadUI.menuW=btnW; deadUI.menuH=btnH;
+     ctx.drawImage(okBtn,   okX,   btnY, btnW, btnH);
+     ctx.drawImage(menuBtn, menuX, btnY, btnW, btnH);
+   } else {
+     // Portrait dead screen: original layout
+     ctx.drawImage(gameOver,W/2-96,H*0.18);
+
+     const bw = Math.min(W*0.88, 360);
+     const bh = bw * (110/238);
+     const bx = W/2 - bw/2;
+     const by = H*0.32;
+     ctx.drawImage(board, bx, by, bw, bh);
+
+     const medal = getMedal();
+     if(medal){
+       const mSize = bh * 0.406;
+       ctx.drawImage(medal, bx + bw*0.13 - 3, by + (bh - mSize)/2 + bh*0.08 - 3, mSize, mSize);
+     }
+
+     const digitH = 16;
+     const numRight = bx + bw - bw*0.12;
+     drawScoreNumber(score, numRight, by + bh*0.28, digitH);
+     drawScoreNumber(best,  numRight, by + bh*0.65, digitH);
+     if(isNewBest){ const nH=digitH*1.2,nW=nH*2; ctx.drawImage(newBadge, numRight-String(best).length*digitH-nW-2, by+bh*0.63, nW, nH); }
+
+     const btnY  = by + bh + 16;
+     const btnH  = 44;
+     const btnW  = 110;
+     const okX   = W/2 - btnW - 10;
+     const menuX = W/2 + 10;
+     deadUI.okX=okX; deadUI.okY=btnY; deadUI.okW=btnW; deadUI.okH=btnH;
+     deadUI.menuX=menuX; deadUI.menuY=btnY; deadUI.menuW=btnW; deadUI.menuH=btnH;
+     ctx.drawImage(okBtn,   okX,   btnY, btnW, btnH);
+     ctx.drawImage(menuBtn, menuX, btnY, btnW, btnH);
    }
-
-   // Score digits: fit inside right column with padding
-   const digitH = 16;
-   const numRight = bx + bw - bw*0.12;
-   drawScoreNumber(score, numRight, by + bh*0.28, digitH);
-   drawScoreNumber(best,  numRight, by + bh*0.65, digitH);
-
-   // Buttons
-   const btnY  = by + bh + 16;
-   const btnH  = 44;
-   const btnW  = 110;
-   const okX   = W/2 - btnW - 10;
-   const menuX = W/2 + 10;
-   deadUI.okX=okX; deadUI.okY=btnY; deadUI.okW=btnW; deadUI.okH=btnH;
-   deadUI.menuX=menuX; deadUI.menuY=btnY; deadUI.menuW=btnW; deadUI.menuH=btnH;
-   ctx.drawImage(okBtn,   okX,   btnY, btnW, btnH);
-   ctx.drawImage(menuBtn, menuX, btnY, btnW, btnH);
  }
  // Pause overlay
- if(paused){
-   ctx.fillStyle="rgba(0,0,0,0.55)";
-   ctx.fillRect(0,0,W,H);
-   ctx.font="bold 20px 'Press Start 2P', monospace";
-   ctx.textAlign="center";
-   ctx.fillStyle="#fff";
-   ctx.shadowColor="#f5a623";
-   ctx.shadowBlur=12;
-   ctx.fillText("PAUSED",W/2,H/2-14);
-   ctx.font="11px 'Press Start 2P', monospace";
-   ctx.fillStyle="#f5d76e";
-   ctx.fillText("tap play to resume",W/2,H/2+18);
-   ctx.shadowBlur=0;
-   ctx.textAlign="left";
- }
 
  updatePauseBtn();
  requestAnimationFrame(loop);
