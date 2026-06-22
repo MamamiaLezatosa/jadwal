@@ -62,7 +62,7 @@ function flap(){
  if(state==="menu") return;
  if(state==="dead"){swoosh.play().catch(()=>{}); reset(); state='ready'; return;}
  if(state==="ready"){state="play";}
- bird.vy=-Math.max(8,H*0.011);
+ bird.vy=-6.8;
  wing.currentTime=0;
  wing.play().catch(()=>{});
 }
@@ -99,7 +99,7 @@ document.getElementById("pause").onclick=()=>{
 };
 
 function spawnPipe(){
- const gap=Math.max(140,H*0.20);
+ const gap=Math.max(180,H*0.24);
  const top=60+Math.random()*(H*0.45);
  pipes.push({x:W+90,top,gap,scored:false});
 }
@@ -117,7 +117,8 @@ function update(){
  frame++;
 
  if(state==="play"){
-   bird.vy+=0.55;
+   bird.vy+=0.24;
+   bird.vy=Math.min(bird.vy,6);
    bird.y+=bird.vy;
 
    if(frame%95===0)spawnPipe();
@@ -189,20 +190,22 @@ function draw(){
  ctx.save();
  ctx.translate(bird.x,bird.y);
  ctx.rotate(Math.max(-0.5,Math.min(1,bird.vy*0.05)));
+ if(state!=="menu"){
  ctx.drawImage(birdFrame,-24,-17,48,34);
+}
  ctx.restore();
 
  for(let x=groundX;x<W+48;x+=48){
-   ctx.drawImage(base,x,H-112,48,112);
+   ctx.drawImage(base,x,H-96,48,96);
  }
 
 
  if(state==="menu"){
-   ctx.drawImage(titleLogo,W/2-140,H*0.15,280,90);
+   ctx.drawImage(titleLogo,W/2-120,H*0.15,240,72);
    const bf=birds[Math.floor(frame/8)%3];
    ctx.drawImage(bf,W/2-24,H*0.33,48,34);
-   ctx.drawImage(startBtn,W/2-110,H*0.62,220,70);
-   ctx.drawImage(leaderBtn,W/2-110,H*0.78,220,70);
+   ctx.drawImage(startBtn,W/2-90,H*0.62,180,58);
+   ctx.drawImage(leaderBtn,W/2-90,H*0.78,180,58);
  }
 
  if(state==="ready"){
@@ -210,7 +213,7 @@ function draw(){
  }
 
 
- if(state!=="ready"){
+ if(state==="play"||state==="dead"){
    drawNumber(score,40);
  }
 
