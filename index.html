@@ -381,6 +381,18 @@
 
   .drawer-item .item-icon svg{ width: 17px; height: 17px; }
 
+  .drawer-item .item-icon-emoji{
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .drawer-item .item-icon-img{
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
   .drawer-item .item-chevron{
     margin-left:auto;
     color: var(--dim);
@@ -980,11 +992,11 @@
   </div>
 
   <div class="pair">
-    <div class="box buka">
+    <div class="box" id="bukaBox">
       <div class="box-title">[BUKA]</div>
       <div class="box-letter" id="bukaLetter">—</div>
     </div>
-    <div class="box tutup">
+    <div class="box" id="tutupBox">
       <div class="box-title">[TUTUP]</div>
       <div class="box-letter" id="tutupLetter">—</div>
     </div>
@@ -1065,6 +1077,13 @@
 
     document.getElementById('tutupLetter').textContent = tutup;
     document.getElementById('bukaLetter').textContent = buka;
+
+    // Swap box colors based on which letter each box shows
+    // V = green (tutup class), A = amber (buka class)
+    const tutupBox = document.getElementById('tutupBox');
+    const bukaBox = document.getElementById('bukaBox');
+    tutupBox.className = 'box ' + (tutup === 'V' ? 'tutup' : 'buka');
+    bukaBox.className = 'box ' + (buka === 'V' ? 'tutup' : 'buka');
   }
 
   // THEME TOGGLE (default: light)
@@ -1247,8 +1266,21 @@
     files.forEach((file) => {
       const btn = document.createElement('button');
       btn.className = 'drawer-item file';
+
+      let iconHTML;
+      if (file.icon && /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(file.icon)){
+        // Image file path — resolve relative to Icons/ folder
+        const src = `Icons/${file.icon}`;
+        iconHTML = `<img src="${src}" alt="" class="item-icon-img">`;
+      } else if (file.icon){
+        // Emoji or any other text icon
+        iconHTML = `<span class="item-icon-emoji">${escapeHtml(file.icon)}</span>`;
+      } else {
+        iconHTML = fileIconSVG;
+      }
+
       btn.innerHTML = `
-        <span class="item-icon">${fileIconSVG}</span>
+        <span class="item-icon">${iconHTML}</span>
         <span>${escapeHtml(file.name || file.path)}</span>
       `;
       const fullPath = `${folder.path.replace(/\/$/, '')}/${file.path}`;
