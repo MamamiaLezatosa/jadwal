@@ -243,7 +243,7 @@ function resize(){
     customizeBtn.style.left = (pad + btnSize + Math.round(8*_scale))+'px';
   }
 }
-addEventListener("resize",()=>{ resize(); invalidateBgCache(); });resize();
+addEventListener("resize",()=>{ resize(); invalidateBgCache(); _groundCache=null; _pipeTopCache=null; });resize();
 
 // Mobile landscape detection — only block on touch devices
 const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -677,6 +677,7 @@ function getMedal(){
 
 // Offscreen canvas for background — only re-blit when bgX changes, avoids recomputing scale each frame
 let _bgCache = null, _bgCacheW = 0, _bgCacheH = 0, _bgCacheNight = -1, _bgCacheX = -9999;
+let _pipeTopCache = null, _groundCache = null;
 function invalidateBgCache(){ _bgCache = null; }
 bgDay.onload = bgNight.onload = invalidateBgCache;
 
@@ -720,7 +721,7 @@ function draw(){
 
  for(const p of pipes){
    const pw=64, ph=_pipeH;
-   // Top pipe: flip so cap faces down, bottom of image at p.top
+   // Top pipe: flip so cap faces down
    ctx.save();
    ctx.translate(p.x+pw/2, p.top);
    ctx.scale(1,-1);
@@ -730,20 +731,28 @@ function draw(){
    ctx.drawImage(pipe,p.x,p.top+p.gap,pw,ph);
  }
 
+ // --- Bird: manual rotation via setTransform instead of save/restore ---
  const birdFrame=birds[Math.floor(frame/8)%3];
- ctx.save();
- ctx.translate(bird.x,bird.y);
- ctx.rotate(Math.max(-0.5,Math.min(1,bird.vy*0.05)));
  if(state!=="menu"){
- ctx.drawImage(birdFrame,-24,-17,48,34);
-}
- ctx.restore();
-
- const baseW = _baseW;
- const baseH = _baseH;
- for(let x=groundX;x<W+baseW;x+=baseW){
-   ctx.drawImage(base,x,H-baseH,baseW,baseH);
+   const angle = Math.max(-0.5, Math.min(1, bird.vy * 0.05));
+   const cos = Math.cos(angle), sin = Math.sin(angle);
+   const bx = bird.x, by = bird.y;
+   ctx.setTransform(_scale*DPR*cos, _scale*DPR*sin, -_scale*DPR*sin, _scale*DPR*cos, (bx*_scale*DPR), (by*_scale*DPR));
+   ctx.drawImage(birdFrame, -24, -17, 48, 34);
+   ctx.setTransform(_scale*DPR, 0, 0, _scale*DPR, 0, 0);
  }
+
+ // --- Ground: cached strip, blit with offset ---
+ if(!_groundCache || _groundCache.w !== W || _groundCache.h !== _baseH){
+   const gc = document.createElement('canvas');
+   gc.width = W + _baseW; gc.height = _baseH;
+   const gcx = gc.getContext('2d');
+   gcx.imageSmoothingEnabled = false;
+   for(let x = 0; x < W + _baseW; x += _baseW) gcx.drawImage(base, x, 0, _baseW, _baseH);
+   _groundCache = { canvas: gc, w: W, h: _baseH };
+ }
+ const gOff = ((groundX % _baseW) + _baseW) % _baseW;
+ ctx.drawImage(_groundCache.canvas, _baseW - gOff, 0, W, _baseH, 0, H - _baseH, W, _baseH);
 
 
  if(state==="menu"){
