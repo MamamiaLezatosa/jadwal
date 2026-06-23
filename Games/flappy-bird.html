@@ -2,16 +2,19 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Flappy Bird</title>
+<title>Flappy Bird Enhanced</title>
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#000}
-canvas{display:block;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-tap-highlight-color:transparent;will-change:transform;}
-#pause{position:fixed;top:12px;right:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;position:relative;}
+canvas{display:block;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;-webkit-tap-highlight-color:transparent;will-change:transform;}
+#pause{position:fixed;width:44px;height:44px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;}
 #pause img{width:100%;height:100%;image-rendering:pixelated}
-#settings-btn{position:fixed;top:12px;left:12px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
+#settings-btn{position:fixed;width:44px;height:44px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
 #settings-btn img{width:100%;height:100%;image-rendering:pixelated}
-#customize-btn{position:fixed;top:12px;left:76px;width:56px;height:56px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
+#customize-btn{position:fixed;width:44px;height:44px;border:none;background:none;z-index:20;outline:none;-webkit-tap-highlight-color:transparent;display:none;}
 #customize-btn img{width:100%;height:100%;image-rendering:pixelated}
 #lb-overlay{display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;}
 #lb-overlay.show{display:flex;}
@@ -186,20 +189,61 @@ const hit=new Audio(A+"audio/hit.wav");
 const die=new Audio(A+"audio/die.wav");
 const swoosh=new Audio(A+"audio/swoosh.wav");
 
-let W,H,paused=false,frame=0,groundX=0,bgX=0,nightBlend=0;
-// Cap DPR at 1.5 — low-end phones often report 2–3 but can't fill that many pixels at 60fps
-const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+let W,H,paused=false,frame=0,groundX=0,bgX=0,nightBlend=0,_pipeTimer=0,_resuming=false,_wasResuming=false;
+// Fixed logical resolution — game always runs at this size internally
+const LW = 360, LH = 640;
+
+// Cap DPR at 1 for low-end phones — halves the pixels filled vs DPR=2
+const DPR = Math.min(window.devicePixelRatio || 1, 1);
+
+// scale/offset of logical canvas onto screen (updated in resize)
+let _scale = 1, _offsetX = 0, _offsetY = 0;
+
 function resize(){
-  W = innerWidth;
-  H = innerHeight;
-  cv.width  = Math.round(W * DPR);
-  cv.height = Math.round(H * DPR);
-  cv.style.width  = W + "px";
-  cv.style.height = H + "px";
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const sw = innerWidth, sh = innerHeight;
+  // Scale to fill width fully; height may extend beyond LH (no black bars)
+  _scale = sw / LW;
+  _offsetX = 0;
+  _offsetY = 0;
+
+  W = LW;
+  // Expand logical height to fill screen so nothing is cut off
+  H = Math.round(sh / _scale);
+
+  cv.width  = Math.round(LW * _scale * DPR);
+  cv.height = Math.round(H  * _scale * DPR);
+  cv.style.width  = sw + "px";
+  cv.style.height = sh + "px";
+  cv.style.position = "absolute";
+  cv.style.left = "0px";
+  cv.style.top  = "0px";
+  ctx.setTransform(_scale * DPR, 0, 0, _scale * DPR, 0, 0);
   ctx.imageSmoothingEnabled = false;
+
+  // Reposition fixed buttons to sit inside the canvas area
+  const btnSize = Math.round(44 * _scale);
+  const pad = Math.round(10 * _scale);
+  const pauseBtn = document.getElementById('pause');
+  const settingsBtn = document.getElementById('settings-btn');
+  const customizeBtn = document.getElementById('customize-btn');
+  if(pauseBtn){
+    pauseBtn.style.width = pauseBtn.style.height = btnSize+'px';
+    pauseBtn.style.top  = pad+'px';
+    pauseBtn.style.right = pad+'px';
+    pauseBtn.style.left = '';
+  }
+  if(settingsBtn){
+    settingsBtn.style.width = settingsBtn.style.height = btnSize+'px';
+    settingsBtn.style.top  = pad+'px';
+    settingsBtn.style.left = pad+'px';
+  }
+  if(customizeBtn){
+    customizeBtn.style.width = customizeBtn.style.height = btnSize+'px';
+    customizeBtn.style.top  = pad+'px';
+    customizeBtn.style.left = (pad + btnSize + Math.round(8*_scale))+'px';
+  }
 }
-addEventListener("resize",resize);resize();
+addEventListener("resize",()=>{ resize(); invalidateBgCache(); });resize();
 
 // Mobile landscape detection — only block on touch devices
 const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -263,6 +307,7 @@ document.getElementById('lb-close').addEventListener('pointerup',(e)=>{
 function reset(){
  bird={x:W*0.28,y:(H - _baseH)*0.45,vy:0};
  pipes=[]; score=0; state='menu'; frame=0; bgX=0; nightBlend=0;
+ _pipeTimer=0;
  menuTime=Date.now();
 }
 reset();
@@ -278,10 +323,21 @@ function flap(){
  if(state==="ready"){
    if(Date.now() - readyTime < 500) return;
    state="play";
+   _wasResuming=_resuming;
+   _resuming=false;
    updatePauseBtn();
+   if(!_wasResuming){
+     // Fresh start — do flap the bird on this tap
+     const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
+     bird.vy = -299.7 * speedMult;
+     wing.currentTime=0;
+     playSound(wing);
+   }
+   return;
  }
- const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
- bird.vy = -4.0 * speedMult;
+ const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
+ // -324 * 0.925 = -299.7px/s
+ bird.vy = -299.7 * speedMult;
  wing.currentTime=0;
  playSound(wing);
 }
@@ -296,7 +352,8 @@ cv.addEventListener("pointerdown",e=>{
 // pointerup — UI button taps on menu and dead screens
 cv.addEventListener("pointerup",e=>{
  if(rotateBlocking)return;
- const x=e.offsetX,y=e.offsetY;
+ // Map screen coords → logical canvas coords
+ const x = e.offsetX / _scale, y = e.offsetY / _scale;
  if(state==='menu'){
    if(Date.now() - menuTime < 600) return;
    const {startX,startY,startW,startH,lbX,lbY,lbW,lbH}=menuUI;
@@ -454,6 +511,8 @@ document.getElementById('pause-resume').addEventListener('pointerup',e=>{
   if(state==="play"||state==="ready"){
     paused=false;
     state='ready';
+    bird.vy = Math.min(bird.vy, 0); // preserve upward momentum, stop any downward fall
+    _resuming=true; // don't apply sine bob — keep bird at current Y
     readyTime=Date.now();
   }
   // if state==="menu", just close the overlay — no state change needed
@@ -528,28 +587,34 @@ function kill(){
  updatePauseBtn();
 }
 
-function update(){
+function update(dt){
  if(paused)return;
- frame++;
+ frame += 60 * dt; // frame counter advances at same rate as before
 
  if(state==="play"){
    // Speed multiplier: smoothly increases with score
-   // 0→1 at score 0→50 (5%), 50→100 (+10%), 100→150 (+15%)
-   const speedMult = 1 + Math.min(score/50*0.05 + Math.max(0,score-50)/50*0.10 + Math.max(0,score-100)/50*0.15, 0.60);
+   const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
 
-   bird.vy += 0.14 * speedMult;
-   bird.vy = Math.min(bird.vy, 4.0 * speedMult);
-   bird.y += bird.vy;
+   // Softer gravity for smoother arc, higher terminal for satisfying fall
+   bird.vy += 560 * speedMult * dt;
+   bird.vy = Math.min(bird.vy, 380 * speedMult);
+   bird.y += bird.vy * dt;
 
-   // Day/night cycle: alternates every 60 score points, stays at each state long, transitions fast
+   // Day/night cycle: only update during active play
    const cycle = Math.floor(score / 60);
    const targetNight = (cycle % 2 === 1) ? 1 : 0;
-   nightBlend += (targetNight - nightBlend) * 0.04;
+   // 0.04/frame * 60 = 2.4/s blend rate
+   const blendDelta = (targetNight - nightBlend) * 2.4 * dt;
+   if(Math.abs(blendDelta) > 0.0001) nightBlend += blendDelta;
 
-   if(frame%140===0)spawnPipe();
+   // Pipe spawn: 140 frames at 60fps = 2.33s, reduced to 1.75s for higher frequency
+   const pipeInterval = 105 / 60;
+   _pipeTimer = (_pipeTimer || 0) + dt;
+   if(_pipeTimer >= pipeInterval){ _pipeTimer -= pipeInterval; spawnPipe(); }
 
    for(const p of pipes){
-      p.x -= 2.5 * speedMult;
+      // 187.5 * 1.25 = 234.375px/s
+      p.x -= 234.375 * speedMult * dt;
 
       if(!p.scored && p.x+64<bird.x){
         p.scored=true;
@@ -570,14 +635,15 @@ function update(){
       kill();
    }
 
-   groundX=(groundX - 2.5 * speedMult)%48;
+   // 187.5 * 1.25 = 234.375px/s
+   groundX=(groundX - 234.375 * speedMult * dt)%48;
  }
 
- if(state==="ready"||state==="menu"){
+ if((state==="ready"||state==="menu") && !_resuming){
    bird.y = (H - _baseH) * 0.45 + Math.sin(frame/15)*8;
  }
- if(state==="ready"||state==="menu") groundX=(groundX-1.5)%48;
- if(state!=="dead") bgX=(bgX-0.5);
+ if((state==="ready"||state==="menu") && !_resuming) groundX=(groundX - 90 * dt)%48;
+ if(state!=="dead" && !_resuming) bgX -= 30 * dt;
 }
 
 function drawNumber(n,y){
@@ -609,21 +675,48 @@ function getMedal(){
  return null;
 }
 
+// Offscreen canvas for background — only re-blit when bgX changes, avoids recomputing scale each frame
+let _bgCache = null, _bgCacheW = 0, _bgCacheH = 0, _bgCacheNight = -1, _bgCacheX = -9999;
+function invalidateBgCache(){ _bgCache = null; }
+bgDay.onload = bgNight.onload = invalidateBgCache;
+
+function drawBgCached(bgScale, bgW, bgH){
+  const nightKey = Math.round(nightBlend * 20); // quantise to 5% steps — avoids redraw every frame
+  const xKey = Math.round(bgX) % Math.round(bgW);
+  if(!_bgCache || _bgCacheW !== W || _bgCacheH !== H || _bgCacheNight !== nightKey || _bgCacheX !== xKey){
+    if(!_bgCache || _bgCacheW !== W || _bgCacheH !== H){
+      _bgCache = document.createElement('canvas');
+      _bgCache.width = W; _bgCache.height = H;
+    }
+    const c = _bgCache.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    c.globalAlpha = 1;
+    const bxOff = xKey;
+    for(let bx = bxOff - bgW; bx < W; bx += bgW) c.drawImage(bgDay, bx, 0, bgW, bgH);
+    if(nightBlend > 0.03){
+      c.globalAlpha = nightBlend;
+      for(let bx = bxOff - bgW; bx < W; bx += bgW) c.drawImage(bgNight, bx, 0, bgW, bgH);
+      c.globalAlpha = 1;
+    }
+    _bgCacheW = W; _bgCacheH = H; _bgCacheNight = nightKey; _bgCacheX = xKey;
+  }
+  ctx.drawImage(_bgCache, 0, 0);
+}
+
+// Frame throttle: target 30fps on devices that drop below 50fps to save CPU
+let _lastFrameTime = 0;
+const _fpsTarget = 1000 / 33; // ~30fps
+let _fpsAdaptive = false;
+let _fpsSampleCount = 0, _fpsSampleSum = 0;
+
 function draw(){
  ctx.clearRect(0,0,W,H);
  // Draw background with day→night crossfade
  const bgScale = H / _bgH;
  const bgW = _bgW * bgScale;
- const bxOff = ((bgX % bgW) + bgW) % bgW;
- // Draw day layer
- ctx.globalAlpha = 1;
- for(let bx = bxOff - bgW; bx < W; bx += bgW) ctx.drawImage(bgDay, bx, 0, bgW, H);
- // Blend night layer on top
- if(nightBlend > 0){
-   ctx.globalAlpha = nightBlend;
-   for(let bx = bxOff - bgW; bx < W; bx += bgW) ctx.drawImage(bgNight, bx, 0, bgW, H);
-   ctx.globalAlpha = 1;
- }
+ const bgH = H;
+ // Draw cached background
+ drawBgCached(bgScale, bgW, bgH);
 
  for(const p of pipes){
    const pw=64, ph=_pipeH;
@@ -763,13 +856,30 @@ function draw(){
 }
 
 let rafId = null;
-function loop(){
-  update();
-  draw();
+function loop(now){
   rafId = requestAnimationFrame(loop);
+
+  // Delta time in seconds, clamped to 50ms to avoid huge jumps after tab switch
+  const dt = Math.min((now - (_lastFrameTime || now)) / 1000, 0.05);
+
+  // Adaptive throttle: sample real frame times; if device can't hit 50fps, drop to 30fps
+  if(_fpsSampleCount < 90){
+    if(_lastFrameTime){
+      _fpsSampleSum += now - _lastFrameTime;
+      _fpsSampleCount++;
+      if(_fpsSampleCount === 90){
+        _fpsAdaptive = (_fpsSampleSum / 90) > 22; // avg frame >22ms = below 45fps
+      }
+    }
+  }
+  if(_fpsAdaptive && (now - _lastFrameTime) < _fpsTarget){ return; }
+  _lastFrameTime = now;
+
+  update(dt);
+  draw();
 }
 _initUI();
-loop();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
