@@ -5,7 +5,7 @@
       "path": "Games",
       "files": [
         { "name": "Minesweeper", "path": "minesweeper.html", "icon": "minesweeper.png" },
-        { "name": "Worlde", "path": "wordle.html", "icon": "wordle.png" },
+        { "name": "Wordle", "path": "wordle.html", "icon": "wordle.png" },
         { "name": "Snake", "path": "snake.html", "icon": "snake.png" },
         { "name": "2048", "path": "2048.html", "icon": "2048.png" },
         { "name": "Flappy Bird", "path": "flappy-bird.html", "icon": "flappy-bird.png" },
