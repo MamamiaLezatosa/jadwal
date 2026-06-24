@@ -317,7 +317,7 @@
   <div id="board-wrap">
     <div id="board"></div>
   </div>
-  <p id="game-tip">Combine tiles to reach <strong>2048</strong>!</p>
+  <p id="game-tip">Gabungkan ubin untuk mencapai <strong>2048</strong>!</p>
 </div>
 
 <!-- How to play modal -->
@@ -329,13 +329,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="howto-row"><div class="icon">🎯</div><span>Reach the <strong>2048</strong> tile to win — but you can keep going!</span></div>
-    <div class="howto-row"><div class="icon">⬆️</div><span>Use <strong>arrow keys</strong> (or swipe on mobile) to slide all tiles in that direction.</span></div>
-    <div class="howto-row"><div class="icon">➕</div><span>Tiles with the <strong>same number</strong> merge into one when they collide.</span></div>
-    <div class="howto-row"><div class="icon">↩</div><span>You can <strong>undo up to 3 moves</strong>. Ctrl+Z also works on desktop.</span></div>
-    <div class="howto-row"><div class="icon">💥</div><span>The game ends when no more moves are possible.</span></div>
+    <div class="howto-row"><div class="icon">🎯</div><span>Capai ubin <strong>2048</strong> untuk menang — tapi kamu bisa terus bermain!</span></div>
+    <div class="howto-row"><div class="icon">⬆️</div><span>Gunakan <strong>tombol panah</strong> (atau geser di HP) untuk menggeser semua ubin ke arah tersebut.</span></div>
+    <div class="howto-row"><div class="icon">➕</div><span>Ubin dengan <strong>angka yang sama</strong> akan bergabung saat bertabrakan.</span></div>
+    <div class="howto-row"><div class="icon">↩</div><span>Kamu bisa <strong>undo hingga 3 langkah</strong>. Ctrl+Z juga bisa dipakai di komputer.</span></div>
+    <div class="howto-row"><div class="icon">💥</div><span>Permainan berakhir saat tidak ada langkah yang tersisa.</span></div>
     <div class="modal-actions">
-      <button class="primary" onclick="document.getElementById('howto-modal').classList.remove('open')">Got it!</button>
+      <button class="primary" onclick="document.getElementById('howto-modal').classList.remove('open')">Mengerti!</button>
     </div>
   </div>
 </div>
@@ -498,7 +498,7 @@
     addTile(); addTile();
     renderBoard();
     updateUndoBtn();
-    setStatus('Swipe or use arrow keys to play');
+    setStatus('Geser atau gunakan tombol panah untuk bermain');
   }
 
   function clone(g) { return g.map(r => [...r]); }
