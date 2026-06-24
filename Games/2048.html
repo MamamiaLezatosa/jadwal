@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -289,12 +289,12 @@
 <div id="top-bar">
   <h1>🎮 2048</h1>
   <div style="display:flex;gap:8px;">
-    <button class="icon-btn" id="howto-btn" aria-label="How to play">
+    <button class="icon-btn" id="howto-btn" aria-label="Cara bermain">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
     </button>
-    <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme">
+    <button class="icon-btn" id="theme-toggle" aria-label="Ganti tema">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
@@ -324,8 +324,8 @@
 <div class="modal" id="howto-modal">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-      <h2>How to play</h2>
-      <button class="icon-btn" id="howto-close" style="width:32px;height:32px;">
+      <h2>Cara Bermain</h2>
+      <button class="icon-btn" id="howto-close" style="width:32px;height:32px;" aria-label="Tutup">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -754,11 +754,11 @@
       animating = false;
       if (!won && grid.some(r => r.some(v => v === 2048))) {
         won = true; wonShown = true;
-        setStatus('🎉 You reached 2048! Keep going!');
+        setStatus('🎉 Kamu mencapai 2048! Terus bermain!');
         setTimeout(playVictory, 80);
       } else if (isGameOver()) {
         gameOver = true;
-        setStatus('💥 No more moves! Game over. Score: ' + score);
+        setStatus('💥 Tidak ada langkah tersisa! Game over. Skor: ' + score);
         setTimeout(playGameOver, 80);
       } else if (!wonShown) {
         setStatus('');
@@ -787,7 +787,7 @@
     renderBoard();
     gameOver = false;
     wonShown = won; // keep won flag so status doesn't re-trigger
-    setStatus(`↩ Undone — ${history.length} undo${history.length !== 1 ? 's' : ''} left`);
+    setStatus(`↩ Dibatalkan — sisa ${history.length} undo`);
     setTimeout(() => { if (!gameOver) setStatus(''); }, 1200);
   });
 
