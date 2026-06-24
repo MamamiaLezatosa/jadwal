@@ -227,6 +227,284 @@
     letter-spacing: 1px;
   }
 
+  /* ── Settings Panel ── */
+  #settings-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    background: #0a0a2a;
+    color: #8888bb;
+    border: 2px solid #333366;
+    padding: 6px 8px;
+    cursor: pointer;
+    z-index: 15;
+    letter-spacing: 0.5px;
+  }
+  #settings-btn:hover { background: #111144; color: #aaaaff; }
+
+  #settings-panel {
+    display: none;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,17,0.97);
+    z-index: 50;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 20px;
+  }
+  #settings-panel.open { display: flex; }
+  #settings-panel h2 {
+    font-size: 11px;
+    color: #00EEFF;
+    text-shadow: 0 0 8px #00EEFF;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .settings-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 260px;
+    gap: 6px;
+  }
+  .settings-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .settings-label {
+    font-size: 7px;
+    color: #8888BB;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .toggle-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 5px 10px;
+    border: 2px solid #333366;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.1s;
+  }
+  .toggle-btn.on  { background: #001a00; color: #44ff88; border-color: #33aa55; }
+  .toggle-btn.off { background: #1a0000; color: #ff5544; border-color: #aa3322; }
+
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .volume-label { font-size: 6px; color: #555588; min-width: 30px; }
+  .vol-slider {
+    -webkit-appearance: none;
+    flex: 1;
+    height: 4px;
+    background: #222255;
+    border-radius: 2px;
+    outline: none;
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #5555FF;
+    cursor: pointer;
+    border: 2px solid #aaaaff;
+  }
+  .vol-slider::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #5555FF;
+    cursor: pointer;
+    border: 2px solid #aaaaff;
+  }
+
+  .music-select-label {
+    font-size: 6px;
+    color: #555588;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .music-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+  .music-opt {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #05051a;
+    color: #7777aa;
+    border: 2px solid #222255;
+    padding: 7px 10px;
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.5px;
+    transition: all 0.1s;
+  }
+  .music-opt:hover { background: #0a0a33; color: #aaaaff; }
+  .music-opt.active { background: #001030; color: #44aaff; border-color: #3366cc; }
+
+  #settings-close {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #0000AA;
+    color: #fff;
+    border: 2px solid #5555FF;
+    padding: 8px 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 8px;
+  }
+  #settings-close:hover { background: #0000DD; }
+
+  /* ── Game Over Screen ── */
+  #gameover-screen {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,10,0.97);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px;
+    font-family: 'Press Start 2P', monospace;
+  }
+  #gameover-screen.open { display: flex; }
+  #go-title {
+    font-size: 18px;
+    color: #FF4444;
+    text-shadow: 0 0 16px #FF4444, 0 0 32px #FF0000;
+    letter-spacing: 3px;
+    animation: goFlicker 1.5s infinite;
+  }
+  @keyframes goFlicker {
+    0%,100% { opacity:1; }
+    50% { opacity:0.7; }
+  }
+  #go-score-line {
+    font-size: 8px;
+    color: #FFDD00;
+    letter-spacing: 1px;
+    text-align: center;
+    line-height: 2;
+  }
+  #go-name-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 280px;
+  }
+  #go-name-label { font-size: 7px; color: #8888BB; }
+  #go-name-input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    background: #000033;
+    color: #FFFFFF;
+    border: 2px solid #5555FF;
+    padding: 8px 12px;
+    width: 180px;
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    outline: none;
+  }
+  #go-name-submit {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #003300;
+    color: #44ff44;
+    border: 2px solid #44aa44;
+    padding: 7px 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+  #go-name-submit:hover { background: #004400; }
+  #go-lb-title { font-size: 7px; color: #8888BB; text-align: center; width: 100%; max-width: 320px; margin-bottom: 2px; }
+  #go-leaderboard {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  #go-back-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #0000AA;
+    color: #fff;
+    border: 2px solid #5555FF;
+    padding: 8px 22px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    display: none;
+  }
+  #go-back-btn.visible { display: block; }
+  #go-back-btn:hover { background: #0000DD; }
+
+  /* ── Title Screen ── */
+  #title-screen {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000011;
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    font-family: 'Press Start 2P', monospace;
+  }
+  #title-screen.open { display: flex; }
+  #title-logo {
+    max-width: 280px;
+    max-height: 180px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 18px #00EEFF);
+  }
+  #title-play-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    background: #0000AA;
+    color: #fff;
+    border: 3px solid #5555FF;
+    padding: 14px 36px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 0 20px #0000FF88;
+    animation: titlePulse 1.2s infinite;
+  }
+  @keyframes titlePulse {
+    0%,100% { box-shadow: 0 0 12px #0000FF88; border-color: #5555FF; }
+    50%      { box-shadow: 0 0 28px #4444FFCC; border-color: #aaaaFF; }
+  }
+  #title-play-btn:hover { background: #0000DD; }
+  #title-subtitle {
+    font-size: 7px;
+    color: #5555AA;
+    letter-spacing: 2px;
+    animation: titleBlink 1.5s step-end infinite;
+  }
+  @keyframes titleBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
   /* ── Mobile controls ── */
   #mobile-controls {
     display: none;
@@ -315,7 +593,69 @@
 </style>
 </head>
 <body>
+<!-- Title Screen -->
+<div id="title-screen" class="open">
+  <img id="title-logo" src="../Assets/Tetris/logo.png" alt="NES TETRIS" onerror="this.style.display='none';document.getElementById('title-fallback').style.display='block'">
+  <div id="title-fallback" style="display:none;font-size:22px;color:#00EEFF;text-shadow:0 0 14px #00EEFF;letter-spacing:3px;line-height:1.8;text-align:center">NES<br>TETRIS</div>
+  <button id="title-play-btn">▶ PLAY</button>
+  <div id="title-subtitle">PRESS TO START</div>
+</div>
+
 <div id="wrapper">
+  <!-- Settings button (always visible, top-right of wrapper) -->
+  <button id="settings-btn" title="Settings">⚙</button>
+
+  <!-- Settings Panel (full overlay over game) -->
+  <div id="settings-panel">
+    <h2>⚙ SETTINGS</h2>
+
+    <!-- Music -->
+    <div class="settings-row">
+      <div class="settings-row-header">
+        <span class="settings-label">🎵 MUSIC</span>
+        <button class="toggle-btn on" id="music-toggle">ON</button>
+      </div>
+      <div id="music-vol-row" class="volume-row">
+        <span class="volume-label">VOL</span>
+        <input type="range" class="vol-slider" id="music-vol" min="0" max="1" step="0.05" value="0.5">
+      </div>
+      <div class="music-select-label" style="margin-top:4px">SELECT TRACK</div>
+      <div class="music-options">
+        <button class="music-opt active" data-track="classic" data-file="../Assets/Tetris/music/tetris-classic.mp3">Classic</button>
+        <button class="music-opt" data-track="music1" data-file="../Assets/Tetris/music/tetris-music1.mp3">Music 01</button>
+        <button class="music-opt" data-track="music2" data-file="../Assets/Tetris/music/tetris-music2.mp3">Music 02</button>
+        <button class="music-opt" data-track="music3" data-file="../Assets/Tetris/music/tetris-music3.mp3">Music 03</button>
+      </div>
+    </div>
+
+    <!-- SFX -->
+    <div class="settings-row">
+      <div class="settings-row-header">
+        <span class="settings-label">🔊 SFX</span>
+        <button class="toggle-btn on" id="sfx-toggle">ON</button>
+      </div>
+      <div id="sfx-vol-row" class="volume-row">
+        <span class="volume-label">VOL</span>
+        <input type="range" class="vol-slider" id="sfx-vol" min="0" max="1" step="0.05" value="0.7">
+      </div>
+    </div>
+
+    <button id="settings-close">CLOSE</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameover-screen">
+    <div id="go-title">GAME OVER</div>
+    <div id="go-score-line"></div>
+    <div id="go-name-entry" style="display:none">
+      <div id="go-name-label">ENTER YOUR NAME</div>
+      <input id="go-name-input" maxlength="8" placeholder="AAA" spellcheck="false" autocomplete="off"/>
+      <button id="go-name-submit">SAVE SCORE</button>
+    </div>
+    <div id="go-lb-title" style="display:none">— HIGH SCORES —</div>
+    <div id="go-leaderboard"></div>
+    <button id="go-back-btn">BACK TO TITLE</button>
+  </div>
   <div id="left-panel">
     <div class="panel-section">
       <div class="panel-label">SCORE</div>
@@ -358,7 +698,7 @@
       <div id="diff-badge"></div>
     </div>
   </div>
-  <div id="overlay">
+  <div id="overlay" style="display:none;">
     <h1>NES<br>TETRIS</h1>
     <div id="level-select">
       <div class="label">START LEVEL</div>
@@ -551,7 +891,10 @@ function newGameState(startLevel) {
     lineClearAnim: null, // {rows, timer}
     holdPieceType: -1,   // -1 = empty
     holdUsed: false,     // can only hold once per piece
+    lockTimer: 0,        // counts up when piece is on ground
+    lockResets: 0,       // how many times lock delay was reset this piece
     pieceStats: new Array(7).fill(0),
+    lines25Played: false,
     totalLinesForLevelUp: startLevel < 10
       ? Math.min(startLevel * DIFF_META[difficulty].linesPerLevel + DIFF_META[difficulty].linesPerLevel,
                  DIFF_META[difficulty].linesPerLevel * 10)
@@ -588,7 +931,98 @@ const statsCanvas = document.getElementById('stats-canvas');
 const statsCtx = statsCanvas.getContext('2d');
 
 // ─────────────────────────────────────────────
-// SOUND FX  (Web Audio API)
+// AUDIO SETTINGS STATE  (persisted to localStorage)
+// ─────────────────────────────────────────────
+
+const SETTINGS_KEY = 'nes_tetris_settings';
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (s) return s;
+  } catch {}
+  return null;
+}
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(audioSettings)); } catch {}
+}
+
+const _savedSettings = loadSettings();
+const audioSettings = Object.assign({
+  musicEnabled: true,
+  sfxEnabled: true,
+  musicVolume: 0.5,
+  sfxVolume: 0.7,
+  currentTrack: 'classic',
+  currentTrackFile: '../Assets/Tetris/music/tetris-classic.mp3',
+}, _savedSettings || {});
+
+// ─────────────────────────────────────────────
+// MUSIC PLAYER  (HTML Audio)
+// ─────────────────────────────────────────────
+
+let titleAudio = null;        // title screen music
+let bgmAudio = null;          // current background music <audio>
+let gameoverSfxPlayed = false;// guard for one-shot gameover sfx
+let nameEntryAudio = null;    // name entry / game over screen music
+let bgmState = 'idle';        // 'idle' | 'title' | 'playing' | 'gameover'
+
+function createAudio(src, loop = true) {
+  const a = new Audio(src);
+  a.loop = loop;
+  return a;
+}
+
+function startTitleMusic() {
+  stopAllMusic();
+  if (!audioSettings.musicEnabled) return;
+  titleAudio = createAudio('../Assets/Tetris/music/tetris-titlescreen.mp3', true);
+  titleAudio.volume = audioSettings.musicVolume;
+  titleAudio.play().catch(() => {});
+  bgmState = 'title';
+}
+
+function startBGM() {
+  if (!audioSettings.musicEnabled) return;
+  stopAllMusic();
+  bgmAudio = createAudio(audioSettings.currentTrackFile, true);
+  bgmAudio.volume = audioSettings.musicVolume;
+  bgmAudio.play().catch(() => {});
+  bgmState = 'playing';
+}
+
+function stopAllMusic() {
+  if (titleAudio)      { titleAudio.pause();      titleAudio.currentTime = 0;      titleAudio = null; }
+  if (bgmAudio)        { bgmAudio.pause();        bgmAudio.currentTime = 0;        bgmAudio = null; }
+  if (nameEntryAudio)  { nameEntryAudio.pause();  nameEntryAudio.currentTime = 0;  nameEntryAudio = null; }
+  bgmState = 'idle';
+}
+
+function pauseBGM() {
+  if (bgmAudio) bgmAudio.pause();
+}
+
+function resumeBGM() {
+  if (bgmAudio && audioSettings.musicEnabled) bgmAudio.play().catch(() => {});
+}
+
+function startNameEntryMusic() {
+  stopAllMusic();
+  if (!audioSettings.musicEnabled) return;
+  nameEntryAudio = createAudio('../Assets/Tetris/music/tetris-nameentry.mp3', true);
+  nameEntryAudio.volume = audioSettings.musicVolume;
+  nameEntryAudio.play().catch(() => {});
+  bgmState = 'gameover';
+}
+
+function applyMusicVolume(v) {
+  if (titleAudio)     titleAudio.volume = v;
+  if (bgmAudio)       bgmAudio.volume = v;
+  if (nameEntryAudio) nameEntryAudio.volume = v;
+}
+
+// ─────────────────────────────────────────────
+// SOUND FX  (Web Audio API — synth + mp3)
 // ─────────────────────────────────────────────
 
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -596,13 +1030,13 @@ let audioCtx = null;
 
 function getAudio() {
   if (!audioCtx) audioCtx = new AudioCtx();
-  // Resume on first gesture (mobile requirement)
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
 
 function playTone({ type='square', freq=440, freq2=null, vol=0.18, attack=0.005,
                     sustain=0.06, release=0.08, detune=0 } = {}) {
+  if (!audioSettings.sfxEnabled) return;
   try {
     const ac = getAudio();
     const osc = ac.createOscillator();
@@ -613,8 +1047,9 @@ function playTone({ type='square', freq=440, freq2=null, vol=0.18, attack=0.005,
     if (freq2) osc.frequency.linearRampToValueAtTime(freq2, ac.currentTime + sustain);
     osc.detune.setValueAtTime(detune, ac.currentTime);
     gain.gain.setValueAtTime(0, ac.currentTime);
-    gain.gain.linearRampToValueAtTime(vol, ac.currentTime + attack);
-    gain.gain.setValueAtTime(vol, ac.currentTime + attack + sustain);
+    const v = vol * audioSettings.sfxVolume;
+    gain.gain.linearRampToValueAtTime(v, ac.currentTime + attack);
+    gain.gain.setValueAtTime(v, ac.currentTime + attack + sustain);
     gain.gain.linearRampToValueAtTime(0, ac.currentTime + attack + sustain + release);
     osc.start(ac.currentTime);
     osc.stop(ac.currentTime + attack + sustain + release + 0.01);
@@ -622,6 +1057,7 @@ function playTone({ type='square', freq=440, freq2=null, vol=0.18, attack=0.005,
 }
 
 function playNoise({ vol=0.12, duration=0.08, lowpass=800 } = {}) {
+  if (!audioSettings.sfxEnabled) return;
   try {
     const ac = getAudio();
     const buf = ac.createBuffer(1, ac.sampleRate * duration, ac.sampleRate);
@@ -632,10 +1068,21 @@ function playNoise({ vol=0.12, duration=0.08, lowpass=800 } = {}) {
     const filt = ac.createBiquadFilter();
     filt.type = 'lowpass'; filt.frequency.value = lowpass;
     const gain = ac.createGain();
-    gain.gain.setValueAtTime(vol, ac.currentTime);
+    const v = vol * audioSettings.sfxVolume;
+    gain.gain.setValueAtTime(v, ac.currentTime);
     gain.gain.linearRampToValueAtTime(0, ac.currentTime + duration);
     src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
     src.start(); src.stop(ac.currentTime + duration + 0.01);
+  } catch(e) {}
+}
+
+// Play an mp3 SFX file (one-shot, not looping)
+function playSFXFile(src) {
+  if (!audioSettings.sfxEnabled) return;
+  try {
+    const a = new Audio(src);
+    a.volume = audioSettings.sfxVolume;
+    a.play().catch(() => {});
   } catch(e) {}
 }
 
@@ -649,7 +1096,6 @@ const SFX = {
   },
   land()     { playTone({ type:'square', freq:100, freq2:80, vol:0.18, sustain:0.04, release:0.06 }); },
   lineClear(n) {
-    // 1-3 lines: ascending chord; tetris: fanfare
     if (n >= 4) {
       [523, 659, 784, 1047].forEach((f, i) =>
         setTimeout(() => playTone({ type:'square', freq:f, vol:0.22, sustain:0.10, release:0.12 }), i * 60));
@@ -659,17 +1105,11 @@ const SFX = {
         setTimeout(() => playTone({ type:'square', freq:f, vol:0.18, sustain:0.08, release:0.10 }), i * 50));
     }
   },
-  levelUp()  {
-    [392, 523, 659, 784].forEach((f, i) =>
-      setTimeout(() => playTone({ type:'square', freq:f, vol:0.20, sustain:0.08, release:0.10 }), i * 70));
-  },
-  gameOver() {
-    [440, 370, 311, 262, 220].forEach((f, i) =>
-      setTimeout(() => playTone({ type:'square', freq:f, vol:0.18, sustain:0.09, release:0.12 }), i * 90));
-  },
+  levelUp()    { playSFXFile('../Assets/Tetris/sfx/tetris-levelup.mp3'); },
+  lines25()    { playSFXFile('../Assets/Tetris/sfx/tetris-25lines.mp3'); },
+  gameOverSfx(){ playSFXFile('../Assets/Tetris/sfx/tetris-gameover.mp3'); },
   hold() { playTone({ type:'square', freq:494, freq2:330, vol:0.15, sustain:0.04, release:0.06 }); },
 };
-
 
 
 // ─────────────────────────────────────────────
@@ -759,6 +1199,10 @@ function addScore(s, numLines) {
 
 function checkLevelUp(s, numLines) {
   s.lines += numLines;
+  if (!s.lines25Played && s.lines >= 25) {
+    s.lines25Played = true;
+    SFX.lines25();
+  }
   if (s.lines >= s.totalLinesForLevelUp) {
     s.level++;
     s.totalLinesForLevelUp += DIFF_META[difficulty].linesPerLevel;
@@ -787,9 +1231,11 @@ function spawnPiece(s) {
   s.pieceX = 5;
   s.pieceY = 0;
   s.fallTimer = 0;
-  s.autorepeatY = -160; // INITIAL_AUTOREPEAT_Y equivalent (~2.7s delay before autodown starts)
+  s.autorepeatY = -160;
   s.holdDownPoints = 0;
   s.holdUsed = false;
+  s.lockTimer = 0;
+  s.lockResets = 0;
   s.pieceStats[ptype]++;
   s.lastSpawnID = ptype;
   s.nextPieceType = chooseNextPiece(ptype);
@@ -828,6 +1274,27 @@ function holdPiece(s) {
 
 const DAS_DELAY = 10;  // frames before autorepeat
 const DAS_RESET = 16;  // DAS charge frames
+const LOCK_DELAY = 30; // frames before piece locks after touching ground
+const LOCK_RESETS_MAX = 15; // max times lock delay can be reset per piece
+
+// Wall kick: try horizontal offsets until rotation fits
+function tryRotate(s, dir) {
+  const newOri = ROTATION_TABLE[s.pieceOri][dir];
+  const kicks = [0, -1, 1, -2, 2];
+  for (const dx of kicks) {
+    if (isValidPosition(newOri, s.pieceX + dx, s.pieceY, s.board)) {
+      s.pieceOri = newOri;
+      s.pieceX += dx;
+      // Reset lock delay on successful rotate (if on ground)
+      if (!isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board)) {
+        if (s.lockResets < LOCK_RESETS_MAX) { s.lockTimer = 0; s.lockResets++; }
+      }
+      SFX.rotate();
+      return true;
+    }
+  }
+  return false;
+}
 
 function processFrame(s) {
   if (s.gameOver || s.paused) return;
@@ -848,18 +1315,10 @@ function processFrame(s) {
 
   // ── Rotation (A=CW, B=CCW; mapped to Up/X = CW, Z = CCW)
   if (justPressed['ArrowUp'] || justPressed['KeyX']) {
-    const newOri = ROTATION_TABLE[s.pieceOri][1]; // CW
-    if (isValidPosition(newOri, s.pieceX, s.pieceY, s.board)) {
-      s.pieceOri = newOri;
-      SFX.rotate();
-    }
+    tryRotate(s, 1); // CW
   }
   if (justPressed['KeyZ']) {
-    const newOri = ROTATION_TABLE[s.pieceOri][0]; // CCW
-    if (isValidPosition(newOri, s.pieceX, s.pieceY, s.board)) {
-      s.pieceOri = newOri;
-      SFX.rotate();
-    }
+    tryRotate(s, 0); // CCW
   }
 
   // ── Hold (C or Shift)
@@ -906,46 +1365,63 @@ function processFrame(s) {
         if (isValidPosition(s.pieceOri, s.pieceX - 1, s.pieceY, s.board)) {
           s.pieceX--;
           SFX.move();
+          // Reset lock delay on successful move while on ground
+          if (!isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board)) {
+            if (s.lockResets < LOCK_RESETS_MAX) { s.lockTimer = 0; s.lockResets++; }
+          }
         }
       } else if (rightHeld && !leftHeld) {
         if (isValidPosition(s.pieceOri, s.pieceX + 1, s.pieceY, s.board)) {
           s.pieceX++;
           SFX.move();
+          if (!isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board)) {
+            if (s.lockResets < LOCK_RESETS_MAX) { s.lockTimer = 0; s.lockResets++; }
+          }
         }
       }
     }
   }
 
-  // ── Gravity / Soft drop
+  // ── Gravity / Soft drop / Lock delay
   const softDrop = keys['ArrowDown'];
+  const onGround = !isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board);
+
   if (softDrop) {
     s.autorepeatY++;
-    if (s.autorepeatY < 0) {
-      // initial delay before autorepeat — do nothing
-    } else {
-      // every frame when holding down
-      if (isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board)) {
+    if (s.autorepeatY >= 0) {
+      if (!onGround) {
         s.pieceY++;
         s.holdDownPoints++;
         s.fallTimer = 0;
+        s.lockTimer = 0;
         if (s.autorepeatY % 3 === 0) SFX.softDrop();
       } else {
-        s.score = Math.min(s.score + s.holdDownPoints, 999999);
-        landPiece(s);
-        return;
+        // On ground while soft-dropping: count lock delay but faster
+        s.lockTimer += 3;
+        if (s.lockTimer >= LOCK_DELAY) {
+          s.score = Math.min(s.score + s.holdDownPoints, 999999);
+          landPiece(s);
+          return;
+        }
       }
     }
   } else {
     s.autorepeatY = 0;
-    s.fallTimer++;
-    const framesNeeded = dropSpeed(s.level);
-    if (s.fallTimer >= framesNeeded) {
-      s.fallTimer = 0;
-      if (isValidPosition(s.pieceOri, s.pieceX, s.pieceY + 1, s.board)) {
-        s.pieceY++;
-      } else {
+    if (onGround) {
+      // Lock delay: count up, lock when timer expires
+      s.lockTimer++;
+      if (s.lockTimer >= LOCK_DELAY) {
         landPiece(s);
         return;
+      }
+    } else {
+      // Normal gravity
+      s.lockTimer = 0;
+      s.fallTimer++;
+      const framesNeeded = dropSpeed(s.level);
+      if (s.fallTimer >= framesNeeded) {
+        s.fallTimer = 0;
+        s.pieceY++;
       }
     }
   }
@@ -1054,16 +1530,23 @@ function render(s) {
     }
   }
 
-  // Active piece
+  // Active piece — flashes white when lock delay is running
   if (s.pieceOri !== -1 && !s.lineClearAnim) {
     const ptype = PIECE_TYPE_FROM_ORI[s.pieceOri];
     const [col, dark] = getBlockColors(ptype);
+    const locking = s.lockTimer > 0;
+    // Flash faster as lock timer runs out
+    const flashOn = locking && Math.floor(s.lockTimer / 4) % 2 === 0;
+    const drawCol  = flashOn ? '#ffffff' : col;
+    const drawDark = flashOn ? '#aaaaaa' : dark;
+    if (locking) ctx.globalAlpha = 0.55 + 0.45 * (1 - s.lockTimer / LOCK_DELAY);
     for (const [dr, dc] of ORIENTATION_MINOS[s.pieceOri]) {
       const r = s.pieceY + dr, c = s.pieceX + dc;
       if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
-        drawBlock(ctx, r, c, col, dark);
+        drawBlock(ctx, r, c, drawCol, drawDark);
       }
     }
+    if (locking) ctx.globalAlpha = 1;
   }
 
   // Side panels
@@ -1147,7 +1630,23 @@ let gameRunning = false;
 let rafId = null;
 let startLevel = 0;
 
+let gameOverPending = false;
+let gameOverTimer = 0;
+const GAMEOVER_DELAY_FRAMES = 180; // ~3 seconds at 60fps
+
 function gameLoop() {
+  if (gameOverPending) {
+    render(state);
+    gameOverTimer++;
+    if (gameOverTimer >= GAMEOVER_DELAY_FRAMES) {
+      gameOverPending = false;
+      showGameOver();
+    } else {
+      rafId = requestAnimationFrame(gameLoop);
+    }
+    return;
+  }
+
   processFrame(state);
   render(state);
 
@@ -1155,7 +1654,12 @@ function gameLoop() {
   for (const k in justPressed) delete justPressed[k];
 
   if (state.gameOver) {
-    showGameOver();
+    // Play SFX immediately, then delay the screen
+    stopAllMusic();
+    SFX.gameOverSfx();
+    gameOverPending = true;
+    gameOverTimer = 0;
+    rafId = requestAnimationFrame(gameLoop);
     return;
   }
   if (keys['KeyP'] && justPressed['KeyP']) {
@@ -1168,12 +1672,18 @@ function gameLoop() {
 function startGame(lvl) {
   startLevel = lvl || 0;
   state = newGameState(startLevel);
+  document.getElementById('title-screen').classList.remove('open');
   document.getElementById('overlay').style.display = 'none';
+  document.getElementById('gameover-screen').classList.remove('open');
   document.getElementById('name-entry').style.display = 'none';
   document.getElementById('gameover-reason').textContent = '';
   if (rafId) cancelAnimationFrame(rafId);
   gameRunning = true;
+  gameOverPending = false;
+  gameOverTimer = 0;
   spawnPiece(state);
+  stopAllMusic();
+  startBGM();
   rafId = requestAnimationFrame(gameLoop);
 }
 
@@ -1218,55 +1728,123 @@ function lbRender(entries, highlightScore = null) {
 let pendingScore = null;
 
 function showGameOver() {
-  SFX.gameOver();
+  startNameEntryMusic();
   pendingScore = state.score;
-  const overlay = document.getElementById('overlay');
-  const reason = document.getElementById('gameover-reason');
-  overlay.style.display = 'flex';
-  reason.textContent = `GAME OVER  SCORE: ${String(state.score).padStart(6,'0')}`;
-  document.getElementById('start-btn').textContent = 'PLAY AGAIN';
 
-  // Show name entry if score is worthy (non-zero, or board has fewer than LB_MAX entries)
+  const screen = document.getElementById('gameover-screen');
+  document.getElementById('go-score-line').textContent =
+    `SCORE: ${String(state.score).padStart(6,'0')}  LINES: ${String(state.lines).padStart(3,'0')}  LVL: ${state.level}`;
+
+  // Check if score qualifies for leaderboard
   const existing = lbLoad();
-  const qualifies = state.score > 0 && (existing.length < LB_MAX || state.score > existing[existing.length - 1].score);
-  const nameEntry = document.getElementById('name-entry');
-  const lbTitle = document.getElementById('lb-title');
+  const qualifies = state.score > 0 &&
+    (existing.length < LB_MAX || state.score > existing[existing.length - 1].score);
 
+  const nameEntry = document.getElementById('go-name-entry');
   if (qualifies) {
     nameEntry.style.display = 'flex';
-    const inp = document.getElementById('name-input');
+    const inp = document.getElementById('go-name-input');
     inp.value = '';
-    setTimeout(() => inp.focus(), 100);
+    setTimeout(() => inp.focus(), 200);
   } else {
     nameEntry.style.display = 'none';
   }
 
-  lbTitle.style.display = 'block';
-  lbRender(existing, qualifies ? null : null);
+  const lbTitle = document.getElementById('go-lb-title');
+  lbTitle.style.display = existing.length || qualifies ? 'block' : 'none';
+  goLbRender(existing, qualifies ? null : null);
+
+  // Back button always visible — player can skip name entry
+  const backBtn = document.getElementById('go-back-btn');
+  backBtn.classList.add('visible');
+
+  screen.classList.add('open');
 }
 
-document.getElementById('name-submit').addEventListener('click', submitScore);
-document.getElementById('name-input').addEventListener('keydown', e => {
-  if (e.code === 'Enter') { e.stopPropagation(); submitScore(); }
-  // force uppercase display
-  setTimeout(() => { document.getElementById('name-input').value = document.getElementById('name-input').value.toUpperCase(); }, 0);
+// Separate leaderboard renderer for game over screen
+function goLbRender(entries, highlightScore) {
+  const el = document.getElementById('go-leaderboard');
+  if (!entries.length) { el.innerHTML = '<div class="lb-row" style="justify-content:center;color:#444488">NO SCORES YET</div>'; return; }
+  el.innerHTML = entries.map((e, i) => {
+    const isYou = highlightScore !== null && e.score === highlightScore && i === entries.findIndex(x => x.score === highlightScore);
+    const isTop = i === 0;
+    const cls = isYou ? 'lb-row lb-you' : isTop ? 'lb-row lb-top' : 'lb-row';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    return `<div class="${cls}">
+      <span class="lb-rank">${medal}</span>
+      <span class="lb-name">${e.name}</span>
+      <span class="lb-score">${String(e.score).padStart(6,'0')}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('go-name-submit').addEventListener('click', goSubmitScore);
+document.getElementById('go-name-input').addEventListener('keydown', e => {
+  if (e.code === 'Enter') { e.stopPropagation(); goSubmitScore(); }
+  setTimeout(() => { document.getElementById('go-name-input').value = document.getElementById('go-name-input').value.toUpperCase(); }, 0);
 });
 
-function submitScore() {
-  const name = document.getElementById('name-input').value.trim() || 'AAA';
+function goSubmitScore() {
+  const name = document.getElementById('go-name-input').value.trim() || 'AAA';
   const entries = lbAdd(name, pendingScore, state.lines, state.level);
-  document.getElementById('name-entry').style.display = 'none';
-  lbRender(entries, pendingScore);
+  document.getElementById('go-name-entry').style.display = 'none';
+  goLbRender(entries, pendingScore);
+  document.getElementById('go-lb-title').style.display = 'block';
+  // Show back-to-title button after score is saved
+  document.getElementById('go-back-btn').classList.add('visible');
   pendingScore = null;
 }
 
-// Show leaderboard on title screen too
+document.getElementById('go-back-btn').addEventListener('click', () => {
+  document.getElementById('gameover-screen').classList.remove('open');
+  stopAllMusic();
+  gameRunning = false;
+  gameOverPending = false;
+  // Show title screen
+  document.getElementById('title-screen').classList.add('open');
+  startTitleMusic();
+});
+
+
+
+// Show leaderboard on title screen
 function showTitleLeaderboard() {
   const entries = lbLoad();
   document.getElementById('lb-title').style.display = entries.length ? 'block' : 'none';
   lbRender(entries);
 }
 showTitleLeaderboard();
+
+// ─────────────────────────────────────────────
+// TITLE SCREEN
+// ─────────────────────────────────────────────
+
+function closeTitleScreen() {
+  document.getElementById('title-screen').classList.remove('open');
+}
+
+document.getElementById('title-play-btn').addEventListener('click', () => {
+  closeTitleScreen();
+  // Start title music now — this is guaranteed post-gesture so autoplay works
+  stopAllMusic();
+  startTitleMusic();
+  // Show the game overlay (level select / start)
+  document.getElementById('overlay').style.display = 'flex';
+  document.getElementById('start-btn').textContent = 'PRESS START';
+  showTitleLeaderboard();
+});
+
+// Also allow Enter/Space on title screen
+document.addEventListener('keydown', e => {
+  if ((e.code === 'Enter' || e.code === 'Space') &&
+      document.getElementById('title-screen').classList.contains('open')) {
+    e.preventDefault();
+    document.getElementById('title-play-btn').click();
+  }
+});
+
+// Title music starts when the user taps PLAY (guaranteed post-gesture, so autoplay works).
+// Nothing to autoplay here — browsers block audio before first interaction.
 
 // ─────────────────────────────────────────────
 // UI CONTROLS
@@ -1297,6 +1875,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if (e.code === 'KeyP' && gameRunning && !state.gameOver) {
     state.paused = !state.paused;
+    if (state.paused) pauseBGM(); else resumeBGM();
   }
 });
 
@@ -1391,7 +1970,107 @@ bindMobileBtn('mc-drop',  'Space',      false);   // Hard drop
 
 // Pause button
 document.getElementById('mc-pause').addEventListener('click', () => {
-  if (gameRunning && !state.gameOver) state.paused = !state.paused;
+  if (gameRunning && !state.gameOver) {
+    state.paused = !state.paused;
+    if (state.paused) pauseBGM(); else resumeBGM();
+  }
+});
+
+// ─────────────────────────────────────────────
+// SETTINGS PANEL
+// ─────────────────────────────────────────────
+
+const settingsBtn   = document.getElementById('settings-btn');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsClose = document.getElementById('settings-close');
+const musicToggle   = document.getElementById('music-toggle');
+const sfxToggle     = document.getElementById('sfx-toggle');
+const musicVolSlider = document.getElementById('music-vol');
+const sfxVolSlider  = document.getElementById('sfx-vol');
+const musicVolRow   = document.getElementById('music-vol-row');
+const sfxVolRow     = document.getElementById('sfx-vol-row');
+
+// Apply saved settings to UI on load
+function applySettingsToUI() {
+  musicToggle.textContent = audioSettings.musicEnabled ? 'ON' : 'OFF';
+  musicToggle.className = 'toggle-btn ' + (audioSettings.musicEnabled ? 'on' : 'off');
+  musicVolRow.style.display = audioSettings.musicEnabled ? 'flex' : 'none';
+  musicVolSlider.value = audioSettings.musicVolume;
+
+  sfxToggle.textContent = audioSettings.sfxEnabled ? 'ON' : 'OFF';
+  sfxToggle.className = 'toggle-btn ' + (audioSettings.sfxEnabled ? 'on' : 'off');
+  sfxVolRow.style.display = audioSettings.sfxEnabled ? 'flex' : 'none';
+  sfxVolSlider.value = audioSettings.sfxVolume;
+
+  // Highlight active track
+  document.querySelectorAll('.music-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.track === audioSettings.currentTrack);
+  });
+}
+applySettingsToUI();
+
+settingsBtn.addEventListener('click', () => {
+  settingsPanel.classList.toggle('open');
+  if (settingsPanel.classList.contains('open') && gameRunning && !state.gameOver) {
+    state.paused = true;
+    pauseBGM();
+  }
+});
+
+settingsClose.addEventListener('click', () => {
+  settingsPanel.classList.remove('open');
+  if (gameRunning && !state.gameOver && state.paused) {
+    state.paused = false;
+    resumeBGM();
+  }
+});
+
+musicToggle.addEventListener('click', () => {
+  audioSettings.musicEnabled = !audioSettings.musicEnabled;
+  musicToggle.textContent = audioSettings.musicEnabled ? 'ON' : 'OFF';
+  musicToggle.className = 'toggle-btn ' + (audioSettings.musicEnabled ? 'on' : 'off');
+  musicVolRow.style.display = audioSettings.musicEnabled ? 'flex' : 'none';
+  saveSettings();
+  if (!audioSettings.musicEnabled) {
+    stopAllMusic();
+  } else {
+    if (bgmState === 'idle' || bgmState === 'title') startTitleMusic();
+    else if (bgmState === 'playing' && gameRunning && !state.gameOver) startBGM();
+    else if (bgmState === 'gameover') startNameEntryMusic();
+  }
+});
+
+sfxToggle.addEventListener('click', () => {
+  audioSettings.sfxEnabled = !audioSettings.sfxEnabled;
+  sfxToggle.textContent = audioSettings.sfxEnabled ? 'ON' : 'OFF';
+  sfxToggle.className = 'toggle-btn ' + (audioSettings.sfxEnabled ? 'on' : 'off');
+  sfxVolRow.style.display = audioSettings.sfxEnabled ? 'flex' : 'none';
+  saveSettings();
+});
+
+musicVolSlider.addEventListener('input', e => {
+  audioSettings.musicVolume = parseFloat(e.target.value);
+  applyMusicVolume(audioSettings.musicVolume);
+  saveSettings();
+});
+
+sfxVolSlider.addEventListener('input', e => {
+  audioSettings.sfxVolume = parseFloat(e.target.value);
+  saveSettings();
+});
+
+// Music track selection
+document.querySelectorAll('.music-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.music-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    audioSettings.currentTrack = btn.dataset.track;
+    audioSettings.currentTrackFile = btn.dataset.file;
+    saveSettings();
+    if (bgmState === 'playing' && gameRunning && !state.gameOver) {
+      startBGM();
+    }
+  });
 });
 
 // ─────────────────────────────────────────────
