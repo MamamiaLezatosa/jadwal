@@ -229,7 +229,7 @@
 
   /* ── Settings Panel ── */
   #settings-btn {
-    position: absolute;
+    position: fixed;
     top: 8px;
     right: 8px;
     font-family: 'Press Start 2P', monospace;
@@ -601,10 +601,10 @@
   <div id="title-subtitle">PRESS TO START</div>
 </div>
 
-<div id="wrapper">
-  <!-- Settings button (always visible, top-right of wrapper) -->
-  <button id="settings-btn" title="Settings">⚙</button>
+<!-- Settings button (fixed, outside wrapper so it's never scaled) -->
+<button id="settings-btn" title="Settings">⚙</button>
 
+<div id="wrapper">
   <!-- Settings Panel (full overlay over game) -->
   <div id="settings-panel">
     <h2>⚙ SETTINGS</h2>
@@ -641,11 +641,13 @@
     </div>
 
     <button id="settings-close">CLOSE</button>
+    <button id="reset-lb-btn" style="font-family:'Press Start 2P',monospace;font-size:6px;background:#1a0000;color:#ff5544;border:2px solid #aa3322;padding:7px 16px;cursor:pointer;letter-spacing:0.5px;">RESET LEADERBOARD</button>
   </div>
 
   <!-- Game Over Screen -->
   <div id="gameover-screen">
     <div id="go-title">GAME OVER</div>
+    <div id="go-new-highscore" style="display:none;font-size:9px;color:#FFDD00;text-shadow:0 0 12px #FFDD00;letter-spacing:2px;animation:goFlicker 0.8s infinite">✦ NEW HIGH SCORE! ✦</div>
     <div id="go-score-line"></div>
     <div id="go-name-entry" style="display:none">
       <div id="go-name-label">ENTER YOUR NAME</div>
@@ -655,11 +657,16 @@
     <div id="go-lb-title" style="display:none">— HIGH SCORES —</div>
     <div id="go-leaderboard"></div>
     <button id="go-back-btn">BACK TO TITLE</button>
+  <button id="go-play-again-btn" style="display:none;font-family:'Press Start 2P',monospace;font-size:7px;background:#0000AA;color:#fff;border:2px solid #5555FF;padding:8px 22px;cursor:pointer;letter-spacing:1px;">▶ PLAY AGAIN</button>
   </div>
   <div id="left-panel">
     <div class="panel-section">
       <div class="panel-label">SCORE</div>
       <div class="panel-value" id="score-display">000000</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">BEST</div>
+      <div class="panel-value" id="best-display" style="color:#FFDD00">000000</div>
     </div>
     <div class="panel-section">
       <div class="panel-label">LINES</div>
@@ -668,6 +675,9 @@
     <div class="panel-section">
       <div class="panel-label">LEVEL</div>
       <div class="panel-value" id="level-display-panel">00</div>
+    </div>
+    <div class="panel-section" style="margin-top:6px">
+      <button id="restart-btn" style="display:none;font-family:'Press Start 2P',monospace;font-size:6px;background:#001a00;color:#44ff88;border:2px solid #33aa55;padding:6px 4px;cursor:pointer;letter-spacing:0.5px;width:100%">↺ RESTART</button>
     </div>
     <div class="panel-section" style="margin-top:8px">
       <div class="panel-label">HOLD</div>
@@ -696,6 +706,9 @@
         <span>P</span> Pause<br>
       </div>
       <div id="diff-badge"></div>
+      <div id="track-display" style="margin-top:8px;font-size:5px;color:#555588;letter-spacing:0.5px;line-height:1.8">
+        <span style="color:#8888BB">♪</span> <span id="track-name">CLASSIC</span>
+      </div>
     </div>
   </div>
   <div id="overlay" style="display:none;">
@@ -1202,6 +1215,7 @@ function checkLevelUp(s, numLines) {
   if (!s.lines25Played && s.lines >= 25) {
     s.lines25Played = true;
     SFX.lines25();
+    s._lines25Flash = 90; // ~1.5s at 60fps
   }
   if (s.lines >= s.totalLinesForLevelUp) {
     s.level++;
@@ -1549,6 +1563,45 @@ function render(s) {
     if (locking) ctx.globalAlpha = 1;
   }
 
+  // 25-lines milestone flash
+  if (s._lines25Flash && s._lines25Flash > 0) {
+    s._lines25Flash--;
+    const alpha = Math.min(1, s._lines25Flash / 20) * 0.7;
+    ctx.save();
+    ctx.fillStyle = `rgba(255,220,0,${alpha})`;
+    ctx.fillRect(0, 0, 300, 602);
+    ctx.font = '13px "Press Start 2P"';
+    ctx.fillStyle = `rgba(255,255,255,${Math.min(1, s._lines25Flash / 20)})`;
+    ctx.shadowColor = '#FFDD00';
+    ctx.shadowBlur = 20;
+    ctx.textAlign = 'center';
+    ctx.fillText('25 LINES!', 150, 285);
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillText('MILESTONE!', 150, 312);
+    ctx.restore();
+  }
+
+  // Pause overlay on canvas
+  if (s.paused) {
+    ctx.fillStyle = 'rgba(0,0,17,0.72)';
+    ctx.fillRect(0, 0, 300, 602);
+    ctx.save();
+    ctx.font = '18px "Press Start 2P"';
+    ctx.fillStyle = '#00EEFF';
+    ctx.shadowColor = '#00EEFF';
+    ctx.shadowBlur = 14;
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', 150, 290);
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillStyle = '#8888BB';
+    ctx.shadowBlur = 0;
+    ctx.fillText('PRESS P TO RESUME', 150, 320);
+    ctx.restore();
+  }
+
+  document.getElementById('best-display').textContent =
+    String(lbLoad()[0]?.score ?? 0).padStart(6, '0');
+
   // Side panels
   document.getElementById('score-display').textContent =
     String(s.score).padStart(6, '0');
@@ -1790,8 +1843,13 @@ function goSubmitScore() {
   document.getElementById('go-name-entry').style.display = 'none';
   goLbRender(entries, pendingScore);
   document.getElementById('go-lb-title').style.display = 'block';
+  // Show NEW HIGH SCORE if this is #1
+  if (entries[0] && entries[0].score === pendingScore) {
+    document.getElementById('go-new-highscore').style.display = 'block';
+  }
   // Show back-to-title button after score is saved
   document.getElementById('go-back-btn').classList.add('visible');
+  document.getElementById('go-play-again-btn').style.display = 'block';
   pendingScore = null;
 }
 
@@ -2074,6 +2132,182 @@ document.querySelectorAll('.music-opt').forEach(btn => {
 });
 
 // ─────────────────────────────────────────────
+// RESTART BUTTON (during gameplay)
+// ─────────────────────────────────────────────
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  if (gameRunning) startGame(startLevel);
+});
+
+// Show/hide restart button based on game state
+function updateRestartBtn() {
+  const btn = document.getElementById('restart-btn');
+  btn.style.display = gameRunning && !state.gameOver ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────────
+// PLAY AGAIN BUTTON (game over screen)
+// ─────────────────────────────────────────────
+
+document.getElementById('go-play-again-btn').addEventListener('click', () => {
+  document.getElementById('gameover-screen').classList.remove('open');
+  stopAllMusic();
+  startGame(startLevel);
+});
+
+// ─────────────────────────────────────────────
+// RESET LEADERBOARD
+// ─────────────────────────────────────────────
+
+document.getElementById('reset-lb-btn').addEventListener('click', () => {
+  if (confirm('Reset all high scores? This cannot be undone.')) {
+    try { localStorage.removeItem(LB_KEY); } catch {}
+    showTitleLeaderboard();
+    document.getElementById('best-display').textContent = '000000';
+  }
+});
+
+// ─────────────────────────────────────────────
+// TRACK NAME DISPLAY
+// ─────────────────────────────────────────────
+
+function updateTrackDisplay() {
+  const names = { classic:'CLASSIC', music1:'MUSIC 01', music2:'MUSIC 02', music3:'MUSIC 03' };
+  const el = document.getElementById('track-name');
+  if (el) el.textContent = names[audioSettings.currentTrack] || audioSettings.currentTrack.toUpperCase();
+}
+updateTrackDisplay();
+
+// Patch music track selection to also update display
+document.querySelectorAll('.music-opt').forEach(btn => {
+  btn.addEventListener('click', updateTrackDisplay);
+});
+
+// ─────────────────────────────────────────────
+// TOUCH SWIPE CONTROLS
+// ─────────────────────────────────────────────
+
+(function() {
+  let touchStartX = 0, touchStartY = 0;
+  let touchLastX = 0;
+  let swipeActive = false;
+  const SWIPE_THRESHOLD = 18; // px to trigger a swipe step
+  const SWIPE_DOWN_THRESHOLD = 40; // px for hard drop
+
+  canvas.addEventListener('touchstart', e => {
+    if (!gameRunning || state.paused || state.gameOver) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchLastX = t.clientX;
+    swipeActive = true;
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', e => {
+    if (!swipeActive || !gameRunning || state.paused || state.gameOver) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchLastX;
+    const dy = t.clientY - touchStartY;
+
+    // Horizontal swipe: move piece
+    if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+      if (dx > 0) {
+        injectKey('ArrowRight', 'down');
+        setTimeout(() => injectKey('ArrowRight', 'up'), 50);
+      } else {
+        injectKey('ArrowLeft', 'down');
+        setTimeout(() => injectKey('ArrowLeft', 'up'), 50);
+      }
+      touchLastX = t.clientX;
+    }
+    // Swipe down fast = soft drop
+    if (dy > SWIPE_THRESHOLD) {
+      injectKey('ArrowDown', 'down');
+      setTimeout(() => injectKey('ArrowDown', 'up'), 50);
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', e => {
+    if (!swipeActive || !gameRunning || state.paused || state.gameOver) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+    const elapsed = Date.now();
+
+    // Quick tap (minimal movement) = rotate CW
+    if (absDx < 12 && absDy < 12) {
+      injectKey('ArrowUp', 'down');
+      setTimeout(() => injectKey('ArrowUp', 'up'), 50);
+    }
+    // Fast hard swipe down = hard drop
+    if (dy > SWIPE_DOWN_THRESHOLD && absDy > absDx * 1.5) {
+      injectKey('Space', 'down');
+      setTimeout(() => injectKey('Space', 'up'), 50);
+    }
+    swipeActive = false;
+  }, { passive: true });
+})();
+
+// ─────────────────────────────────────────────
+// PATCH startGame to show/hide restart btn
+// ─────────────────────────────────────────────
+
+const _origStartGame = startGame;
+// Override restart visibility after startGame
+const _startGameOrig = startGame;
+function patchedStartGame(lvl) {
+  _startGameOrig(lvl);
+  updateRestartBtn();
+}
+// We can't easily re-assign startGame since it's a function declaration,
+// so patch the restart button directly:
+document.getElementById('restart-btn').style.display = 'none';
+
+// Show restart when game starts
+const _origGameLoop = gameLoop;
+let _restartBtnShown = false;
+function ensureRestartVisible() {
+  if (gameRunning && !state.gameOver && !state.paused) {
+    document.getElementById('restart-btn').style.display = 'block';
+    _restartBtnShown = true;
+  }
+}
+// Use a small poll since gameLoop runs via rAF
+setInterval(() => {
+  const btn = document.getElementById('restart-btn');
+  if (gameRunning && !state.gameOver) {
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
+  }
+}, 500);
+
+// ─────────────────────────────────────────────
+// PATCH showGameOver to show NEW HIGH SCORE + play again
+// ─────────────────────────────────────────────
+
+const _origShowGameOver = showGameOver;
+// Re-declare showGameOver is not possible; instead patch the display of go-play-again-btn here:
+document.getElementById('gameover-screen').addEventListener('transitionend', () => {});
+
+// Observe when game over screen opens to show NEW HIGH SCORE and play again button
+const goObserver = new MutationObserver(() => {
+  const screen = document.getElementById('gameover-screen');
+  if (screen.classList.contains('open')) {
+    // Show play again button
+    document.getElementById('go-play-again-btn').style.display = 'block';
+    // Check for new high score
+    const entries = lbLoad();
+    const nhsEl = document.getElementById('go-new-highscore');
+    if (entries.length > 0 && state.score > 0 && entries[0].score === state.score) {
+      nhsEl.style.display = 'block';
+    } else {
+      nhsEl.style.display = 'none';
+    }
+  }
+});
+goObserver.observe(document.getElementById('gameover-screen'), { attributes: true, attributeFilter: ['class'] });
+
 // Initial render
 const demoState = newGameState(0);
 demoState.board[19] = [5,5,5,5,5,5,5,5,5,5];
