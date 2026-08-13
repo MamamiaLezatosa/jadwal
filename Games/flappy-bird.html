@@ -188,10 +188,12 @@ const point=new Audio(A+"audio/point.wav");
 const hit=new Audio(A+"audio/hit.wav");
 const die=new Audio(A+"audio/die.wav");
 const swoosh=new Audio(A+"audio/swoosh.wav");
+const _allAudio=[wing,point,hit,die,swoosh];
+_allAudio.forEach(a=>{ a.preload='auto'; a.load(); });
 
 let W,H,paused=false,frame=0,groundX=0,bgX=0,nightBlend=0,_pipeTimer=0,_resuming=false,_wasResuming=false;
 // Fixed logical resolution — game always runs at this size internally
-const LW = 360, LH = 640;
+const LW = 414, LH = 736;
 
 // Cap DPR at 1 for low-end phones — halves the pixels filled vs DPR=2
 const DPR = Math.min(window.devicePixelRatio || 1, 1);
@@ -328,14 +330,14 @@ function flap(){
    updatePauseBtn();
    if(!_wasResuming){
      // Fresh start — do flap the bird on this tap
-     const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
+     const speedMult = 1 + Math.min(score/20*0.04 + Math.max(0,score-20)/20*0.06 + Math.max(0,score-40)/20*0.05, 0.40);
      bird.vy = -299.7 * speedMult;
      wing.currentTime=0;
      playSound(wing);
    }
    return;
  }
- const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
+ const speedMult = 1 + Math.min(score/20*0.04 + Math.max(0,score-20)/20*0.06 + Math.max(0,score-40)/20*0.05, 0.40);
  // -324 * 0.925 = -299.7px/s
  bird.vy = -299.7 * speedMult;
  wing.currentTime=0;
@@ -553,6 +555,7 @@ document.getElementById('exit-btn').addEventListener('pointerup',e=>{
     paused=false;
     reset();
     state='menu';
+    updatePauseBtn();
   });
 });
 
@@ -593,7 +596,7 @@ function update(dt){
 
  if(state==="play"){
    // Speed multiplier: smoothly increases with score
-   const speedMult = 1 + Math.min(score/20*0.08 + Math.max(0,score-20)/20*0.12 + Math.max(0,score-40)/20*0.10, 0.80);
+   const speedMult = 1 + Math.min(score/20*0.04 + Math.max(0,score-20)/20*0.06 + Math.max(0,score-40)/20*0.05, 0.40);
 
    // Softer gravity for smoother arc, higher terminal for satisfying fall
    bird.vy += 560 * speedMult * dt;
@@ -608,13 +611,13 @@ function update(dt){
    if(Math.abs(blendDelta) > 0.0001) nightBlend += blendDelta;
 
    // Pipe spawn: 140 frames at 60fps = 2.33s, reduced to 1.75s for higher frequency
-   const pipeInterval = 105 / 60;
+   const pipeInterval = 85 / 60;
    _pipeTimer = (_pipeTimer || 0) + dt;
    if(_pipeTimer >= pipeInterval){ _pipeTimer -= pipeInterval; spawnPipe(); }
 
    for(const p of pipes){
-      // 187.5 * 1.25 = 234.375px/s
-      p.x -= 234.375 * speedMult * dt;
+      // 187.5 * 1.25 = 210px/s
+      p.x -= 210 * speedMult * dt;
 
       if(!p.scored && p.x+64<bird.x){
         p.scored=true;
@@ -635,8 +638,8 @@ function update(dt){
       kill();
    }
 
-   // 187.5 * 1.25 = 234.375px/s
-   groundX=(groundX - 234.375 * speedMult * dt)%48;
+   // 187.5 * 1.25 = 210px/s
+   groundX=(groundX - 210 * speedMult * dt)%48;
  }
 
  if((state==="ready"||state==="menu") && !_resuming){
@@ -720,15 +723,27 @@ function draw(){
  drawBgCached(bgScale, bgW, bgH);
 
  for(const p of pipes){
-   const pw=64, ph=_pipeH;
-   // Top pipe: flip so cap faces down
-   ctx.save();
-   ctx.translate(p.x+pw/2, p.top);
-   ctx.scale(1,-1);
-   ctx.drawImage(pipe,-pw/2,0,pw,Math.max(ph, p.top+ph));
-   ctx.restore();
-   // Bottom pipe
-   ctx.drawImage(pipe,p.x,p.top+p.gap,pw,ph);
+   const pw=64, srcW=52, srcCapH=24, srcBodyH=_pipeH-srcCapH;
+   const capH = 30; // drawn cap height, kept fixed/undistorted
+   // Top pipe: flip so cap faces down into the gap
+   {
+     const totalLen = Math.max(capH+10, p.top+10);
+     const bodyLen = totalLen - capH;
+     ctx.save();
+     ctx.translate(p.x+pw/2, p.top);
+     ctx.scale(1,-1);
+     ctx.drawImage(pipe, 0, 0, srcW, srcCapH, -pw/2, 0, pw, capH);
+     ctx.drawImage(pipe, 0, srcCapH, srcW, srcBodyH, -pw/2, capH, pw, bodyLen);
+     ctx.restore();
+   }
+   // Bottom pipe: cap at top, body stretched down past the ground so it's never cut short
+   {
+     const startY = p.top+p.gap;
+     const totalLen = Math.max(capH+10, (H-startY)+40);
+     const bodyLen = totalLen - capH;
+     ctx.drawImage(pipe, 0, 0, srcW, srcCapH, p.x, startY, pw, capH);
+     ctx.drawImage(pipe, 0, srcCapH, srcW, srcBodyH, p.x, startY+capH, pw, bodyLen);
+   }
  }
 
  // --- Bird: manual rotation via setTransform instead of save/restore ---
@@ -887,8 +902,26 @@ function loop(now){
   update(dt);
   draw();
 }
-_initUI();
-requestAnimationFrame(loop);
+// Preload/decode all sprites before starting so the first real frames aren't
+// spent on image decode + first-time cache builds (this was the startup lag spike).
+const _allImgs=[bgDay,bgNight,base,ready,gameOver,board,...Object.values(medals),
+  ...nums,...scoreNums,titleLogo,startBtn,leaderBtn,okBtn,menuBtn,newBadge,
+  ...birdVariants.flat(),...pipeVariants];
+const _audioReady = Promise.all(_allAudio.map(a=>new Promise(res=>{
+  if(a.readyState >= 2) return res();
+  a.addEventListener('canplaythrough', res, {once:true});
+  a.addEventListener('error', res, {once:true});
+  setTimeout(res, 1500); // don't block startup forever if audio stalls
+})));
+Promise.all([
+  Promise.all(_allImgs.map(im=>im.decode ? im.decode().catch(()=>{}) : Promise.resolve())),
+  _audioReady
+])
+  .catch(()=>{})
+  .then(()=>{
+    _initUI();
+    requestAnimationFrame(loop);
+  });
 </script>
 </body>
 </html>
