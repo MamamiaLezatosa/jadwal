@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sudoku</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :focus { outline: none; }
+  button, div { -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg:                  #F4F1EA;
+    --panel:               #FDFAF4;
+    --panel-border:        #DDD8CC;
+    --stat-bg:             #EDE9DF;
+    --cell:                #FDFAF4;
+    --cell-border:         #DDD8CC;
+    --cell-given:          #EDE9DF;
+    --cell-selected:       #E4D9B8;
+    --cell-selected-border:#C8960A;
+    --cell-peer:           #F0ECE0;
+    --cell-samenum:        #E8DFC4;
+    --cell-error:          #F5DCD9;
+    --cell-error-border:   #C0504A;
+    --text:                #2C2416;
+    --text-given:          #2C2416;
+    --text-user:           #6B5744;
+    --text-muted:          #7A6E5C;
+    --text-tip:            #A09484;
+    --btn-border:          #C8C2B2;
+    --btn-hover:           #EDE9DF;
+    --btn-hover-border:    #8B7355;
+    --accent:              #6B5744;
+    --accent-text:         #FDFAF4;
+    --error-text:          #C0504A;
+    --toggle-bg:           #EDE9DF;
+    --input-bg:            #FDFAF4;
+    --modal-overlay:       rgba(44,36,22,0.35);
+    --grid-line:           #B0A890;
+  }
+
+  body.dark {
+    --bg:                  #1a1a2e;
+    --panel:               #16213e;
+    --panel-border:        #2a2a4a;
+    --stat-bg:             #0f3460;
+    --cell:                #0d1a33;
+    --cell-border:         #1a2244;
+    --cell-given:          #16213e;
+    --cell-selected:       #3a3a1a;
+    --cell-selected-border:#aa8810;
+    --cell-peer:           #14203f;
+    --cell-samenum:        #2a3a2a;
+    --cell-error:          #4a1010;
+    --cell-error-border:   #aa2222;
+    --text:                #e8e8f0;
+    --text-given:          #e8e8f0;
+    --text-user:           #9db4ff;
+    --text-muted:          #8888aa;
+    --text-tip:            #555577;
+    --btn-border:          #3a3a5c;
+    --btn-hover:           #2a2a4a;
+    --btn-hover-border:    #6c6caa;
+    --accent:              #4a4aaa;
+    --accent-text:         #ffffff;
+    --error-text:          #ff6666;
+    --toggle-bg:           #2a2a4a;
+    --input-bg:            #0f1a33;
+    --modal-overlay:       rgba(0,0,0,0.55);
+    --grid-line:           #4a4a7a;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 3rem;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  #top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 1.25rem;
+  }
+  h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--btn-border);
+    background: var(--panel);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, background 0.3s ease, transform 0.15s ease;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn svg { width: 19px; height: 19px; }
+  #theme-toggle .icon-sun { display: none; }
+  #theme-toggle .icon-moon { display: block; }
+  body.dark #theme-toggle .icon-sun { display: block; }
+  body.dark #theme-toggle .icon-moon { display: none; }
+
+  #sd-diff {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 460px;
+  }
+  #sd-diff button {
+    font-size: 13px;
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1.5px solid var(--btn-border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  #sd-diff button:hover { border-color: var(--btn-hover-border); color: var(--text); }
+  #sd-diff button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+  #sd-panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 1.25rem 1.25rem 1rem;
+    width: 100%;
+    max-width: 460px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  #sd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #sd-info { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .sd-stat {
+    background: var(--stat-bg);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+  }
+
+  #sd-restart {
+    font-size: 13px;
+    padding: 5px 13px;
+    border-radius: 8px;
+    border: 1.5px solid var(--btn-border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  #sd-restart:hover { background: var(--btn-hover); border-color: var(--btn-hover-border); }
+
+  #sd-status {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    min-height: 22px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  #sd-status.win { color: var(--accent); }
+  #sd-status.err { color: var(--error-text); }
+
+  #sd-board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    width: 100%;
+    max-width: 396px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 1rem;
+    border: 2px solid var(--grid-line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--grid-line);
+    gap: 1px;
+  }
+
+  .cell {
+    background: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(14px, 4.2vw, 19px);
+    font-weight: 600;
+    color: var(--text-user);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    transition: background 0.1s;
+  }
+  .cell.given { background: var(--cell-given); color: var(--text-given); font-weight: 700; cursor: default; }
+  .cell.peer { background: var(--cell-peer); }
+  .cell.samenum { background: var(--cell-samenum); }
+  .cell.selected { background: var(--cell-selected); box-shadow: inset 0 0 0 2px var(--cell-selected-border); }
+  .cell.error { background: var(--cell-error); color: var(--error-text); box-shadow: inset 0 0 0 2px var(--cell-error-border); }
+
+  /* thicker lines around 3x3 boxes */
+  .cell[data-c="2"], .cell[data-c="5"] { box-shadow: inset -2px 0 0 var(--grid-line); }
+  .cell[data-r="2"], .cell[data-r="5"] { box-shadow: inset 0 -2px 0 var(--grid-line); }
+  .cell[data-c="2"][data-r="2"], .cell[data-c="5"][data-r="2"],
+  .cell[data-c="2"][data-r="5"], .cell[data-c="5"][data-r="5"] { box-shadow: inset -2px -2px 0 var(--grid-line); }
+  .cell.selected[data-c="2"], .cell.selected[data-c="5"],
+  .cell.selected[data-r="2"], .cell.selected[data-r="5"],
+  .cell.error[data-c="2"], .cell.error[data-c="5"],
+  .cell.error[data-r="2"], .cell.error[data-r="5"] { box-shadow: inset 0 0 0 2px var(--cell-selected-border); }
+  .cell.error { z-index: 1; }
+
+  .cell .notes {
+    display: none;
+    position: absolute;
+    inset: 2px;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    font-size: clamp(7px, 1.6vw, 9px);
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .cell.has-notes .notes { display: grid; }
+  .notes span { display: flex; align-items: center; justify-content: center; }
+
+  #sd-numpad {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+    margin-bottom: 0.85rem;
+  }
+  #sd-numpad button {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1.5px solid var(--btn-border);
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #sd-numpad button:hover { background: var(--btn-hover); border-color: var(--btn-hover-border); }
+  #sd-numpad button:active { transform: scale(0.92); }
+
+  #sd-tools {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  #sd-tools button {
+    font-size: 12.5px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1.5px solid var(--btn-border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  #sd-tools button:hover { background: var(--btn-hover); border-color: var(--btn-hover-border); }
+  #sd-tools button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  #sd-tools svg { width: 14px; height: 14px; }
+
+  #sd-tip {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-tip);
+    margin-top: 0.75rem;
+  }
+
+  /* ── Settings modal ── */
+  #settings-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  #settings-modal.open { display: flex; }
+
+  #settings-box {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 320px;
+  }
+  #settings-box h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+    gap: 12px;
+  }
+  .settings-row label {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .switch { position: relative; width: 44px; height: 25px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: var(--toggle-bg);
+    border: 1.5px solid var(--btn-border);
+    border-radius: 25px;
+    transition: 0.2s;
+  }
+  .switch .slider::before {
+    content: ""; position: absolute; height: 17px; width: 17px;
+    left: 3px; bottom: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .switch input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(19px); background: var(--accent-text); }
+
+  .settings-row input[type="number"] {
+    width: 70px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--btn-border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: center;
+  }
+  #max-mistakes-row.disabled { opacity: 0.45; pointer-events: none; }
+
+  #settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    gap: 8px;
+  }
+  #settings-actions button {
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--btn-border);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  #settings-actions button:hover { opacity: 0.85; }
+
+  #game-area { position: relative; }
+
+  #start-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--panel);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #start-box { text-align: center; padding: 1rem; }
+  #start-icon { font-size: 40px; margin-bottom: 0.75rem; }
+  #start-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 1.1rem; max-width: 260px; }
+  #start-btn {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 28px;
+    border-radius: 10px;
+    border: 1.5px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  #start-btn:hover { opacity: 0.85; }
+
+  /* Leaderboard modal */
+  #leaderboard-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  #leaderboard-modal.open { display: flex; }
+  #leaderboard-box {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  #leaderboard-box h2 { font-size: 16px; font-weight: 700; color: var(--text); }
+  .lb-entry {
+    background: var(--stat-bg);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+  .lb-entry .lb-diff { font-size: 14px; font-weight: 600; color: var(--text); }
+  .lb-entry .lb-time { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .lb-entry .lb-time.empty { color: var(--text-tip); font-weight: 500; font-size: 13px; }
+
+  @media (max-width: 500px) {
+    h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body class="dark">
+
+  <div id="top-bar">
+    <h1>🔢 Sudoku</h1>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="leaderboard-btn" onclick="openLeaderboard()" aria-label="Leaderboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M6 2h12v10a6 6 0 0 1-12 0V2z"/><path d="M12 18v4"/><path d="M8 22h8"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Pengaturan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Ganti tema">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="sd-diff">
+    <button onclick="setDiff('mudah')" id="btn-mudah">Mudah</button>
+    <button onclick="setDiff('sedang')" class="active" id="btn-sedang">Sedang</button>
+    <button onclick="setDiff('sulit')" id="btn-sulit">Sulit</button>
+    <button onclick="setDiff('ahli')" id="btn-ahli">Ahli</button>
+  </div>
+
+  <div id="sd-panel">
+    <div id="sd-header">
+      <div id="sd-info">
+        <div class="sd-stat">⏱ <span id="sd-time">00:00</span></div>
+        <div class="sd-stat">❌ <span id="sd-mistakes-wrap"><span id="sd-mistakes">0</span>/<span id="sd-max-mistakes">3</span></span></div>
+      </div>
+      <button id="sd-restart" onclick="newGame()">↻ Baru</button>
+    </div>
+
+    <div id="sd-status"></div>
+
+    <div id="game-area">
+      <div id="sd-board"></div>
+      <div id="sd-numpad"></div>
+      <div id="sd-tools">
+        <button id="tool-notes" onclick="toggleNotes()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Catatan
+        </button>
+        <button onclick="eraseCell()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-1-1-1-2 0-3L13 3c1-1 2-1 3 0l5 5c1 1 1 2 0 3L11 21"/></svg>
+          Hapus
+        </button>
+        <button onclick="giveHint()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Petunjuk
+        </button>
+        <button onclick="undo()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
+          Undo
+        </button>
+      </div>
+
+      <div id="start-overlay">
+        <div id="start-box">
+          <div id="start-icon">🔢</div>
+          <p>Papan siap. Tekan mulai saat kamu siap bermain.</p>
+          <button id="start-btn" onclick="startGame()">▶ Mulai</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="sd-tip">Ketuk sel, lalu pilih angka. Tahan mode Catatan untuk menandai kemungkinan.</div>
+  </div>
+
+  <div id="leaderboard-modal">
+    <div id="leaderboard-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <h2>🏆 Leaderboard</h2>
+        <button class="icon-btn" id="lb-close-btn" onclick="closeLeaderboard()" style="width:32px;height:32px;" aria-label="Tutup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:1rem;">Waktu tercepat menyelesaikan papan, per tingkat kesulitan</p>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <div id="settings-modal">
+    <div id="settings-box">
+      <h2>Pengaturan</h2>
+      <div class="settings-row">
+        <label for="mistakes-toggle">Sistem Kesalahan</label>
+        <label class="switch">
+          <input type="checkbox" id="mistakes-toggle" onchange="setMistakesEnabled(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-row" id="max-mistakes-row">
+        <label for="max-mistakes-input">Jumlah Kesalahan Maks.</label>
+        <input type="number" id="max-mistakes-input" min="1" max="99" value="3" onchange="setMaxMistakes(this.value)">
+      </div>
+      <div id="settings-actions" style="justify-content:space-between;">
+        <button id="reset-lb-btn" onclick="resetLeaderboard()" style="background:transparent;border-color:var(--btn-border);color:var(--text-muted);">🗑 Reset Leaderboard</button>
+        <button onclick="closeSettings()">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Sudoku generation (backtracking + dig-holes) ---------- */
+function emptyGrid(){ return Array.from({length:9},()=>Array(9).fill(0)); }
+
+function isValid(g, r, c, v){
+  for(let i=0;i<9;i++){ if(g[r][i]===v || g[i][c]===v) return false; }
+  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(g[br+i][bc+j]===v) return false;
+  return true;
+}
+
+function shuffled(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function fillGrid(g){
+  for(let pos=0; pos<81; pos++){
+    const r=Math.floor(pos/9), c=pos%9;
+    if(g[r][c]!==0) continue;
+    for(const v of shuffled([1,2,3,4,5,6,7,8,9])){
+      if(isValid(g,r,c,v)){
+        g[r][c]=v;
+        if(fillGrid(g)) return true;
+        g[r][c]=0;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+function countSolutions(g, limit){
+  let count=0;
+  function solve(){
+    if(count>=limit) return;
+    for(let pos=0; pos<81; pos++){
+      const r=Math.floor(pos/9), c=pos%9;
+      if(g[r][c]===0){
+        for(let v=1; v<=9; v++){
+          if(isValid(g,r,c,v)){
+            g[r][c]=v;
+            solve();
+            g[r][c]=0;
+            if(count>=limit) return;
+          }
+        }
+        return;
+      }
+    }
+    count++;
+  }
+  solve();
+  return count;
+}
+
+function generatePuzzle(holes){
+  const solution = emptyGrid();
+  fillGrid(solution);
+  const puzzle = solution.map(row=>row.slice());
+  const cells = shuffled(Array.from({length:81},(_,i)=>i));
+  let removed = 0;
+  for(const pos of cells){
+    if(removed>=holes) break;
+    const r=Math.floor(pos/9), c=pos%9;
+    const backup = puzzle[r][c];
+    if(backup===0) continue;
+    puzzle[r][c]=0;
+    const test = puzzle.map(row=>row.slice());
+    if(countSolutions(test, 2)===1){
+      removed++;
+    } else {
+      puzzle[r][c]=backup;
+    }
+  }
+  return { puzzle, solution };
+}
+
+/* ---------- Game state ---------- */
+const DIFF = {
+  mudah: { holes: 38 },
+  sedang:{ holes: 46 },
+  sulit: { holes: 52 },
+  ahli:  { holes: 58 },
+};
+
+let solution, given, board, notes;
+let selected = null;
+let mistakes = 0;
+let maxMistakes = parseInt(localStorage.getItem('sd_max_mistakes'), 10) || 3;
+let mistakesEnabled = localStorage.getItem('sd_mistakes_enabled') !== '0';
+let notesMode = false;
+let seconds = 0, timerId = null;
+let currentDiff = localStorage.getItem('sd_diff') || 'sedang';
+let history = [];
+let gameOver = false;
+let gameStarted = false;
+
+const boardEl = document.getElementById('sd-board');
+const numpadEl = document.getElementById('sd-numpad');
+const statusEl = document.getElementById('sd-status');
+const timeEl = document.getElementById('sd-time');
+const mistakesEl = document.getElementById('sd-mistakes');
+const maxMistakesEl = document.getElementById('sd-max-mistakes');
+
+function buildBoardDOM(){
+  boardEl.innerHTML = '';
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+      cell.addEventListener('click', ()=>selectCell(r,c));
+      const notesDiv = document.createElement('div');
+      notesDiv.className = 'notes';
+      for(let n=1;n<=9;n++){ const s=document.createElement('span'); s.dataset.n=n; notesDiv.appendChild(s); }
+      cell.appendChild(notesDiv);
+      const numSpan = document.createElement('span');
+      numSpan.className = 'num';
+      cell.appendChild(numSpan);
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function buildNumpadDOM(){
+  numpadEl.innerHTML = '';
+  for(let n=1;n<=9;n++){
+    const b = document.createElement('button');
+    b.textContent = n;
+    b.addEventListener('click', ()=>inputNumber(n));
+    numpadEl.appendChild(b);
+  }
+}
+
+function setDiff(d){
+  currentDiff = d;
+  localStorage.setItem('sd_diff', d);
+  document.querySelectorAll('#sd-diff button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+d).classList.add('active');
+  newGame();
+}
+
+function newGame(){
+  const { holes } = DIFF[currentDiff];
+  const gen = generatePuzzle(holes);
+  solution = gen.solution;
+  given = gen.puzzle.map(row=>row.map(v=>v!==0));
+  board = gen.puzzle.map(row=>row.slice());
+  notes = Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
+  selected = null;
+  mistakes = 0;
+  gameOver = false;
+  gameStarted = false;
+  history = [];
+  seconds = 0;
+  if(timerId){ clearInterval(timerId); timerId = null; }
+  updateStats();
+  statusEl.textContent = '';
+  statusEl.className = '';
+  render();
+  document.getElementById('start-overlay').style.display = 'flex';
+}
+
+function startGame(){
+  gameStarted = true;
+  document.getElementById('start-overlay').style.display = 'none';
+  startTimer();
+}
+
+function startTimer(){
+  if(timerId) clearInterval(timerId);
+  timerId = setInterval(()=>{
+    if(gameOver) return;
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    timeEl.textContent = m+':'+s;
+  }, 1000);
+}
+
+function updateStats(){
+  mistakesEl.textContent = mistakes;
+  maxMistakesEl.textContent = maxMistakes;
+  const m = String(Math.floor(seconds/60)).padStart(2,'0');
+  const s = String(seconds%60).padStart(2,'0');
+  timeEl.textContent = m+':'+s;
+}
+
+function selectCell(r,c){
+  if(gameOver || !gameStarted) return;
+  selected = {r,c};
+  render();
+}
+
+function pushHistory(){
+  history.push({
+    board: board.map(row=>row.slice()),
+    notes: notes.map(row=>row.map(s=>new Set(s))),
+    mistakes
+  });
+  if(history.length>200) history.shift();
+}
+
+function undo(){
+  if(gameOver || !gameStarted || history.length===0) return;
+  const prev = history.pop();
+  board = prev.board;
+  notes = prev.notes;
+  mistakes = prev.mistakes;
+  updateStats();
+  render();
+}
+
+function inputNumber(n){
+  if(gameOver || !gameStarted || !selected) return;
+  const {r,c} = selected;
+  if(given[r][c]) return;
+
+  if(notesMode){
+    pushHistory();
+    if(notes[r][c].has(n)) notes[r][c].delete(n);
+    else notes[r][c].add(n);
+    render();
+    return;
+  }
+
+  pushHistory();
+  board[r][c] = n;
+  notes[r][c].clear();
+
+  if(n !== solution[r][c]){
+    if(mistakesEnabled){
+      mistakes++;
+      updateStats();
+      if(mistakes >= maxMistakes){
+        render();
+        endGame(false);
+        return;
+      }
+    }
+  } else {
+    // clear this number from notes of peers
+    clearPeerNotes(r,c,n);
+  }
+
+  render();
+  checkWin();
+}
+
+function clearPeerNotes(r,c,n){
+  for(let i=0;i<9;i++){
+    notes[r][i].delete(n);
+    notes[i][c].delete(n);
+  }
+  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++) notes[br+i][bc+j].delete(n);
+}
+
+function eraseCell(){
+  if(gameOver || !gameStarted || !selected) return;
+  const {r,c} = selected;
+  if(given[r][c]) return;
+  pushHistory();
+  board[r][c] = 0;
+  notes[r][c].clear();
+  render();
+}
+
+function giveHint(){
+  if(gameOver || !gameStarted) return;
+  let target = selected;
+  if(!target || given[target.r][target.c] || board[target.r][target.c]===solution[target.r][target.c]){
+    outer:
+    for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+      if(!given[r][c] && board[r][c]!==solution[r][c]){ target={r,c}; break outer; }
+    }
+  }
+  if(!target) return;
+  pushHistory();
+  const {r,c} = target;
+  board[r][c] = solution[r][c];
+  notes[r][c].clear();
+  clearPeerNotes(r,c,solution[r][c]);
+  selected = target;
+  render();
+  checkWin();
+}
+
+function toggleNotes(){
+  notesMode = !notesMode;
+  document.getElementById('tool-notes').classList.toggle('on', notesMode);
+}
+
+function checkWin(){
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+    if(board[r][c] !== solution[r][c]) return;
+  }
+  endGame(true);
+}
+
+function endGame(won){
+  gameOver = true;
+  if(timerId) clearInterval(timerId);
+  statusEl.textContent = won ? '🎉 Selesai! Papan terpecahkan.' : '💥 Game over — terlalu banyak kesalahan.';
+  statusEl.className = won ? 'win' : 'err';
+  if(won) recordScore(currentDiff, seconds);
+}
+
+function render(){
+  const cells = boardEl.children;
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const idx = r*9+c;
+      const cell = cells[idx];
+      const val = board[r][c];
+      const numSpan = cell.querySelector('.num');
+      const notesDiv = cell.querySelector('.notes');
+
+      cell.classList.toggle('given', given[r][c]);
+      cell.classList.toggle('selected', !!selected && selected.r===r && selected.c===c);
+
+      const isErr = val!==0 && !given[r][c] && val!==solution[r][c];
+      cell.classList.toggle('error', isErr);
+
+      let isPeer=false, isSame=false;
+      if(selected){
+        const sr=selected.r, sc=selected.c;
+        isPeer = (r===sr || c===sc || (Math.floor(r/3)===Math.floor(sr/3) && Math.floor(c/3)===Math.floor(sc/3)));
+        const selVal = board[sr][sc];
+        isSame = selVal!==0 && val===selVal && !(r===sr&&c===sc);
+      }
+      cell.classList.toggle('peer', isPeer && !(selected.r===r && selected.c===c));
+      cell.classList.toggle('samenum', isSame);
+
+      if(val!==0){
+        numSpan.textContent = val;
+        cell.classList.remove('has-notes');
+        notesDiv.querySelectorAll('span').forEach(s=>s.textContent='');
+      } else {
+        numSpan.textContent = '';
+        const ns = notes[r][c];
+        cell.classList.toggle('has-notes', ns.size>0);
+        notesDiv.querySelectorAll('span').forEach(s=>{
+          s.textContent = ns.has(+s.dataset.n) ? s.dataset.n : '';
+        });
+      }
+    }
+  }
+}
+
+/* ---------- Keyboard support ---------- */
+document.addEventListener('keydown', e=>{
+  if(!selected || !gameStarted || gameOver) return;
+  if(e.key>='1' && e.key<='9'){ inputNumber(+e.key); return; }
+  if(e.key==='Backspace' || e.key==='Delete' || e.key==='0'){ eraseCell(); return; }
+  let {r,c} = selected;
+  if(e.key==='ArrowUp') r = Math.max(0,r-1);
+  else if(e.key==='ArrowDown') r = Math.min(8,r+1);
+  else if(e.key==='ArrowLeft') c = Math.max(0,c-1);
+  else if(e.key==='ArrowRight') c = Math.min(8,c+1);
+  else return;
+  e.preventDefault();
+  selectCell(r,c);
+});
+
+/* ---------- Theme ---------- */
+let dark = localStorage.getItem('sd_dark');
+dark = dark === null ? true : dark === '1';
+document.body.classList.toggle('dark', dark);
+function openSettings(){
+  document.getElementById('mistakes-toggle').checked = mistakesEnabled;
+  document.getElementById('max-mistakes-input').value = maxMistakes;
+  document.getElementById('max-mistakes-row').classList.toggle('disabled', !mistakesEnabled);
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings(){
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function setMistakesEnabled(v){
+  mistakesEnabled = v;
+  localStorage.setItem('sd_mistakes_enabled', v ? '1' : '0');
+  document.getElementById('sd-mistakes-wrap').parentElement.style.display = v ? 'flex' : 'none';
+  document.getElementById('max-mistakes-row').classList.toggle('disabled', !v);
+}
+function setMaxMistakes(v){
+  let n = parseInt(v, 10);
+  if(isNaN(n) || n<1) n=1;
+  if(n>99) n=99;
+  maxMistakes = n;
+  document.getElementById('max-mistakes-input').value = n;
+  localStorage.setItem('sd_max_mistakes', n);
+  updateStats();
+}
+
+/* ---------- Leaderboard ---------- */
+const DIFF_LABELS = { mudah:'Mudah', sedang:'Sedang', sulit:'Sulit', ahli:'Ahli' };
+function loadLeaderboard(){
+  try { return JSON.parse(localStorage.getItem('sd_leaderboard') || '{}'); } catch(e){ return {}; }
+}
+function saveLeaderboard(lb){
+  localStorage.setItem('sd_leaderboard', JSON.stringify(lb));
+}
+function recordScore(diff, secs){
+  const lb = loadLeaderboard();
+  if(lb[diff] == null || secs < lb[diff]) {
+    lb[diff] = secs;
+    saveLeaderboard(lb);
+  }
+}
+function formatSecs(s){
+  const m = String(Math.floor(s/60)).padStart(2,'0');
+  const sec = String(s%60).padStart(2,'0');
+  return m+':'+sec;
+}
+function renderLeaderboard(){
+  const lb = loadLeaderboard();
+  const list = document.getElementById('lb-list');
+  list.innerHTML = '';
+  Object.keys(DIFF_LABELS).forEach(d=>{
+    const entry = document.createElement('div');
+    entry.className = 'lb-entry';
+    const time = lb[d];
+    entry.innerHTML = `<span class="lb-diff">${DIFF_LABELS[d]}</span>` +
+      (time!=null ? `<span class="lb-time">${formatSecs(time)}</span>` : `<span class="lb-time empty">Belum ada</span>`);
+    list.appendChild(entry);
+  });
+}
+function openLeaderboard(){
+  renderLeaderboard();
+  document.getElementById('leaderboard-modal').classList.add('open');
+}
+function closeLeaderboard(){
+  document.getElementById('leaderboard-modal').classList.remove('open');
+}
+function resetLeaderboard(){
+  if(confirm('Hapus semua data leaderboard?')){
+    localStorage.removeItem('sd_leaderboard');
+  }
+}
+
+function toggleTheme(){
+  dark = !dark;
+  document.body.classList.toggle('dark', dark);
+  localStorage.setItem('sd_dark', dark ? '1' : '0');
+}
+
+/* ---------- Init ---------- */
+document.querySelectorAll('#sd-diff button').forEach(b=>b.classList.remove('active'));
+const activeBtn = document.getElementById('btn-'+currentDiff);
+if(activeBtn) activeBtn.classList.add('active');
+
+buildBoardDOM();
+buildNumpadDOM();
+document.getElementById('sd-mistakes-wrap').parentElement.style.display = mistakesEnabled ? 'flex' : 'none';
+document.getElementById('max-mistakes-row').classList.toggle('disabled', !mistakesEnabled);
+newGame();
+</script>
+</body>
+</html>
