@@ -5,12 +5,13 @@
       "path": "Games",
       "files": [
         { "name": "Minesweeper", "path": "minesweeper.html", "icon": "minesweeper.png" },
-        { "name": "Wordle", "path": "wordle.html", "icon": "wordle.png" },
+        { "name": "Sudoku", "path": "sudoku.html", "icon": "sudoku.jpg" },
         { "name": "Snake", "path": "snake.html", "icon": "snake.png" },
         { "name": "2048", "path": "2048.html", "icon": "2048.png" },
+        { "name": "Worlde", "path": "wordle.html", "icon": "wordle.png" },
         { "name": "Flappy Bird", "path": "flappy-bird.html", "icon": "flappy-bird.png" },
-        { "name": "Tetris", "path": "tetris.html", "icon": "tetris.png" }
-        
+        { "name": "Tetris", "path": "tetris.html", "icon": "tetris.png" },
+        { "name": "Bounce Original", "path": "bounce-original.html", "icon": "bounce-original.png" }
       ]
     },
     {
