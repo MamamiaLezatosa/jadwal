@@ -1,0 +1,2806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Bounce — HTML5 Remake</title>
+<link rel="icon" href="../Assets/Bounce/images/favicon.png" />
+<style>
+
+@font-face {
+  font-family: "PixelBounce";
+  src: local("Courier New");
+}
+
+:root {
+  --phone-body: #c9cdd3;
+  --phone-body-dark: #9aa0a8;
+  --screen-bezel: #2b2f36;
+  --screen-bg: #0a1f0a;
+  --accent-red: #d81e2c;
+  --accent-red-dark: #9c141f;
+  --accent-blue: #1a4fa0;
+  --text-light: #eef1f5;
+  --text-dim: #b8c0c9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 20%, #2a2d33, #101115 70%);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-light);
+  padding: 24px;
+}
+
+.phone {
+  width: 380px;
+  max-width: 100%;
+  background: linear-gradient(160deg, var(--phone-body), var(--phone-body-dark) 85%);
+  border-radius: 34px;
+  padding: 22px 18px 28px;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.55),
+    inset 0 2px 0 rgba(255,255,255,0.4),
+    inset 0 -6px 12px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+.phone::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.18);
+}
+
+.brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 6px 10px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #4b4f57;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.brand-row .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.screen-frame {
+  background: var(--screen-bezel);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: inset 0 0 0 2px #000, inset 0 4px 14px rgba(0,0,0,0.6);
+}
+
+.screen {
+  position: relative;
+  background: var(--screen-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+}
+
+.level-select-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 31, 10, 0.96);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px 8px;
+  box-sizing: border-box;
+  z-index: 5;
+}
+
+.level-select-overlay.open { display: flex; }
+
+.level-select-title {
+  color: #eef7ee;
+  font: bold 13px 'Courier New', monospace;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.level-select-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.level-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid #2f5f38;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #1c3d20, #122815);
+  color: #eef7ee;
+  font: bold 14px 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.level-tile:hover:not(:disabled) { border-color: #5fd3c4; color: #5fd3c4; }
+
+.level-tile.done {
+  border-color: #5fd3c4;
+  background: linear-gradient(160deg, #1f4a3c, #123028);
+}
+
+.level-tile.done::after {
+  content: "\2713";
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: #5fd3c4;
+}
+
+.level-tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  color: #7fae8a;
+}
+
+.level-tile:disabled::before {
+  content: "\1F512";
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+}
+
+.level-select-back {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid #3a6b44;
+  color: #a9d9b4;
+  font: 10px 'Courier New', monospace;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.level-select-back:hover { border-color: #5fd3c4; color: #5fd3c4; }
+
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  background: #a2d3e3;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: #5a5f68;
+  padding: 8px 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud span b {
+  color: #23262b;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding: 0 4px;
+}
+
+.softkey {
+  font-size: 10px;
+  color: #4b4f57;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  width: 70px;
+  text-align: center;
+}
+.softkey.right { text-align: right; }
+
+.dpad {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #eef0f2, #babfc7);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.7);
+  margin: 18px auto 0;
+  touch-action: none;
+}
+
+.dpad-btn {
+  position: absolute;
+  border: none;
+  background: transparent;
+  color: #565b63;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.dpad-btn:active { color: var(--accent-red); }
+.dpad-left  { left: 2px; top: 50%; width: 36px; height: 44px; transform: translateY(-50%); }
+.dpad-right { right: 2px; top: 50%; width: 36px; height: 44px; transform: translateY(-50%); }
+.dpad-center {
+  left: 50%; top: 50%; width: 40px; height: 40px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #fff, #d7dade);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.controls-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 18px;
+}
+.controls-area .dpad { margin: 0; }
+
+.jump-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(160deg, #ff5b56, var(--accent-red));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 4px 10px rgba(216,30,44,0.45), inset 0 1px 2px rgba(255,255,255,0.5);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.05s ease;
+}
+.jump-btn::before {
+  content: "\25B2";
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.jump-btn:active, .jump-btn.pressed {
+  transform: scale(0.92);
+  background: linear-gradient(160deg, var(--accent-red), #a01118);
+}
+
+.legend {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 10px;
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 0 6px;
+}
+.legend div { display: flex; align-items: center; gap: 5px; }
+.legend i {
+  width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+  background-size: cover; image-rendering: pixelated;
+}
+.leg-wall { background-color: #a13024; }
+.leg-bouncy { background-color: #1a4fa0; }
+.leg-hazard { background-color: #d43a2f; }
+.leg-life { background-color: #a9d8e8; }
+.leg-antigrav { background-color: #1a3f7a; }
+.leg-highjump { background-color: #3a5fa0; }
+.leg-goal { background-color: #eeeeee; border: 2px solid #de2529; }
+
+@media (max-width: 420px) {
+  .phone { width: 100%; padding: 16px 12px 22px; border-radius: 24px; }
+  .dpad { width: 96px; height: 96px; }
+}
+
+.cheat-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  color: #cfd3d8;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  line-height: 1;
+}
+.cheat-toggle:hover { color: #fff; border-color: rgba(255,255,255,0.35); }
+.cheat-toggle.active { color: #5fd3c4; border-color: #5fd3c4; }
+
+.cheat-panel {
+  position: fixed;
+  top: 56px;
+  right: 16px;
+  z-index: 20;
+  width: 220px;
+  background: #14161ae6;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 12px 14px 14px;
+  font-family: "Courier New", monospace;
+  color: #cfd3d8;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  display: none;
+}
+.cheat-panel.open { display: block; }
+
+.cheat-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #8b91a0;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.cheat-panel-header button {
+  background: none;
+  border: none;
+  color: #8b91a0;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.cheat-panel-header button:hover { color: #fff; }
+
+.cheat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  padding: 5px 0;
+  cursor: pointer;
+  user-select: none;
+}
+.cheat-row input { accent-color: #5fd3c4; }
+.cheat-row.sub { padding-left: 2px; }
+.cheat-row.sub.disabled { color: #565a63; cursor: not-allowed; }
+
+.cheat-section-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #8b91a0;
+  margin: 10px 0 6px;
+  text-transform: uppercase;
+}
+
+.cheat-level-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.cheat-level-grid button {
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  background: #262b35;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #cfd3d8;
+  border-radius: 5px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.cheat-level-grid button:hover:not(:disabled) { border-color: #5fd3c4; color: #5fd3c4; }
+.cheat-level-grid button:disabled { opacity: 0.35; cursor: not-allowed; }
+.cheat-level-grid button.current { background: #5fd3c4; color: #0c1210; border-color: #5fd3c4; }
+
+#row-buffs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+#row-buffs button {
+  font-family: "Courier New", monospace;
+  font-size: 10.5px;
+  background: #262b35;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #cfd3d8;
+  border-radius: 5px;
+  padding: 6px 2px;
+  cursor: pointer;
+}
+#row-buffs button:hover:not(:disabled) { border-color: #5fd3c4; color: #5fd3c4; }
+#row-buffs button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+
+</style>
+</head>
+<body>
+
+  <button class="cheat-toggle" id="cheat-toggle" aria-label="Cheats">&#9881;</button>
+  <div class="cheat-panel" id="cheat-panel">
+    <div class="cheat-panel-header">
+      <span>CHEAT MODE</span>
+      <button id="cheat-close" aria-label="Close">&times;</button>
+    </div>
+    <label class="cheat-row">
+      <input type="checkbox" id="cheat-master">
+      Enable cheat mode
+    </label>
+    <label class="cheat-row sub" id="row-noclip">
+      <input type="checkbox" id="cheat-noclip" disabled>
+      No-clip + free roam (fly, ignore gravity)
+    </label>
+    <div class="cheat-row sub" id="row-freeroam-hint" style="display:none">
+      Fly: arrows/WASD · hold <b id="freeroam-down-btn" style="cursor:pointer;color:#5fd3c4;text-decoration:underline">DOWN</b> to descend
+    </div>
+    <label class="cheat-row sub" id="row-invincible">
+      <input type="checkbox" id="cheat-invincible" disabled>
+      Invincibility
+    </label>
+    <label class="cheat-row sub" id="row-debug">
+      <input type="checkbox" id="cheat-debug" disabled>
+      Show collision debug overlay
+    </label>
+    <div class="cheat-section-label">Grant buff</div>
+    <div class="cheat-row sub" id="row-buffs">
+      <button type="button" id="cheat-buff-antigrav" disabled>Antigravity</button>
+      <button type="button" id="cheat-buff-speed" disabled>Speed up</button>
+      <button type="button" id="cheat-buff-highjump" disabled>High jump</button>
+    </div>
+    <div class="cheat-section-label">Jump to level</div>
+    <div class="cheat-level-grid" id="cheat-level-grid"></div>
+  </div>
+
+  <div class="phone">
+    <div class="brand-row"><span><span class="dot"></span>NOKIA</span><span>BOUNCE</span></div>
+
+    <div class="screen-frame">
+      <div class="screen">
+        <canvas id="game-canvas" width="336" height="208"></canvas>
+        <div class="level-select-overlay" id="level-select-overlay">
+          <div class="level-select-title">SELECT LEVEL</div>
+          <div class="level-select-grid" id="level-select-grid"></div>
+          <button type="button" class="level-select-back" id="level-select-back">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud">
+      <span>SCORE <b id="hud-score">0</b></span>
+      <span>LEVEL <b id="hud-level">1</b></span>
+      <span>HOOPS <b id="hud-hoops">0/0</b></span>
+      <span>LIVES <b id="hud-lives">3</b></span>
+    </div>
+
+    <div class="controls-row">
+      <div class="softkey"></div>
+      <div class="softkey right"></div>
+    </div>
+
+    <div class="controls-area">
+      <div class="dpad" id="dpad">
+        <button class="dpad-btn dpad-left" id="btn-left" aria-label="Move left">&#9664;</button>
+        <div class="dpad-btn dpad-center" id="btn-action">START</div>
+        <button class="dpad-btn dpad-right" id="btn-right" aria-label="Move right">&#9654;</button>
+      </div>
+      <button class="jump-btn" id="btn-jump">JUMP</button>
+    </div>
+
+    <div class="legend">
+      <div><i class="leg-wall"></i>Wall</div>
+      <div><i class="leg-bouncy"></i>Bouncy</div>
+      <div><i class="leg-hazard"></i>Hazard</div>
+      <div><i class="leg-life"></i>Life</div>
+      <div><i class="leg-antigrav"></i>Antigrav</div>
+      <div><i class="leg-highjump"></i>High jump</div>
+    </div>
+  </div>
+
+  <script>
+// ===================================================================
+// BOUNCE — HTML5 remake
+// Loads the ORIGINAL Nokia Bounce level files (J2MElvl.001-011) and
+// parses the real binary format straight from the decompiled loader
+// (b.java: LoadLevelId). Tile IDs match the authoritative list decoded
+// from those files.
+//
+// Header (8 bytes): ballX, ballY, bigBall(0/1), exitX, exitY,
+//                    hoopsTotal, width, height
+// Then width*height bytes of tile IDs (row-major).
+// Then 1 byte dynamic-thorn count (+ their data — not yet used here).
+//
+// STATUS: this is stage 1 of the full port — real levels load and are
+// fully navigable with correct wall/bouncy/hazard/life/checkpoint/
+// antigravity/highjump/hoop/locked-exit behavior. Diagonal slope
+// collision, water buoyancy, speed boxes, inflate/deflate, moving
+// (dynamic) thorns, and 2x2 doors/spikes are drawn with their real
+// textures but still behave as simple solid/no-op placeholders —
+// noted inline with TODO(full-port).
+// ===================================================================
+
+(() => {
+  "use strict";
+
+  // ---- level files -------------------------------------------------
+  const LEVEL_FILES = [
+    "J2MElvl.001", "J2MElvl.002", "J2MElvl.003", "J2MElvl.004",
+    "J2MElvl.005", "J2MElvl.006", "J2MElvl.007", "J2MElvl.008",
+    "J2MElvl.009", "J2MElvl.010", "J2MElvl.011",
+  ];
+  const LEVEL_DIR = "../Assets/Bounce/levels/";
+
+  // ---- constants -------------------------------------------------
+  const TILE = 16;                  // on-screen tile size (native art is 12px, upscaled crisp)
+  const BALL_SIZE_NORMAL = 14;
+  const BALL_SIZE_BIG = 21; // 1.5x BALL_SIZE_NORMAL
+
+  const VIEW_COLS = 21, VIEW_ROWS = 13;   // camera viewport, matches the phone screen (336x208)
+
+  // Gravity differs by ball size (matches the original: big ball falls
+  // slower AND jumps higher off the exact same jump impulse). Values below
+  // are calibrated so a normal jump reaches 5.25 tiles for the small ball
+  // and 8.75 tiles for the big ball, per direct measurement of the original game.
+  const GRAVITY_SMALL = 780;
+  const GRAVITY_BIG = 468;
+  const MAX_FALL_SMALL = 460;
+  const MAX_FALL_BIG = 276;
+  const MOVE_ACCEL = 1000;
+  const FRICTION = 820;
+  const MAX_MOVE = 190;
+  const BOUNCE_DAMPING = 0.48;
+  const REST_VEL = 40;
+  const BOUNCY_BOOST = 1.25;
+  const JUMP_VELOCITY = 337;        // shared by both ball sizes — height differs purely from gravity above; +0.3 tile over the previous 326
+  const JUMP_VELOCITY_BOOSTED = 470; // with a high-jump pickup active, once fully ramped in
+  const HIGHJUMP_RAMP_START_SCALE = 0.15; // fraction of the full boost available the instant the pickup is grabbed
+  const HIGHJUMP_RAMP_TIME = 3;      // seconds to ramp from RAMP_START_SCALE up to the full boost
+  const BOUNCE_CHAIN_STEP = 40;     // added to jump velocity per consecutive jump off bouncy ground — uncapped
+  const HIGHJUMP_BOOST_TIME = 8;    // seconds a high-jump pickup lasts
+  const ANTIGRAV_TIME = 7;
+  const SPEEDBOOST_TIME = 6;        // seconds a speed-up pickup lasts
+  const SPEED_BOOST_SCALE = 1.7;    // multiplier on move accel + top speed while active
+  const RESPAWN_DELAY = 0.9;
+  const SPIKE_SPEED = 1.6; // tiles/sec — moving 2x2 spike travel speed
+
+  // Water (per the ID notes: big balls float, small balls sink, and a small
+  // ball's jump is weaker underwater). Buoyancy is modeled as just another
+  // gravity value swapped in while submerged — negative for the big ball
+  // (a steady net force pulling it back UP toward the surface) so diving in
+  // fast still carries it down a bit before the float wins, which falls out
+  // naturally from applying it per-substep rather than needing a special
+  // "enter water" event.
+  const WATER_FLOAT_ACCEL_BIG = 320;   // net upward accel for a submerged big ball
+  const WATER_MAX_RISE_BIG = 80;       // terminal float-up speed
+  const WATER_MAX_DIVE_BIG = 85;       // cap on the initial dive-in speed, separate from normal air fall
+  const WATER_SINK_GRAVITY_SCALE_SMALL = 0.3; // small ball still sinks, just slower
+  const WATER_MAX_SINK_SMALL = 85;
+  const WATER_JUMP_SCALE_SMALL = 0.55; // weaker jump impulse, small ball only
+  const WATER_MOVE_SCALE = 0.6;        // horizontal drag while submerged
+
+  // ---- cheat mode (dev/testing tool) ---------------------------------
+  const cheat = { enabled: false, noclip: false, invincible: false, debug: false };
+
+  // ---- tile classification -----------------------------------------
+  // Based on the tile IDs decoded from the real level files.
+  const SPRITE_SLOT = {
+    wall: 1, bouncy: 2, hazard: 3, life: 4, antigrav: 5, highjump: 6,
+    goal: 7, checkpoint: 8, slope: 9, bouncy_slope: 10, speedbox: 11,
+    deflater: 12, inflater: 13, big_spike: 14,
+  };
+
+  // Tile families that share ONE base texture across several IDs, just
+  // rotated/flipped per direction (matches how the original sheet stores
+  // them — one texture, reused at four facings).
+  const ROTATION_BY_ID = {
+    // hazard "candle": 3=up(base) 4=left 5=upside-down 6=right
+    3: 0, 4: 90, 5: 180, 6: -90,
+    67: 0, 68: 90, 69: 180, 70: -90, // waterlogged hazard, same facings
+    39: 0, 40: 90, 41: 180, 42: -90, // deflater
+    43: 0, 44: 90, 45: 180, 46: -90, // inflater
+    47: 0, 48: 90, 49: 180, 50: -90, // antigravity block
+    51: 0, 53: 180, 54: -90,          // high jump block (52/sideways-flip unused in the real levels)
+    105: 180, 106: -90,               // deflater, waterlogged (only these facings appear in the data)
+    107: 0,                            // inflater, waterlogged
+  };
+  // Diagonal/slope families: one base texture, flipped per orientation
+  // (derived from how the level format relates 30<->31<->32<->33 by
+  // flip/180°-rotation pairs).
+  const SLOPE_TRANSFORM = {
+    30: "rot180", 31: "flipY", 32: "id", 33: "flipX",
+    34: "rot180", 35: "flipY", 36: "id", 37: "flipX",
+    94: "rot180", 96: "id", 97: "flipX",
+    100: "id", 101: "flipX",
+  };
+
+  // A slope tile is a right-triangle ramp. "id" is solid where localX+localY>=1
+  // (low on the left, rising to full height on the right — an ascending-right
+  // floor ramp). The other transforms mirror that per drawSprite's ctx.scale/
+  // rotate handling. flipY/rot180 end up solid at the TOP of the cell, so they
+  // act as ceiling ramps rather than floor ramps.
+  function slopeKind(transform) {
+    return (transform === "flipY" || transform === "rot180") ? "slopeCeil" : "slopeFloor";
+  }
+  // Returns the fraction (0=tile top, 1=tile bottom) of the ramp surface at a
+  // given horizontal fraction (0=tile left, 1=tile right) through the cell.
+  function slopeSurfaceFrac(transform, xFrac) {
+    switch (transform) {
+      case "id": return 1 - xFrac;
+      case "flipX": return xFrac;
+      case "flipY": return xFrac;
+      case "rot180": return 1 - xFrac;
+      default: return 1 - xFrac;
+    }
+  }
+  // Hoop tile IDs: within each family of 4, order is [top, bottom, left, right]
+  const HOOP_GROUPS = [
+    { ids: [13, 14, 15, 16], big: false, water: false },
+    { ids: [21, 22, 23, 24], big: true, water: false },
+    { ids: [77, 78, 79, 80], big: false, water: true },
+    { ids: [85, 86, 87, 88], big: true, water: true },
+  ];
+  function hoopInfoFor(id) {
+    for (const g of HOOP_GROUPS) {
+      const idx = g.ids.indexOf(id);
+      if (idx !== -1) return { big: g.big, water: g.water, part: ["top", "bottom", "left", "right"][idx] };
+    }
+    return null;
+  }
+  // Each hoop is really TWO adjacent tiles (top+bottom, or left+right) that
+  // together form one ring — this gives a stable key shared by both halves,
+  // so they're counted and greyed-out as a single hoop, not two.
+  function hoopPairKey(part, r, c) {
+    switch (part) {
+      case "top": return (r + 1) + "," + c;
+      case "bottom": return r + "," + c;
+      case "left": return r + "," + (c + 1);
+      case "right": return r + "," + c;
+    }
+  }
+
+  function classifyTile(id) {
+    const hoop = hoopInfoFor(id);
+    if (hoop) return { type: "hoop", ...hoop };
+    switch (id) {
+      case 0: return { type: "air" };
+      case 1: return { type: "solid", sprite: "wall" };
+      case 2: return { type: "bouncy", sprite: "bouncy", bouncy: true };
+      case 3: case 4: case 5: case 6:
+        return { type: "hazard", sprite: "hazard", rotation: ROTATION_BY_ID[id] };
+      case 7: return { type: "checkpoint", sprite: "checkpoint" };
+      case 9: return { type: "solid", sprite: "wall", note: "door placeholder" }; // TODO(full-port): real 2x2 door
+      case 10: return { type: "hazard", sprite: "big_spike" }; // TODO(full-port): true 2x2 footprint
+      case 29: return { type: "life", sprite: "life" };
+      case 30: case 31: case 32: case 33: {
+        const t = SLOPE_TRANSFORM[id];
+        return { type: slopeKind(t), sprite: "slope", transform: t, bouncy: false };
+      }
+      case 34: case 35: case 36: case 37: {
+        const t = SLOPE_TRANSFORM[id];
+        return { type: slopeKind(t), sprite: "bouncy_slope", transform: t, bouncy: true };
+      }
+      case 38: return { type: "speedbox", sprite: "speedbox" }; // TODO(full-port): speed timer
+      case 39: case 40: case 41: case 42:
+        return { type: "deflater", sprite: "deflater", rotation: ROTATION_BY_ID[id] }; // TODO(full-port): ball size change
+      case 43: case 44: case 45: case 46:
+        return { type: "inflater", sprite: "inflater", rotation: ROTATION_BY_ID[id] }; // TODO(full-port): ball size change
+      case 47: case 48: case 49: case 50:
+        return { type: "antigrav", sprite: "antigrav", rotation: ROTATION_BY_ID[id] };
+      case 51: case 53: case 54:
+        return { type: "highjump", sprite: "highjump", rotation: ROTATION_BY_ID[id] };
+      case 64: return { type: "water" }; // TODO(full-port): buoyancy
+      case 67: case 68: case 69: case 70:
+        return { type: "hazard", sprite: "hazard", rotation: ROTATION_BY_ID[id], water: true };
+      case 94: case 96: case 97: {
+        const t = SLOPE_TRANSFORM[id];
+        return { type: slopeKind(t), sprite: "slope", transform: t, bouncy: false, water: true };
+      }
+      case 100: case 101: {
+        const t = SLOPE_TRANSFORM[id];
+        return { type: slopeKind(t), sprite: "bouncy_slope", transform: t, bouncy: true, water: true };
+      }
+      case 105: case 106:
+        return { type: "deflater", sprite: "deflater", rotation: ROTATION_BY_ID[id], water: true };
+      case 107: return { type: "inflater", sprite: "inflater", rotation: ROTATION_BY_ID[id], water: true };
+      default:
+        if (!warnedUnknownIds.has(id)) {
+          warnedUnknownIds.add(id);
+          console.warn("[bounce] unmapped tile id:", id);
+        }
+        return { type: "solid", sprite: null, unknown: true };
+    }
+  }
+  const warnedUnknownIds = new Set();
+  // Antigrav/highjump/speedbox/deflater are full-tile solid — they
+  // physically block the ball like a wall — but they ALSO need to still
+  // fire their touch effect (gravity flip, ...), which used to rely on
+  // the ball's box truly overlapping the tile. Now that box collision keeps
+  // it flush just outside instead, those triggers use forEachNearTile
+  // (below) with a small pad so "touching" still counts as touching.
+  // Hazard and inflater are handled separately (resolveThinSolids) with a
+  // small rotation-aware rect matching their actual sprite shape instead of
+  // the full tile. Hoops normally stay non-solid — resolveHoopSolids owns
+  // their small standable-rim hitbox — a small hoop being too tight for a
+  // big ball to fit through is ALSO handled there (as a thin rect matching
+  // the tube's actual bounding shape, not a full-tile block).
+  const SOLID_TYPES = new Set([
+    "solid", "bouncy", "antigrav", "highjump", "speedbox", "deflater",
+  ]);
+  function isSolidTile(def) {
+    return SOLID_TYPES.has(def.type);
+  }
+
+  // ---- dom / canvas ------------------------------------------------
+  const canvas = document.getElementById("game-canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+
+  const hudScore = document.getElementById("hud-score");
+  const hudLevel = document.getElementById("hud-level");
+  const hudLives = document.getElementById("hud-lives");
+  const hudHoops = document.getElementById("hud-hoops");
+
+  // ---- assets --------------------------------------------------
+  function loadImage(src) {
+    const img = new Image();
+    img.src = src;
+    return img;
+  }
+  const tilesetImg = loadImage("../Assets/Bounce/images/tileset.png");
+  const bigSpikeImg = loadImage("../Assets/Bounce/images/big_spike.png"); // dedicated hi-res sprite — tileset's own 12x12 slot 14 is too cramped to read
+  const ballImg = loadImage("../Assets/Bounce/images/ball.png");
+  const bigBallImg = loadImage("../Assets/Bounce/images/big_ball.png");
+  const splashImg = loadImage("../Assets/Bounce/images/splash.png");
+  const popImg = loadImage("../Assets/Bounce/images/pop.png");
+  const hoopImgs = {
+    small: { active: loadImage("../Assets/Bounce/images/hoop_small_active.png"), used: loadImage("../Assets/Bounce/images/hoop_small_used.png") },
+    big: { active: loadImage("../Assets/Bounce/images/hoop_big_active.png"), used: loadImage("../Assets/Bounce/images/hoop_big_used.png") },
+  };
+  const checkpointActiveImg = loadImage("../Assets/Bounce/images/checkpoint_active.png");
+  const goalOpenImg = loadImage("../Assets/Bounce/images/goal_open.png");
+  const goalLockedImg = loadImage("../Assets/Bounce/images/goal_locked_2x2.png");
+
+  function loadSound(src) {
+    const a = new Audio(src);
+    a.preload = "auto";
+    return a;
+  }
+  const sfx = {
+    bounce: loadSound("../Assets/Bounce/audio/bounce.wav"),
+    pickup: loadSound("../Assets/Bounce/audio/pickup.wav"),
+    pop: loadSound("../Assets/Bounce/audio/pop.wav"),
+    goal: loadSound("../Assets/Bounce/audio/hoop.wav"),
+    gameover: loadSound("../Assets/Bounce/audio/gameover.wav"),
+  };
+  function play(name) {
+    const base = sfx[name];
+    if (!base) return;
+    const node = base.cloneNode();
+    node.volume = base.volume;
+    node.play().catch(() => {});
+  }
+
+  // ---- binary level parsing -----------------------------------------
+  async function fetchLevel(index) {
+    const url = LEVEL_DIR + LEVEL_FILES[index];
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to load " + url + " (" + res.status + ")");
+    const buf = new Uint8Array(await res.arrayBuffer());
+    let p = 0;
+    const ballX = buf[p++], ballY = buf[p++];
+    const bigBall = buf[p++] !== 0;
+    const exitX = buf[p++], exitY = buf[p++];
+    const hoopsTotal = buf[p++];
+    const width = buf[p++], height = buf[p++];
+    const tiles = [];
+    for (let r = 0; r < height; r++) {
+      const row = new Array(width);
+      for (let c = 0; c < width; c++) row[c] = buf[p++]; // raw tile id — no real level data ever exceeds 107, a prior "& 0x3f" mask here was silently corrupting every id 64+ (water, and every waterlogged variant) into a different, wrong tile
+      tiles.push(row);
+    }
+    const dynThornsCount = p < buf.length ? buf[p++] : 0; // TODO(full-port): parse + animate dynamic thorns
+    return { width, height, tiles, ballStart: { x: ballX, y: ballY }, bigBall, exit: { x: exitX, y: exitY }, hoopsTotal, dynThornsCount };
+  }
+
+  // ---- moving spikes (tile id 10) ------------------------------------
+  // Tile id 10 marks the *travel box* a moving 2x2 spike slides around in,
+  // not a static hazard tile — see notes below. A rectangle taller than it
+  // is wide moves vertically; wider than tall moves horizontally; a square
+  // box (seen at 4x4) moves diagonally corner-to-corner and — per the real
+  // game — clips straight through any solid tiles inside its own box.
+  //
+  // A few spots in the real level data are two (or more) of these travel
+  // boxes packed edge-to-edge, which a naive flood-fill would merge into
+  // one nonsense blob. Those specific spots are called out explicitly
+  // below instead of guessed at automatically.
+  const SPIKE_OVERRIDES = {
+    // level 2 (index 1): the 4-wide/6-tall box right at the start is two
+    // separate 2x2 spikes sitting side by side (4x2 combined), not one
+    // wide 3x2 spike.
+    "J2MElvl.002": [
+      {
+        clear: { row: 15, col: 2, w: 4, h: 6 },
+        spikes: [
+          { row: 15, col: 2, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 15, col: 4, w: 2, h: 2, axis: "vertical", travel: 4 },
+        ],
+      },
+    ],
+    // level 4 (index 3): a 6x6 block that's actually two separate 2x2
+    // vertical spikes sitting side by side.
+    "J2MElvl.004": [
+      {
+        clear: { row: 22, col: 31, w: 6, h: 6 },
+        spikes: [
+          { row: 22, col: 31, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 22, col: 34, w: 2, h: 2, axis: "vertical", travel: 4 },
+        ],
+      },
+    ],
+    // level 10 (index 9): two vertical spikes packed together; the right
+    // one is a deliberate "funny" 3x2-wide variant (half a tile wider —
+    // an in-joke nod to a glitch in the original, not a real mechanic).
+    "J2MElvl.010": [
+      {
+        clear: { row: 22, col: 92, w: 11, h: 6 },
+        spikes: [
+          { row: 22, col: 94, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 22, col: 99, w: 3, h: 2, axis: "vertical", travel: 4 },
+        ],
+      },
+    ],
+    // level 3 (index 2): a 12-wide/6-tall block that's actually SIX separate
+    // 2x2 vertical spikes packed edge-to-edge (no gap between them, unlike
+    // the 3-apart spacing elsewhere) — the flood-fill instead read the whole
+    // thing as one wide travel box and slid a single spike sideways across it.
+    "J2MElvl.003": [
+      {
+        clear: { row: 1, col: 28, w: 12, h: 6 },
+        spikes: [
+          { row: 1, col: 28, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 1, col: 30, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 1, col: 32, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 1, col: 34, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 1, col: 36, w: 2, h: 2, axis: "vertical", travel: 4 },
+          { row: 1, col: 38, w: 2, h: 2, axis: "vertical", travel: 4 },
+        ],
+      },
+    ],
+  };
+
+  function extractSpikes(level, filename) {
+    const { width, height, tiles } = level;
+    const spikes = [];
+
+    // 1) apply manual overrides first — clear their tiles and add explicit spikes
+    const overrides = SPIKE_OVERRIDES[filename] || [];
+    for (const ov of overrides) {
+      const { row, col, w, h } = ov.clear;
+      for (let r = row; r < row + h; r++) {
+        for (let c = col; c < col + w; c++) {
+          if (r >= 0 && r < height && c >= 0 && c < width) tiles[r][c] = 0;
+        }
+      }
+      for (const s of ov.spikes) {
+        spikes.push({
+          axis: s.axis,
+          col: s.col, row: s.row,   // top-left of the travel box
+          w: s.w, h: s.h,            // spike's own footprint in tiles
+          travel: s.travel,          // how many tiles of room it has to slide
+          phase: spikes.length * 0.35,
+        });
+      }
+    }
+
+    // 2) flood-fill (8-connected) whatever id-10 cells remain
+    const visited = Array.from({ length: height }, () => new Array(width).fill(false));
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        if (tiles[r][c] !== 10 || visited[r][c]) continue;
+        const cells = [];
+        const stack = [[r, c]];
+        visited[r][c] = true;
+        while (stack.length) {
+          const [cr, cc] = stack.pop();
+          cells.push([cr, cc]);
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = cr + dr, nc = cc + dc;
+              if (nr < 0 || nr >= height || nc < 0 || nc >= width) continue;
+              if (visited[nr][nc] || tiles[nr][nc] !== 10) continue;
+              visited[nr][nc] = true;
+              stack.push([nr, nc]);
+            }
+          }
+        }
+        const rows = cells.map((p) => p[0]), cols = cells.map((p) => p[1]);
+        const rMin = Math.min(...rows), rMax = Math.max(...rows);
+        const cMin = Math.min(...cols), cMax = Math.max(...cols);
+        const bboxW = cMax - cMin + 1, bboxH = rMax - rMin + 1;
+
+        let spike;
+        if (bboxW === bboxH && bboxW > 2) {
+          // square travel box -> diagonal mover, corner to corner
+          spike = { axis: "diagonal", col: cMin, row: rMin, w: 2, h: 2, travel: bboxW - 2 };
+        } else if (bboxW <= bboxH) {
+          const w = Math.min(2, bboxW);
+          spike = {
+            axis: "vertical",
+            col: cMin + Math.floor((bboxW - w) / 2), row: rMin,
+            w, h: 2, travel: bboxH - 2,
+          };
+        } else {
+          const h = Math.min(2, bboxH);
+          spike = {
+            axis: "horizontal",
+            col: cMin, row: rMin + Math.floor((bboxH - h) / 2),
+            w: 2, h, travel: bboxW - 2,
+          };
+        }
+        spike.phase = spikes.length * 0.35;
+        spikes.push(spike);
+
+        // clear the raw tiles — the spike is now a dynamic entity, not static geometry
+        for (const [cr, cc] of cells) tiles[cr][cc] = 0;
+      }
+    }
+    return spikes;
+  }
+
+  function pingPong(t, period) {
+    if (period <= 0) return 0;
+    const cyc = (t % period) / period; // 0..1
+    return cyc < 0.5 ? cyc * 2 : 2 - cyc * 2; // triangle wave 0->1->0
+  }
+
+  function updateSpikes(level, dt) {
+    spikeClock += dt;
+    for (const s of level.spikes) {
+      const period = s.travel > 0 ? (s.travel * 2) / SPIKE_SPEED : 1;
+      const frac = pingPong(spikeClock + s.phase, period);
+      if (s.axis === "vertical") {
+        s.curCol = s.col;
+        s.curRow = s.row + frac * s.travel;
+      } else if (s.axis === "horizontal") {
+        s.curCol = s.col + frac * s.travel;
+        s.curRow = s.row;
+      } else { // diagonal — slides both axes together, ignores solid tiles in its box
+        s.curCol = s.col + frac * s.travel;
+        s.curRow = s.row + frac * s.travel;
+      }
+    }
+  }
+
+  let spikeClock = 0;
+
+  // ---- level/game state ----------------------------------------------
+  let level = null;           // parsed level data
+  let hoopsPassed = 0;
+  let passedHoopKeys = null;  // Set of "r,c" already counted
+  let usedCheckpoints = null; // Set of "r,c" checkpoints ever touched (so they stay gone)
+  let touchingPadKeys = new Set(); // "r,c" of reusable pads (antigrav/highjump/speedbox) the ball is overlapping AS OF the last check — lets triggers fire once per fresh touch instead of every frame of continuous contact
+  let activeCheckpointKey = null; // "r,c" of the CURRENT respawn checkpoint (only this one shows the arrow)
+  let respawnPos = { x: 0, y: 0 };
+  let respawnSize = BALL_SIZE_NORMAL; // ball size to respawn as — set to level.bigBall's size on load, then updated whenever a checkpoint is touched
+  const camera = { x: 0, y: 0 };
+
+  function tileIdAt(col, row) {
+    if (!level || row < 0 || row >= level.height || col < 0 || col >= level.width) return 1; // treat outside as wall
+    return level.tiles[row][col];
+  }
+
+  function isExitTile(col, row) {
+    if (!level) return false;
+    // the exit is a 2x2 object anchored at (exit.x, exit.y) as its top-left cell
+    return col >= level.exit.x && col <= level.exit.x + 1 && row >= level.exit.y && row <= level.exit.y + 1;
+  }
+
+  function exitLocked() {
+    return !level || hoopsPassed < level.hoopsTotal;
+  }
+
+  // ---- ball ----------------------------------------------------
+  const ball = {
+    x: 0, y: 0, vx: 0, vy: 0,
+    size: BALL_SIZE_NORMAL,
+    gravityFlipped: false,
+    gravityTimer: 0,
+    jumpBoostTimer: 0,
+    speedBoostTimer: 0,
+    grounded: false,
+    groundBouncy: false, // is the tile currently standing on a bouncy one?
+    bounceChain: 0,      // consecutive jumps off bouncy ground — resets on non-bouncy landing
+    inWater: false,
+    ceilinged: false, // resting against a ceiling slope (mirrors `grounded`, but upward) — lets buoyancy stop re-fighting it every substep once settled
+    rollAngle: 0,
+    state: "alive", // alive | popped
+    popTimer: 0,
+  };
+  let upHeldPrev = false;
+
+  function resetBall() {
+    ball.x = respawnPos.x;
+    ball.y = respawnPos.y;
+    ball.vx = 0;
+    ball.vy = 0;
+    ball.size = respawnSize;
+    ball.gravityFlipped = false;
+    ball.gravityTimer = 0;
+    ball.jumpBoostTimer = 0;
+    ball.speedBoostTimer = 0;
+    ball.grounded = false;
+    ball.groundBouncy = false;
+    ball.bounceChain = 0;
+    ball.inWater = false;
+    ball.ceilinged = false;
+    ball.state = "alive";
+    ball.popTimer = 0;
+    upHeldPrev = false;
+    touchingPadKeys = new Set(); // fresh contact detection at the new spot
+    // A checkpoint's saved position might be tight for the size being
+    // respawned as (e.g. touched while small, but respawnSize is now big
+    // from an inflater picked up after) — same cleanup inflater/deflater
+    // use, so respawning never embeds the ball in solid ground.
+    unstickBall();
+  }
+
+  // ---- game/session state -------------------------------------------
+  const game = {
+    mode: "menu", // menu | levelselect | loading | playing | levelcomplete | gameover | error
+    levelIndex: 0,
+    score: 0,
+    lives: 3,
+    errorMsg: "",
+  };
+
+  // ---- level progress (persisted) ------------------------------------
+  const PROGRESS_KEY = "nokiaBounceProgress";
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      const completed = Array.isArray(parsed && parsed.completed) ? parsed.completed : [];
+      // Pad/truncate to the current level count so a stale save (from a
+      // build with a different number of levels) never throws or leaves
+      // gaps — everything beyond what was saved just starts locked.
+      const out = new Array(LEVEL_FILES.length).fill(false);
+      for (let i = 0; i < out.length; i++) out[i] = !!completed[i];
+      return { completed: out };
+    } catch (e) {
+      return { completed: new Array(LEVEL_FILES.length).fill(false) };
+    }
+  }
+  const progress = loadProgress();
+  function saveProgress() {
+    try {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    } catch (e) {
+      // localStorage unavailable (private mode, quota, etc.) — progress
+      // just won't persist across reloads; nothing else depends on it.
+    }
+  }
+  function isLevelUnlocked(i) {
+    return i === 0 || !!progress.completed[i - 1];
+  }
+  function markLevelComplete(i) {
+    if (!progress.completed[i]) {
+      progress.completed[i] = true;
+      saveProgress();
+    }
+  }
+
+  function updateHud() {
+    hudScore.textContent = game.score;
+    hudLevel.textContent = game.levelIndex + 1;
+    hudLives.textContent = Math.max(0, game.lives);
+    if (hudHoops) hudHoops.textContent = (level ? hoopsPassed + "/" + level.hoopsTotal : "0/0");
+    if (typeof refreshCheatUI === "function") refreshCheatUI();
+  }
+
+  async function loadLevel(index) {
+    document.getElementById("level-select-overlay").classList.remove("open");
+    game.mode = "loading";
+    canvas.width = VIEW_COLS * TILE;
+    canvas.height = VIEW_ROWS * TILE;
+    try {
+      level = await fetchLevel(index);
+      level.spikes = extractSpikes(level, LEVEL_FILES[index]);
+      spikeClock = 0;
+      hoopsPassed = 0;
+      passedHoopKeys = new Set();
+      usedCheckpoints = new Set();
+      touchingPadKeys = new Set();
+      activeCheckpointKey = null;
+      respawnPos = { x: level.ballStart.x * TILE + TILE / 2, y: level.ballStart.y * TILE + TILE / 2 };
+      respawnSize = level.bigBall ? BALL_SIZE_BIG : BALL_SIZE_NORMAL;
+      resetBall();
+      camera.x = 0;
+      camera.y = 0;
+      game.mode = "playing";
+    } catch (err) {
+      game.errorMsg = String(err.message || err);
+      game.mode = "error";
+    }
+    updateHud();
+  }
+
+  function startNewGame() {
+    game.mode = "levelselect";
+    renderLevelSelect();
+  }
+
+  function beginLevel(i) {
+    game.levelIndex = i;
+    game.score = 0;
+    game.lives = 3;
+    loadLevel(i);
+  }
+
+  function nextLevel() {
+    game.levelIndex++;
+    if (game.levelIndex >= LEVEL_FILES.length) {
+      game.mode = "levelselect";
+      renderLevelSelect();
+      return;
+    }
+    loadLevel(game.levelIndex);
+  }
+
+  // ---- level select overlay (angry-birds style grid) -----------------
+  function renderLevelSelect() {
+    const overlay = document.getElementById("level-select-overlay");
+    const grid = document.getElementById("level-select-grid");
+    overlay.classList.add("open");
+    grid.innerHTML = "";
+    LEVEL_FILES.forEach((_, i) => {
+      const unlocked = isLevelUnlocked(i);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "level-tile" + (progress.completed[i] ? " done" : "");
+      btn.textContent = String(i + 1);
+      btn.disabled = !unlocked;
+      if (unlocked) {
+        btn.addEventListener("click", () => {
+          overlay.classList.remove("open");
+          beginLevel(i);
+        });
+      }
+      grid.appendChild(btn);
+    });
+  }
+
+  // ---- collision helpers ------------------------------------------
+  // `footInset` shrinks how far DOWN the box reaches before it counts as
+  // hitting a row, in gravity-relative terms (i.e. it's applied against
+  // whichever edge gravity is pulling the ball toward). It's used for the
+  // HORIZONTAL check only: when the ball is riding a slope, resolveSlopes
+  // keeps it snapped flush with the ramp surface, so its foot is often
+  // sitting exactly on (or a hair past) a row boundary. A neighboring
+  // column that's a plain solid tile — the flush step at the bottom of a
+  // ramp, not a wall — occupies that same row, and without the inset the
+  // ball's foot box overlaps its top edge and snags there instead of
+  // rolling on. Vertical collision always calls this with footInset 0 so
+  // real floors/ceilings still stop the ball exactly.
+  function boxCollides(x, y, gSign = 1, footInset = 0) {
+    if (cheat.enabled && cheat.noclip) return null;
+    const half = ball.size / 2;
+    const left = Math.floor((x - half) / TILE);
+    const right = Math.floor((x + half - 1) / TILE);
+    let top = Math.floor((y - half) / TILE);
+    let bottom = Math.floor((y + half - 1) / TILE);
+    if (footInset > 0) {
+      if (gSign > 0) bottom = Math.floor((y + half - 1 - footInset) / TILE);
+      else top = Math.floor((y - half + footInset) / TILE);
+    }
+    for (let r = top; r <= bottom; r++) {
+      for (let c = left; c <= right; c++) {
+        if (isExitTile(c, r)) {
+          if (exitLocked()) return { col: c, row: r, exitLocked: true, def: { type: "solid" } };
+          continue; // unlocked exit is passable, handled as a trigger instead
+        }
+        const def = classifyTile(tileIdAt(c, r));
+        if (isSolidTile(def)) return { col: c, row: r, def };
+      }
+    }
+    return null;
+  }
+
+  function forEachOverlappedTile(x, y, fn) {
+    const half = ball.size / 2;
+    const left = Math.floor((x - half) / TILE);
+    const right = Math.floor((x + half - 1) / TILE);
+    const top = Math.floor((y - half) / TILE);
+    const bottom = Math.floor((y + half - 1) / TILE);
+    for (let r = top; r <= bottom; r++) {
+      for (let c = left; c <= right; c++) fn(c, r);
+    }
+  }
+
+  // Same as forEachOverlappedTile, but padded a couple px past the ball's
+  // real edge. Needed for any tile that's both solid AND has a touch
+  // effect (hazard, antigrav, highjump, ...) — box collision deliberately
+  // stops the ball a hair short of true overlap with solid tiles, so a
+  // strict overlap check would never see contact with them at all.
+  function forEachNearTile(x, y, pad, fn) {
+    const half = ball.size / 2 + pad;
+    const left = Math.floor((x - half) / TILE);
+    const right = Math.floor((x + half - 1) / TILE);
+    const top = Math.floor((y - half) / TILE);
+    const bottom = Math.floor((y + half - 1) / TILE);
+    for (let r = top; r <= bottom; r++) {
+      for (let c = left; c <= right; c++) fn(c, r);
+    }
+  }
+
+  function slopeDefAt(col, row) {
+    const def = classifyTile(tileIdAt(col, row));
+    return (def.type === "slopeFloor" || def.type === "slopeCeil") ? def : null;
+  }
+
+  // Sanity check used only to decide "is grounded still plausible", NOT the
+  // authoritative source of truth for standing on a thin-rect surface —
+  // resolveSlopes/resolveHoopSolids/resolveThinSolids own the real geometry
+  // and re-confirm it every substep regardless. This just stops the
+  // `support` check above from wrongly concluding "nothing here" for
+  // anything that isn't a full SOLID_TYPES tile. Checks actual distance to
+  // the real rect (not just "is this tile a hoop/hazard/etc at all") —
+  // matching by tile type alone kept grounded stuck true across an entire
+  // hoop tile's width even after walking well past the actual curb,
+  // leaving the ball floating instead of falling once truly clear of it.
+  // Checks a single tile's thin rect for ground contact. Split out of
+  // hasThinRectGround so that function can sample more than one column.
+  function thinRectGroundAt(col, row, gSign, half) {
+    const def = classifyTile(tileIdAt(col, row));
+    let rect = null;
+    if (def.type === "hazard" || def.type === "inflater") {
+      const r = rotateRectFraction(THIN_SOLID_BASE_RECT[def.type], def.rotation || 0);
+      rect = { x0: col * TILE + r.x0 * TILE, y0: row * TILE + r.y0 * TILE, x1: col * TILE + r.x1 * TILE, y1: row * TILE + r.y1 * TILE };
+    } else if (def.type === "hoop") {
+      if (!def.big && ball.size === BALL_SIZE_BIG) {
+        const r = BIG_BALL_SMALL_HOOP_RECT[def.part];
+        if (r) rect = { x0: col * TILE + r.x0 * TILE, y0: row * TILE + r.y0 * TILE, x1: col * TILE + r.x1 * TILE, y1: row * TILE + r.y1 * TILE };
+      } else {
+        rect = hoopSolidRectAt(def.part, col, row);
+      }
+    } else if (slopeDefAt(col, row)) {
+      return true; // diagonal surface — approximate is fine, resolveSlopes owns the real check
+    }
+    if (!rect) return false;
+    const nearX = Math.max(rect.x0, Math.min(ball.x, rect.x1));
+    const nearY = Math.max(rect.y0, Math.min(ball.y, rect.y1));
+    const dx = ball.x - nearX, dy = ball.y - nearY;
+    const reach = half + 2; // small pad, same spirit as the hazard touch-pad fix
+    return dx * dx + dy * dy < reach * reach;
+  }
+  function hasThinRectGround(gSign) {
+    const half = ball.size / 2;
+    const row = Math.floor((ball.y + gSign * (half + 1.5)) / TILE);
+    // Bug: this used to sample only Math.floor(ball.x / TILE) — one column.
+    // A small ball resting dead-centered on the SEAM between two thin-rect
+    // tiles (e.g. a horizontal hoop's left/right rim pair, whose curbs sit
+    // right at that seam) rounds to whichever column floating point happens
+    // to land on, and the OTHER tile's rect — the one actually under the
+    // ball's real contact point — never gets checked at all. That flips
+    // "stillSupported" false while the ball is genuinely still resting,
+    // which can drop `grounded` for a substep right as a jump is pressed —
+    // sending the jump through the airborne branch instead of the resting
+    // one, with the ball's true resting height and any leftover vertical
+    // motion in play instead of a clean launch from rest. Check both
+    // columns the ball's body actually spans, not just its center.
+    const leftCol = Math.floor((ball.x - half) / TILE);
+    const rightCol = Math.floor((ball.x + half - 1) / TILE);
+    for (let col = leftCol; col <= rightCol; col++) {
+      if (thinRectGroundAt(col, row, gSign, half)) return true;
+    }
+    return false;
+  }
+
+  // Whether the ball's center currently sits inside a water tile. Center
+  // point rather than full-body overlap — simple, and matches how the rest
+  // of the collision here already treats the ball as a point for this kind
+  // of area check (e.g. hazard death checks work the same way).
+  //
+  // Biased with hysteresis toward whichever state the ball was ALREADY in
+  // last substep: a ball hovering right at a water surface (e.g. a tight
+  // air pocket at the tip of a ceiling notch) could have its center cross
+  // the exact tile boundary by a fraction of a pixel, which used to flip
+  // the force applied to it completely — strong buoyant lift the instant
+  // it's "in", plain gravity the instant it's "out". That's a
+  // self-sustaining bop with zero tolerance. Sampling a few px further
+  // into whichever state already applied means small hovering doesn't
+  // flip it every substep — the ball has to actually clear the surface by
+  // a real margin before the classification (and the force driving it)
+  // changes.
+  function ballInWater() {
+    const half = ball.size / 2;
+    const bias = ball.inWater ? half * 0.4 : -half * 0.4;
+    const col = Math.floor(ball.x / TILE);
+    const row = Math.floor((ball.y + bias) / TILE);
+    const def = classifyTile(tileIdAt(col, row));
+    // Bug: this used to only check `type === "water"`. A water-hoop's cell
+    // is classified type "hoop" (the hoop tile occupies that cell instead
+    // of a plain water tile) with its own separate `water` flag carried on
+    // the def — see HOOP_GROUPS/hoopInfoFor above — which this never
+    // checked. So near a water-hoop, whichever single column happened to
+    // get sampled decided everything: land on the hoop's own cell and
+    // water goes undetected (full-strength jump), land on a neighboring
+    // plain water tile and it's correctly weakened — purely a matter of
+    // pixel alignment, which is why it looked random.
+    return def.type === "water" || (def.type === "hoop" && def.water);
+  }
+
+  // A ball's foot sits exactly on a row boundary when resting on flat ground.
+  // The next slope step in a staircase occupies the row ONE CELL FURTHER
+  // against gravity from that boundary (it's stacked a level higher than the
+  // flat ground leading into it) — so checking only floor(footY/TILE) misses
+  // it and lets the ball slide its box under/into the wedge undetected.
+  // Check the foot's own row first, then the row one step further up.
+  function findSlopeForFoot(x, footY, gSign) {
+    const col = Math.floor(x / TILE);
+    const row1 = Math.floor(footY / TILE);
+    let def = slopeDefAt(col, row1);
+    if (def) return { def, row: row1, col };
+    const row2 = row1 - gSign;
+    def = slopeDefAt(col, row2);
+    if (def) return { def, row: row2, col };
+    return null;
+  }
+
+  // Snaps the ball onto a diagonal ramp surface. Runs every frame after the
+  // normal box collision so the ball rides the slope as it moves horizontally,
+  // rather than being blocked by (or falling through) its bounding box.
+  // Samples the left edge, center, and right edge of the ball (not just its
+  // center) so a wide ball can't dip its corners into the diagonal cut.
+  function resolveSlopes(gSign) {
+    const half = ball.size / 2;
+    const footY = gSign > 0 ? ball.y + half : ball.y - half;
+    const inset = Math.min(1, half - 0.01);
+    const sampleXs = [ball.x - half + inset, ball.x, ball.x + half - inset];
+
+    let best = null; // { surfaceY, def, role: "floor"|"ceil" }
+    for (const sx of sampleXs) {
+      const found = findSlopeForFoot(sx, footY, gSign);
+      if (!found) continue;
+      const { def, row, col } = found;
+      const role = (def.type === "slopeFloor" && gSign > 0) || (def.type === "slopeCeil" && gSign < 0)
+        ? "floor"
+        : (def.type === "slopeCeil" && gSign > 0) || (def.type === "slopeFloor" && gSign < 0)
+          ? "ceil"
+          : null;
+      if (!role) continue;
+      const xFrac = Math.max(0, Math.min(1, (sx - col * TILE) / TILE));
+      const surfaceY = row * TILE + slopeSurfaceFrac(def.transform, xFrac) * TILE;
+      if (!best) { best = { surfaceY, def, role }; continue; }
+      // pick whichever sample keeps the ball furthest from penetrating the surface
+      const wantMin = (best.role === "floor" && gSign > 0) || (best.role === "ceil" && gSign < 0);
+      const better = wantMin ? surfaceY < best.surfaceY : surfaceY > best.surfaceY;
+      if (better) best = { surfaceY, def, role };
+    }
+    // Pinched between two DIFFERENT ceiling-slope tiles at once (e.g. a
+    // notch narrower than the ball's own diameter — measured this exact
+    // case: a 16px gap against a 21px ball) — satisfying either tile's
+    // surface individually still leaves the ball buried in the other one,
+    // which is what caused the bop/invisible-wall loop no amount of force
+    // or threshold tuning could fix, because the two constraints are
+    // mutually impossible to both satisfy. Checked against the ball's TRUE
+    // full-width column span (not the 3 fixed samples above, which can
+    // miss this if the ball drifts even slightly off-center — only one
+    // side registers, that side alone catches and shoves it back, and it
+    // bops even harder than before as a result). If the ball's own body is
+    // wide enough to reach into two distinct ceiling-slope tiles at this
+    // row at all, that's a real pinch regardless of exactly how centered
+    // it is right now. Don't snap to either — leave it to gravity/
+    // buoyancy, which will carry the ball into the genuinely flat, solid
+    // ceiling tile just past the notch's mouth and stop it there via
+    // ordinary box collision instead, same as hitting any wall.
+    if (best && best.role === "ceil") {
+      const leftCol = Math.floor((ball.x - half) / TILE);
+      const rightCol = Math.floor((ball.x + half - 1) / TILE);
+      const row1 = Math.floor(footY / TILE);
+      const rows = [row1, row1 - gSign]; // matches findSlopeForFoot's own row + one-step-up fallback
+      const pinchTiles = [];
+      for (const row of rows) {
+        for (let col = leftCol; col <= rightCol; col++) {
+          const def = slopeDefAt(col, row);
+          if (!def || def.type !== "slopeCeil") continue;
+          if (!pinchTiles.some(t => t.row === row && t.col === col)) pinchTiles.push({ row, col });
+        }
+      }
+      if (pinchTiles.length >= 2) {
+        // Root cause (see prior comment history) never fully went away —
+        // the zero-vy/ceilinged fix reduced it but didn't kill it outright,
+        // and further chasing it down isn't worth it right now. Pragmatic
+        // call instead: hard-cap how much upward speed the ball can carry
+        // while pinched, so whatever bop still happens tops out low enough
+        // not to trivialize whatever this notch is gating, but isn't fully
+        // zeroed either — the ball can still ride the bop up and over the
+        // notch rather than getting stuck under it. PINCH_BOP_CAP is the
+        // knob: raise it if the ball can't clear the notch anymore, lower
+        // it if the bop is still too generous.
+        const PINCH_BOP_CAP = 30;
+        if (ball.vy * gSign < -PINCH_BOP_CAP) ball.vy = -PINCH_BOP_CAP * gSign;
+        if (ball.vy * gSign <= 0) ball.ceilinged = true;
+        return;
+      }
+    }
+    if (!best) return;
+    const { surfaceY, def, role } = best;
+    // How far the ball's foot has already crossed past the ramp surface.
+    // The fallback in findSlopeForFoot searches an entire ROW away (up to
+    // a full tile), so it can match a slope that's really just sitting
+    // near unrelated ground far below/above — e.g. walking on flat floor
+    // that happens to have a ramp tile one row up gets treated as
+    // "touching" that ramp from underneath and yanked onto it. Real
+    // contact only ever has a tiny overlap (movement per substep is
+    // small), so cap how deep a penetration we'll accept as a genuine
+    // landing — anything deeper is a false match, not a real touch.
+    const MAX_SNAP_DEPTH = 6;
+
+    if (role === "floor") {
+      const overlap = gSign > 0 ? (ball.y + half) - surfaceY : surfaceY - (ball.y - half);
+      if (overlap < -0.5 || overlap > MAX_SNAP_DEPTH) return;
+      ball.y = gSign > 0 ? surfaceY - half : surfaceY + half;
+      // Bouncy slopes settle like normal ground on contact — they only
+      // relaunch (escalating, uncapped) while jump is HELD through the
+      // landing; letting go settles normally and resets the chain.
+      if (def.bouncy && input.up) {
+        ball.groundBouncy = true;
+        launchJump(gSign);
+        return;
+      }
+      if (ball.vy * gSign >= 0) {
+        ball.vy = 0;
+        ball.grounded = true;
+        ball.groundBouncy = def.bouncy;
+        ball.bounceChain = 0;
+      }
+      // else: still geometrically touching the ramp this instant, but
+      // moving AWAY from it (e.g. a jump was just launched this same
+      // substep) — snap position only, don't re-flag grounded here or
+      // the very next substep sees "already grounded" and zeroes the
+      // jump velocity before the ball has moved a single pixel.
+    } else {
+      const overlap = gSign > 0 ? surfaceY - (ball.y - half) : (ball.y + half) - surfaceY;
+      if (overlap < -0.5 || overlap > MAX_SNAP_DEPTH) return;
+      ball.y = gSign > 0 ? surfaceY + half : surfaceY - half;
+      if (ball.vy * gSign <= 0) {
+        ball.vy = 0;
+        ball.ceilinged = true;
+      }
+      // else: moving away (e.g. gravity just flipped) — don't claim
+      // ceiling contact for a substep that's actively leaving it.
+    }
+  }
+
+  function killBall() {
+    if (cheat.enabled && cheat.invincible) return;
+    if (ball.state !== "alive") return;
+    ball.state = "popped";
+    ball.popTimer = RESPAWN_DELAY;
+    ball.vx = 0;
+    ball.vy = 0;
+    game.lives--;
+    play("pop");
+    updateHud();
+  }
+
+  // Inflater/deflater tiles aren't consumed on touch — treated as reusable
+  // pads (like highjump/speedbox) rather than a one-time pickup (like
+  // life), so walking back and forth between an inflater and a deflater
+  // keeps working for anything that relies on toggling size repeatedly.
+  function resizeBall(newSize) {
+    ball.size = newSize;
+    play("pickup");
+    unstickBall();
+  }
+
+  // Growing (small→big) can suddenly put the ball's new, larger radius
+  // inside ground it fit right next to a moment ago — a wall it was
+  // resting against, a low ceiling, a corner. Scan every solid tile the
+  // new size overlaps and push out along the shortest escape direction,
+  // same nearest-point approach as circleTileCornerFix. A few iterations
+  // handle being squeezed from more than one side at once (e.g. inflating
+  // in a tight corner). Harmless no-op when shrinking or when there's
+  // nothing to push out of.
+  function unstickBall() {
+    const radius = ball.size / 2;
+    for (let iter = 0; iter < 4; iter++) {
+      let pushed = false;
+      const left = Math.floor((ball.x - radius) / TILE);
+      const right = Math.floor((ball.x + radius - 1) / TILE);
+      const top = Math.floor((ball.y - radius) / TILE);
+      const bottom = Math.floor((ball.y + radius - 1) / TILE);
+      for (let r = top; r <= bottom; r++) {
+        for (let c = left; c <= right; c++) {
+          if (isExitTile(c, r)) continue;
+          const def = classifyTile(tileIdAt(c, r));
+          if (!isSolidTile(def)) continue;
+          const tx0 = c * TILE, ty0 = r * TILE, tx1 = tx0 + TILE, ty1 = ty0 + TILE;
+          const nearX = Math.max(tx0, Math.min(ball.x, tx1));
+          const nearY = Math.max(ty0, Math.min(ball.y, ty1));
+          const dx = ball.x - nearX, dy = ball.y - nearY;
+          const distSq = dx * dx + dy * dy;
+          if (distSq >= radius * radius) continue;
+          pushed = true;
+          const dist = Math.sqrt(distSq);
+          if (dist < 1e-4) {
+            // center landed dead-inside the tile — push out the shortest side
+            const leftGap = ball.x - tx0, rightGap = tx1 - ball.x;
+            const topGap = ball.y - ty0, bottomGap = ty1 - ball.y;
+            const min = Math.min(leftGap, rightGap, topGap, bottomGap);
+            if (min === leftGap) ball.x = tx0 - radius;
+            else if (min === rightGap) ball.x = tx1 + radius;
+            else if (min === topGap) ball.y = ty0 - radius;
+            else ball.y = ty1 + radius;
+          } else {
+            const push = radius - dist;
+            ball.x += (dx / dist) * push;
+            ball.y += (dy / dist) * push;
+          }
+        }
+      }
+      if (!pushed) break;
+    }
+  }
+
+  function collectTriggers() {
+    let goalHit = false;
+    const nowTouchingPads = new Set(); // rebuilt fresh each call — compared against touchingPadKeys (last call's set) to detect a NEW touch vs. continuous contact
+    forEachNearTile(ball.x, ball.y, 2, (c, r) => {
+      if (isExitTile(c, r) && !exitLocked()) {
+        goalHit = true;
+        return;
+      }
+      const id = tileIdAt(c, r);
+      const def = classifyTile(id);
+      const key = def.type === "hoop" ? hoopPairKey(def.part, r, c) : (r + "," + c);
+      switch (def.type) {
+        case "life":
+          level.tiles[r][c] = 0;
+          game.lives++;
+          game.score += 50;
+          play("pickup");
+          updateHud();
+          break;
+        case "checkpoint":
+          if (!usedCheckpoints.has(key)) {
+            usedCheckpoints.add(key);
+            activeCheckpointKey = key; // this becomes the one-and-only shown arrow; previous one vanishes
+            respawnPos = { x: c * TILE + TILE / 2, y: r * TILE + TILE / 2 };
+            respawnSize = ball.size; // saves current size too — big stays big, small stays small on respawn
+            play("pickup");
+          }
+          break;
+        case "antigrav":
+          // Reusable pad, like highjump/speedbox — NOT consumed on touch.
+          // Only acts on a fresh touch (wasn't already standing on it last
+          // check), same reasoning as below: without that, resting on it
+          // continuously would flip gravity back and forth (and replay the
+          // sound) every single frame instead of once.
+          nowTouchingPads.add(key);
+          if (!touchingPadKeys.has(key)) {
+            ball.gravityFlipped = !ball.gravityFlipped;
+            ball.gravityTimer = ANTIGRAV_TIME;
+            play("pickup");
+          }
+          break;
+        case "highjump":
+          // Only refresh (and play the sound) on a NEW touch — walking on
+          // and immediately back off, or a completely fresh landing —
+          // never on every frame of just continuing to stand on it, which
+          // was replaying the pickup sound nonstop.
+          nowTouchingPads.add(key);
+          if (!touchingPadKeys.has(key)) {
+            ball.jumpBoostTimer = HIGHJUMP_BOOST_TIME;
+            play("pickup");
+          }
+          break;
+        case "speedbox":
+          nowTouchingPads.add(key);
+          if (!touchingPadKeys.has(key)) {
+            ball.speedBoostTimer = SPEEDBOOST_TIME;
+            play("pickup");
+          }
+          break;
+        case "hoop":
+          // A small hoop is solid to a big ball (isSolidTile) — it can't
+          // actually enter it, only bump against the outside, so a big ball
+          // brushing near one shouldn't credit a "pass."
+          if ((def.big || ball.size !== BALL_SIZE_BIG) && !passedHoopKeys.has(key)) {
+            passedHoopKeys.add(key);
+            hoopsPassed++;
+            play("pickup");
+            updateHud();
+          }
+          break;
+        case "inflater":
+          if (ball.size !== BALL_SIZE_BIG) resizeBall(BALL_SIZE_BIG);
+          break;
+        case "deflater":
+          if (ball.size !== BALL_SIZE_NORMAL) resizeBall(BALL_SIZE_NORMAL);
+          break;
+      }
+    });
+    touchingPadKeys = nowTouchingPads;
+    return goalHit;
+  }
+
+  // ---- input ------------------------------------------------------
+  const input = { left: false, right: false, up: false, down: false };
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") input.left = true;
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") input.right = true;
+    if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") input.up = true;
+    if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") input.down = true;
+    if (e.key === "Enter" || e.key === " ") handleAction();
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(e.key)) e.preventDefault();
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") input.left = false;
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") input.right = false;
+    if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") input.up = false;
+    if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") input.down = false;
+  });
+
+  function bindHold(el, onDown, onUp) {
+    const down = (e) => { e.preventDefault(); onDown(); };
+    const up = (e) => { e.preventDefault(); onUp(); };
+    el.addEventListener("mousedown", down);
+    el.addEventListener("touchstart", down, { passive: false });
+    ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach((ev) => el.addEventListener(ev, up));
+  }
+  bindHold(document.getElementById("btn-left"), () => (input.left = true), () => (input.left = false));
+  bindHold(document.getElementById("btn-right"), () => (input.right = true), () => (input.right = false));
+  const jumpBtn = document.getElementById("btn-jump");
+  bindHold(jumpBtn, () => { input.up = true; jumpBtn.classList.add("pressed"); }, () => { input.up = false; jumpBtn.classList.remove("pressed"); });
+  document.getElementById("btn-action").addEventListener("click", handleAction);
+  canvas.addEventListener("click", handleAction);
+  document.getElementById("level-select-back").addEventListener("click", () => {
+    document.getElementById("level-select-overlay").classList.remove("open");
+    game.mode = "menu";
+  });
+
+  function handleAction() {
+    if (game.mode === "menu") startNewGame();
+    else if (game.mode === "levelcomplete") nextLevel();
+    else if (game.mode === "gameover") game.mode = "menu";
+    else if (game.mode === "error") game.mode = "menu";
+  }
+
+  // ---- physics step -------------------------------------------------
+  // Launches the ball upward (against gravity). Off normal ground this is a
+  // fixed jump. Off bouncy ground, each consecutive jump adds another
+  // uncapped increment to the launch speed — chains only while the ball keeps
+  // landing back on bouncy ground; landing on anything else resets it.
+  function launchJump(gSign) {
+    const boosted = ball.jumpBoostTimer > 0;
+    let base = JUMP_VELOCITY;
+    if (boosted) {
+      const elapsedSincePickup = HIGHJUMP_BOOST_TIME - ball.jumpBoostTimer;
+      const rampT = Math.min(1, elapsedSincePickup / HIGHJUMP_RAMP_TIME);
+      const scale = HIGHJUMP_RAMP_START_SCALE + (1 - HIGHJUMP_RAMP_START_SCALE) * rampT;
+      base = JUMP_VELOCITY_BOOSTED * scale;
+    }
+    if (ball.inWater && ball.size !== BALL_SIZE_BIG) base *= WATER_JUMP_SCALE_SMALL;
+    if (ball.groundBouncy) {
+      ball.bounceChain += 1;
+      ball.vy = -(base + (ball.bounceChain - 1) * BOUNCE_CHAIN_STEP) * gSign;
+    } else {
+      ball.bounceChain = 0;
+      ball.vy = -base * gSign;
+    }
+    ball.grounded = false;
+    play("bounce");
+  }
+
+  // One physics tick of at most `dt` seconds. step() calls this multiple
+  // times per frame (with a smaller dt each) when the ball is moving fast,
+  // so collision gets checked along the way instead of only at the final
+  // destination — otherwise a fast-moving ball can skip clean over a thin
+  // diagonal slope, or even a solid tile, within a single frame.
+  // `upJustPressedEdge` is true only on the first substep of a frame where
+  // jump was freshly pressed, so a multi-substep frame can't fire the jump
+  // "just pressed" edge more than once.
+  function physicsSubstep(dt, upJustPressedEdge) {
+    if (ball.gravityTimer > 0) {
+      ball.gravityTimer -= dt;
+      if (ball.gravityTimer <= 0) ball.gravityFlipped = false;
+    }
+    const gSign = ball.gravityFlipped ? -1 : 1;
+    // Was the ball resting against a ceiling slope as of last substep?
+    // Captured before resolveSlopes (which runs at the end of THIS
+    // substep) re-evaluates and overwrites the flag — used below so
+    // buoyancy/gravity can skip re-fighting a ceiling it's already
+    // settled against, instead of rebuilding force into it every substep.
+    const wasCeilinged = ball.ceilinged;
+    ball.ceilinged = false;
+    // Checked once up front (not separately in horizontal/vertical) so
+    // steering drag, buoyancy, and a water-weakened jump all agree on
+    // whether the ball is submerged for this substep.
+    ball.inWater = ballInWater();
+    // A big ball floats, meaning water should immediately break its footing
+    // — otherwise walking into a water tile while still "grounded" (resting
+    // on the floor beneath it) skips buoyancy entirely, since that only runs
+    // in the airborne branch below; the ball would just sit there dry-docked
+    // until something else (like a jump) knocked it off the ground first.
+    if (ball.inWater && ball.size === BALL_SIZE_BIG && ball.grounded) ball.grounded = false;
+
+    // --- horizontal steering ---
+    const speedBoostMul = ball.speedBoostTimer > 0 ? SPEED_BOOST_SCALE : 1;
+    const waterMul = ball.inWater ? WATER_MOVE_SCALE : 1;
+    const moveAccel = MOVE_ACCEL * waterMul * speedBoostMul;
+    const maxMove = MAX_MOVE * waterMul * speedBoostMul;
+    if (input.left && !input.right) ball.vx -= moveAccel * dt;
+    else if (input.right && !input.left) ball.vx += moveAccel * dt;
+    else if (ball.vx > 0) ball.vx = Math.max(0, ball.vx - FRICTION * dt);
+    else if (ball.vx < 0) ball.vx = Math.min(0, ball.vx + FRICTION * dt);
+    ball.vx = Math.max(-maxMove, Math.min(maxMove, ball.vx));
+
+    let newX = ball.x + ball.vx * dt;
+    // Small foot inset so a ball flush with a slope surface doesn't snag
+    // on the lip of a plain solid tile sitting at the same row (see
+    // boxCollides comment) — only matters while grounded/on a ramp.
+    const FOOT_INSET = ball.grounded ? Math.min(4, ball.size * 0.25) : 0;
+    const hitX = boxCollides(newX, ball.y, gSign, FOOT_INSET);
+    if (hitX) {
+      // Only landing on TOP of a bouncy tile (via gravity) should ever launch
+      // the ball — touching it from the side is just a normal wall.
+      if (ball.vx > 0) newX = hitX.col * TILE - ball.size / 2 - 0.01;
+      else if (ball.vx < 0) newX = (hitX.col + 1) * TILE + ball.size / 2 + 0.01;
+      ball.vx = 0;
+    } else {
+      // Ramp tiles are never in SOLID_TYPES (resolveSlopes rides their
+      // surface instead), so horizontal collision has never checked them at
+      // all — meaning nothing stops the ball walking straight through the
+      // steep/back side of a ramp, which is just as solid-looking as any
+      // wall. Block it using the same signed-distance-to-the-diagonal test
+      // resolveSlopes itself is built on, checked ONLY against the single
+      // column the ball is actually entering (never a neighboring tile's
+      // line extrapolated past its own edges — that cross-tile leakage is
+      // what broke a jump at a slope seam earlier in development). A ball
+      // legitimately riding a ramp always keeps its CENTER well clear on the
+      // open side of that same line (a resting ball's center sits roughly
+      // half a radius off it), so normal riding — including transitioning
+      // between two ramp tiles at a peak — never comes remotely close to
+      // this threshold; only a straight-on run into the solid face does.
+      //
+      // FLOOR ramps only. Every "invisible wall/platform" bug reported
+      // across this whole feature (water+ceiling bobbing, the flat-to-ramp
+      // false wall, this one) has traced back to a CEILING-role slope
+      // specifically — walking off flat ground directly onto one leaves the
+      // ball's y stale (still wherever the flat tile put it, not yet
+      // corrected by resolveSlopes, which runs after this check) often
+      // enough that a real fix isn't a targeted patch, it's just not
+      // running this check against ceiling slopes at all. They're still
+      // fully solid vertically (resolveSlopes' "ceil" role, and the
+      // separate jump-into-the-underside block, are untouched) — this only
+      // removes the horizontal side-on wall check for them. Floor ramps
+      // (pyramids, staircases) keep the full check, unchanged.
+      const half = ball.size / 2;
+      const enterCol = ball.vx < 0 ? Math.floor((newX - half) / TILE) : Math.floor((newX + half - 1) / TILE);
+      const top = Math.floor((ball.y - half) / TILE);
+      const bottom = Math.floor((ball.y + half - 1) / TILE);
+      for (let row = top; row <= bottom; row++) {
+        const def = slopeDefAt(enterCol, row);
+        if (!def || def.type !== "slopeFloor") continue;
+        let sx, sy, offset;
+        switch (def.transform) {
+          case "id":     sx = 1;  sy = 1;  offset = TILE;  break;
+          case "flipX":  sx = -1; sy = 1;  offset = 0;     break;
+          case "flipY":  sx = 1;  sy = -1; offset = 0;     break;
+          case "rot180": sx = -1; sy = -1; offset = -TILE; break;
+          default: continue;
+        }
+        const lx = newX - enterCol * TILE, ly = ball.y - row * TILE;
+        const signedD = (sx * lx + sy * ly - offset) / Math.SQRT2; // > 0 = solid side
+        if (signedD > 1.5) {
+          newX = ball.vx < 0 ? (enterCol + 1) * TILE + half + 0.01 : enterCol * TILE - half - 0.01;
+          ball.vx = 0;
+          break;
+        }
+      }
+    }
+    // (No separate slope pre-check here: physicsSubstep already runs in small,
+    // speed-capped increments — see step()'s substep loop — and resolveSlopes
+    // snaps the ball onto the ramp right below every substep, so it can't
+    // outrun or tunnel through a slope. An earlier version blocked horizontal
+    // movement whenever the OLD foot height was a hair below the NEW tile's
+    // slope surface — which deadlocked the ball at slope-to-slope transitions
+    // like a pyramid peak, since resolveSlopes never got a chance to lift it
+    // first.)
+    ball.x = newX;
+    ball.rollAngle += (ball.vx * dt) / (ball.size / 2);
+
+    // --- vertical / gravity ---
+    if (ball.grounded) {
+      // Resting: don't re-run gravity/collision every frame (that was causing
+      // the endless "bounce" sound and swallowing jump presses while still).
+      // Keep groundBouncy in sync with whatever flat tile is actually
+      // underneath — walking from flat ground onto a bouncy tile (or off
+      // it) while never leaving the ground doesn't fire a "landing" event,
+      // so it has to be refreshed here too, not just on actual landings.
+      const support = boxCollides(ball.x, ball.y + gSign * 1.5);
+      if (support) ball.groundBouncy = !!(support.def && support.def.bouncy);
+      // Hoop rim, hazard, and inflater are solid via a small thin rect
+      // (pushBallOutOfRect), not a normal SOLID_TYPES tile, so the
+      // boxCollides check above never finds them — `support` was always
+      // null while resting on one, which set grounded back to false EVERY
+      // substep jump wasn't currently held (it only ever survived because
+      // resolveHoopSolids/resolveThinSolids caught it again moments later,
+      // same substep) — a flicker that made jump presses unreliable to
+      // land. Treat those surfaces as supported too so grounded actually
+      // stays put while genuinely resting on one.
+      const stillSupported = support || hasThinRectGround(gSign);
+      // Bouncy ground auto-relaunches every frame jump is HELD (chain keeps
+      // climbing); normal ground still needs a fresh press each time.
+      if (ball.groundBouncy ? input.up : upJustPressedEdge) {
+        launchJump(gSign);
+      } else {
+        ball.vy = 0;
+        if (ball.groundBouncy) ball.bounceChain = 0; // let go — power resets
+        // still supported? (e.g. the ground tile could've been cleared) — if not, start falling again
+        if (!stillSupported) ball.grounded = false;
+      }
+    } else {
+      // Water swaps in buoyancy instead of normal gravity: a steady net
+      // upward pull for the big ball (still lets it dive in and sink a bit
+      // first — falling out naturally from applying this per-substep rather
+      // than needing a special "just entered water" event), or just a
+      // slower fall for the small ball, matching "big balls float, small
+      // balls sink".
+      let gravity, maxFall, maxRise = null;
+      const isBig = ball.size === BALL_SIZE_BIG;
+      if (ball.inWater && isBig) {
+        gravity = -WATER_FLOAT_ACCEL_BIG;
+        maxFall = WATER_MAX_DIVE_BIG; // still cap an initial fast dive-in, but gentler than normal air fall
+        maxRise = WATER_MAX_RISE_BIG;
+      } else if (ball.inWater) {
+        gravity = GRAVITY_SMALL * WATER_SINK_GRAVITY_SCALE_SMALL;
+        maxFall = WATER_MAX_SINK_SMALL;
+      } else {
+        gravity = isBig ? GRAVITY_BIG : GRAVITY_SMALL;
+        maxFall = isBig ? MAX_FALL_BIG : MAX_FALL_SMALL;
+      }
+      // Resting against a ceiling slope (e.g. a big ball floating up into
+      // the underside of one) used to get fought every single substep:
+      // buoyancy pushes up, the ceiling snaps it back down and zeroes vy,
+      // then buoyancy immediately pushes up again next substep — a rapid
+      // bob that also made it hard to just slide out sideways, since the
+      // ball never got a quiet moment to actually drift. If a force would
+      // push further INTO a ceiling it's already settled against, skip
+      // that increment instead — same idea as `grounded` already skipping
+      // gravity entirely once settled on a floor.
+      if (!(wasCeilinged && gravity * gSign < 0)) {
+        ball.vy += gravity * gSign * dt;
+      }
+      // only cap speed while actually falling (moving WITH gravity) — a jump
+      // impulse against gravity should never be clipped by the fall-speed cap
+      if (ball.vy * gSign > maxFall) ball.vy = maxFall * gSign;
+      if (maxRise !== null && ball.vy * gSign < -maxRise) ball.vy = -maxRise * gSign;
+
+      let newY = ball.y + ball.vy * dt;
+      // Ramp tiles look solid but are excluded from boxCollides entirely
+      // (resolveSlopes handles riding them from the correct side instead),
+      // which left nothing stopping the ball moving UP through the
+      // underside of a FLOOR ramp — jump into the open space below one and
+      // you'd sail straight through its wedge and land on top from behind.
+      // Block just that one case here — bounced with the same damping as a
+      // normal ceiling hit below, not a hard stop. Deliberately checks for
+      // slopeFloor specifically, not any slope: a CEILING slope approached
+      // from below while moving up is the normal, correct way to hit it —
+      // resolveSlopes' diagonal "ceil" handling already covers that
+      // properly, and this used to also match slopeCeil, blocking the
+      // whole tile as a flat wall (ignoring the actual diagonal shape)
+      // before resolveSlopes ever got a chance to run.
+      if (ball.vy * gSign < 0) {
+        const half = ball.size / 2;
+        const edgeY = ball.vy < 0 ? newY - half : newY + half;
+        const slopeRow = Math.floor(edgeY / TILE);
+        const left = Math.floor((ball.x - half) / TILE);
+        const right = Math.floor((ball.x + half - 1) / TILE);
+        for (let c = left; c <= right; c++) {
+          const slope = slopeDefAt(c, slopeRow);
+          if (slope && slope.type === "slopeFloor") {
+            newY = ball.vy < 0 ? (slopeRow + 1) * TILE + half + 0.01 : slopeRow * TILE - half - 0.01;
+            ball.vy = -ball.vy * BOUNCE_DAMPING;
+            if (Math.abs(ball.vy) < REST_VEL) ball.vy = 0;
+            break;
+          }
+        }
+      }
+      const hitY = boxCollides(ball.x, newY);
+      if (hitY) {
+        const movingWithGravity = (ball.vy * gSign) > 0;
+        const isBouncy = !!(hitY.def && hitY.def.bouncy);
+        if (ball.vy > 0) newY = hitY.row * TILE - ball.size / 2 - 0.01;
+        else if (ball.vy < 0) newY = (hitY.row + 1) * TILE + ball.size / 2 + 0.01;
+        const wasFalling = Math.abs(ball.vy) > REST_VEL;
+        // Bouncy ground behaves like normal ground on contact — it only
+        // relaunches (with an escalating, uncapped boost) while jump is HELD
+        // through the landing; letting go just settles and resets the chain.
+        const shouldLaunch = movingWithGravity && (isBouncy ? input.up : (upJustPressedEdge || (wasFalling && input.up)));
+        if (shouldLaunch) {
+          ball.groundBouncy = isBouncy;
+          launchJump(gSign);
+        } else {
+          ball.vy = -ball.vy * BOUNCE_DAMPING;
+          if (Math.abs(ball.vy) < REST_VEL) {
+            ball.vy = 0;
+            if (movingWithGravity) {
+              ball.grounded = true;
+              ball.groundBouncy = isBouncy;
+              ball.bounceChain = 0; // settled without holding — power resets
+            } else {
+              // Ceiling hit settling, same idea as grounded above but
+              // upward — without this, buoyancy (or any upward force) kept
+              // re-fighting a perfectly flat, solid ceiling every substep
+              // forever, since NOTHING here ever marked that as "settled."
+              // resolveSlopes' slope-ceiling branch already had this; plain
+              // box-collision ceilings never did.
+              ball.ceilinged = true;
+            }
+          }
+          if (wasFalling && !isBouncy) play("bounce");
+        }
+      }
+      ball.y = newY;
+    }
+    circleTileCornerFix();
+    resolveSlopes(gSign);
+    resolveHoopSolids(gSign);
+    resolveThinSolids(gSign);
+  }
+
+  // Shared circle-vs-rect push-out, used for anything that's solid across a
+  // smaller rect than a full tile (hoop rim walls, hazard/inflater sprite
+  // shapes). `standable` controls whether resting on TOP of this rect
+  // counts as grounded ground — hazards/inflaters do, the hoop rim does
+  // too, but callers can pass false to opt out (nothing currently does).
+  function pushBallOutOfRect(rect, gSign, standable) {
+    const radius = ball.size / 2;
+    const nearX = Math.max(rect.x0, Math.min(ball.x, rect.x1));
+    const nearY = Math.max(rect.y0, Math.min(ball.y, rect.y1));
+    const dx = ball.x - nearX, dy = ball.y - nearY;
+    const distSq = dx * dx + dy * dy;
+    if (distSq >= radius * radius) return;
+    let nx, ny, targetX = null, targetY = null;
+    const dist = Math.sqrt(distSq);
+    if (dist < 1e-4) {
+      // center landed exactly inside the rect (fast-moving overlap) — push
+      // out whichever direction is shortest
+      const left = ball.x - rect.x0, right = rect.x1 - ball.x;
+      const top = ball.y - rect.y0, bottom = rect.y1 - ball.y;
+      const min = Math.min(left, right, top, bottom);
+      if (min === left) { targetX = rect.x0 - radius; nx = -1; ny = 0; }
+      else if (min === right) { targetX = rect.x1 + radius; nx = 1; ny = 0; }
+      else if (min === top) { targetY = rect.y0 - radius; nx = 0; ny = -1; }
+      else { targetY = rect.y1 + radius; nx = 0; ny = 1; }
+    } else {
+      nx = dx / dist; ny = dy / dist;
+    }
+    const vAlongN = ball.vx * nx + ball.vy * ny;
+    // Bug: this used to always reposition the ball back out to exactly
+    // `radius` away, every single substep, with no regard for which way it
+    // was already moving. That's correct for a ball genuinely resting or
+    // pressing INTO the rect — but a ball that just launched a jump while
+    // centered on a thin rect (e.g. dead on a horizontal hoop's rim seam)
+    // is already moving AWAY along the normal that same substep, and while
+    // its own per-substep travel is still smaller than the rect's overlap
+    // zone, it kept getting *additionally* shoved outward here on top of
+    // its own velocity — several substeps' worth of free extra push stacked
+    // on top of the jump before it finally cleared the rect, landing
+    // however many extra px higher depending on exactly how many substeps
+    // that overlap happened to last (which is why it only sometimes ran
+    // high — purely a matter of pixel-perfect timing/alignment). Skip the
+    // reposition (but still shed inward velocity below, same as always)
+    // once it's clearly departing rather than resting or pressing in.
+    const departing = vAlongN > 5;
+    if (!departing) {
+      if (targetX !== null) ball.x = targetX;
+      else if (targetY !== null) ball.y = targetY;
+      else {
+        const push = radius - dist;
+        ball.x += nx * push;
+        ball.y += ny * push;
+      }
+    }
+    if (vAlongN < 0) { // still driving into it — shed just that component
+      ball.vx -= vAlongN * nx;
+      ball.vy -= vAlongN * ny;
+    }
+    // Landed on top, in the gravity sense — stand on it like normal ground.
+    // Guarded the same way as resolveSlopes: only when not actively moving
+    // away (e.g. a jump launched this same substep), or this would silently
+    // cancel that jump next substep.
+    if (standable && ny * gSign < -0.5 && ball.vy * gSign >= 0) {
+      ball.grounded = true;
+      ball.groundBouncy = false;
+      ball.bounceChain = 0;
+    }
+  }
+
+  // Hoop tiles are otherwise fully passable (not in SOLID_TYPES) — fly
+  // straight through from any direction. This adds back a small genuinely
+  // SOLID block per part (blocks from every side, not a one-way platform)
+  // near the tile's outer edge (away from the hole) so you can still stand
+  // on it. Deliberately kept SMALL and SHORT rather than the wide/tall box
+  // from earlier: a small ball is 14px and the tile is only 16px, so
+  // there's nowhere near enough room to also carve out a side gap the ball
+  // could squeeze past through — trying that just walls off the whole tile
+  // instead. Keeping the block small/low means a ball rolling by just bumps
+  // up and over it (or past its sides) like a little curb, rather than
+  // hitting a wall. The bottom part of a vertical hoop gets nothing —
+  // that's the hole — and this whole rim box is skipped for a small hoop
+  // while the ball is big, since that case uses BIG_BALL_SMALL_HOOP_RECT
+  // instead (below).
+  function hoopSolidRectAt(part, col, row) {
+    const x0 = col * TILE, y0 = row * TILE;
+    switch (part) {
+      case "top":   return { x0: x0 + TILE * 0.275,  y0: y0,                x1: x0 + TILE * 0.725,  y1: y0 + TILE * 0.25 };
+      case "left":  return { x0: x0,                 y0: y0 + TILE * 0.3125, x1: x0 + TILE * 0.25,   y1: y0 + TILE * 0.6875 };
+      case "right": return { x0: x0 + TILE * 0.75,   y0: y0 + TILE * 0.3125, x1: x0 + TILE,           y1: y0 + TILE * 0.6875 };
+      default: return null; // "bottom" — the hole, no collision at all
+    }
+  }
+  // A big ball can't fit through a small hoop, but the block for that
+  // shouldn't be the full 16x16 tile square either — this uses the actual
+  // composited sprite's bounding box per part (measured the same way as
+  // the hazard/inflater rects: rendering the real translate/scale/rotate
+  // canvas ops and reading back the alpha) so it's thin and shaped like the
+  // tube, not a fat square. Every part is solid here (including "bottom" —
+  // unlike the normal small-ball rim, the WHOLE hoop is too tight for a big
+  // ball, not just its rim), but a horizontal part (left/right) still isn't
+  // standable — it blocks like a wall, but was never meant to be footing.
+  const BIG_BALL_SMALL_HOOP_RECT = {
+    top:    { x0: 0.25,  y0: 0.167, x1: 0.75,  y1: 1 },
+    bottom: { x0: 0.25,  y0: 0,     x1: 0.75,  y1: 0.833 },
+    left:   { x0: 0.167, y0: 0.25,  x1: 1,     y1: 0.75 },
+    right:  { x0: 0,     y0: 0.25,  x1: 0.833, y1: 0.75 },
+  };
+  function resolveHoopSolids(gSign) {
+    if (cheat.enabled && cheat.noclip) return;
+    forEachOverlappedTile(ball.x, ball.y, (col, row) => {
+      const def = classifyTile(tileIdAt(col, row));
+      if (def.type !== "hoop") return;
+      if (!def.big && ball.size === BALL_SIZE_BIG) {
+        const r = BIG_BALL_SMALL_HOOP_RECT[def.part];
+        const rect = {
+          x0: col * TILE + r.x0 * TILE, y0: row * TILE + r.y0 * TILE,
+          x1: col * TILE + r.x1 * TILE, y1: row * TILE + r.y1 * TILE,
+        };
+        const standable = def.part !== "left" && def.part !== "right";
+        pushBallOutOfRect(rect, gSign, standable);
+        return;
+      }
+      const rect = hoopSolidRectAt(def.part, col, row);
+      if (!rect) return;
+      pushBallOutOfRect(rect, gSign, true);
+    });
+  }
+
+  // Hazard (candle) and inflater are both solid, but only across the actual
+  // drawn shape — a slim vertical (or, rotated, horizontal) strip — not the
+  // full tile. Base rects measured directly from the sprite art's alpha
+  // channel at its default (unrotated) facing; ROTATION_BY_ID's rotation is
+  // then applied to the rect itself so a sideways hazard's hitbox rotates
+  // right along with its sprite.
+  const THIN_SOLID_BASE_RECT = {
+    hazard:   { x0: 0.25,  y0: 0, x1: 0.667, y1: 1 },
+    inflater: { x0: 0.333, y0: 0, x1: 0.75,  y1: 1 },
+  };
+  function rotateRectFraction(r, deg) {
+    switch (((deg % 360) + 360) % 360) {
+      case 90:  return { x0: r.y0, y0: 1 - r.x1, x1: r.y1, y1: 1 - r.x0 };
+      case 180: return { x0: 1 - r.x1, y0: 1 - r.y1, x1: 1 - r.x0, y1: 1 - r.y0 };
+      case 270: return { x0: 1 - r.y1, y0: r.x0, x1: 1 - r.y0, y1: r.x1 };
+      default:  return r;
+    }
+  }
+  function resolveThinSolids(gSign) {
+    if (cheat.enabled && cheat.noclip) return;
+    forEachOverlappedTile(ball.x, ball.y, (col, row) => {
+      const def = classifyTile(tileIdAt(col, row));
+      const base = THIN_SOLID_BASE_RECT[def.type];
+      if (!base) return;
+      const r = rotateRectFraction(base, def.rotation || 0);
+      const rect = {
+        x0: col * TILE + r.x0 * TILE, y0: row * TILE + r.y0 * TILE,
+        x1: col * TILE + r.x1 * TILE, y1: row * TILE + r.y1 * TILE,
+      };
+      pushBallOutOfRect(rect, gSign, true);
+    });
+  }
+
+  // The ball is round, but the horizontal/vertical box collision above
+  // treats it as a square — fine for hitting a face head-on, but a real
+  // circle grazing the CORNER of a small platform (like bouncing near the
+  // edge of a short floating block) should just glance off, not catch.
+  // The square hitbox can catch that corner on one axis while the ball is
+  // still trying to settle on the other, repeatedly zeroing horizontal
+  // speed each time — killing all momentum before it even lands. This only
+  // touches full solid/bouncy tiles (never ramps — resolveSlopes owns
+  // those) and only nudges the ball when its actual circular body is
+  // overlapping a tile's corner region, which normal face-on hits never
+  // reach (a flush face contact sits exactly `radius` away from the
+  // nearest point, never inside it), so it can't interfere with regular
+  // collision.
+  function circleTileCornerFix() {
+    if (cheat.enabled && cheat.noclip) return;
+    const radius = ball.size / 2;
+    forEachOverlappedTile(ball.x, ball.y, (col, row) => {
+      const def = classifyTile(tileIdAt(col, row));
+      if (!isSolidTile(def)) return;
+      const left = col * TILE, top = row * TILE;
+      const nearX = Math.max(left, Math.min(ball.x, left + TILE));
+      const nearY = Math.max(top, Math.min(ball.y, top + TILE));
+      const dx = ball.x - nearX, dy = ball.y - nearY;
+      const distSq = dx * dx + dy * dy;
+      if (distSq >= radius * radius) return;
+      const dist = Math.sqrt(distSq);
+      if (dist < 1e-4) return; // dead-center overlap — let the axis collision handle it
+      const nx = dx / dist, ny = dy / dist;
+      const push = radius - dist;
+      ball.x += nx * push;
+      ball.y += ny * push;
+      const vAlongN = ball.vx * nx + ball.vy * ny;
+      if (vAlongN < 0) { // still driving into the corner — shed just that component
+        ball.vx -= vAlongN * nx;
+        ball.vy -= vAlongN * ny;
+      }
+    });
+  }
+
+  function step(dt) {
+    if (game.mode !== "playing") return;
+
+    if (ball.state === "popped") {
+      ball.popTimer -= dt;
+      if (ball.popTimer <= 0) {
+        if (game.lives < 0) {
+          game.mode = "gameover";
+          play("gameover");
+        } else {
+          resetBall();
+        }
+      }
+      return;
+    }
+
+    const FREE_ROAM_SPEED = 260; // px/sec
+
+    if (cheat.enabled && cheat.noclip) {
+      // free roam: direct flight in all 4 directions, no gravity, no collision
+      let vx = 0, vy = 0;
+      if (input.left && !input.right) vx = -FREE_ROAM_SPEED;
+      else if (input.right && !input.left) vx = FREE_ROAM_SPEED;
+      if (input.up && !input.down) vy = -FREE_ROAM_SPEED;
+      else if (input.down && !input.up) vy = FREE_ROAM_SPEED;
+      ball.vx = vx;
+      ball.vy = vy;
+      ball.x += vx * dt;
+      ball.y += vy * dt;
+      ball.grounded = false;
+      // keep the ball roughly inside the level so the camera doesn't run away forever
+      ball.x = Math.max(0, Math.min(level.width * TILE, ball.x));
+      ball.y = Math.max(0, Math.min(level.height * TILE, ball.y));
+      ball.rollAngle += (ball.vx * dt) / (ball.size / 2);
+      upHeldPrev = input.up;
+    } else {
+      // Fast movement (from a big escalating bounce, or just a fast fall) can
+      // otherwise skip clean over a thin diagonal slope — or even a solid
+      // tile — within a single frame, since collision is only checked at the
+      // destination point. Split the frame into smaller substeps so nothing
+      // moves more than a fraction of a tile between collision checks.
+      const speed = Math.max(Math.abs(ball.vx), Math.abs(ball.vy), 1);
+      const maxStepDist = TILE * 0.4;
+      const steps = Math.min(16, Math.max(1, Math.ceil((speed * dt) / maxStepDist)));
+      const subDt = dt / steps;
+      const upJustPressedThisFrame = input.up && !upHeldPrev;
+      for (let i = 0; i < steps; i++) {
+        physicsSubstep(subDt, i === 0 && upJustPressedThisFrame);
+      }
+      upHeldPrev = input.up;
+
+      if (ball.jumpBoostTimer > 0) {
+        ball.jumpBoostTimer -= dt;
+        if (ball.jumpBoostTimer < 0) ball.jumpBoostTimer = 0;
+      }
+      if (ball.speedBoostTimer > 0) {
+        ball.speedBoostTimer -= dt;
+        if (ball.speedBoostTimer < 0) ball.speedBoostTimer = 0;
+      }
+    }
+
+    // --- hazards kill on contact — checked against the SAME thin rotated
+    // rect used for its actual solid collision (resolveThinSolids), not a
+    // padded full-tile check, so the kill zone matches what you can see
+    // and what you visibly bump into, not the tile's whole square. A small
+    // pad is still needed here though: resolveThinSolids pushes the ball
+    // to rest exactly `radius` away (flush, not overlapping) once it's
+    // settled against it, so a strict "< radius" test stops seeing contact
+    // the moment it's done pushing — meaning standing on top or resting
+    // against its side would silently stop killing you. Same class of bug
+    // as the padded solid-trigger tiles elsewhere (see forEachNearTile).
+    const HAZARD_TOUCH_PAD = 1.5;
+    forEachNearTile(ball.x, ball.y, HAZARD_TOUCH_PAD, (c, r) => {
+      if (isExitTile(c, r)) return;
+      const def = classifyTile(tileIdAt(c, r));
+      if (def.type !== "hazard") return;
+      const rect = rotateRectFraction(THIN_SOLID_BASE_RECT.hazard, def.rotation || 0);
+      const x0 = c * TILE + rect.x0 * TILE, y0 = r * TILE + rect.y0 * TILE;
+      const x1 = c * TILE + rect.x1 * TILE, y1 = r * TILE + rect.y1 * TILE;
+      const nearX = Math.max(x0, Math.min(ball.x, x1));
+      const nearY = Math.max(y0, Math.min(ball.y, y1));
+      const dx = ball.x - nearX, dy = ball.y - nearY;
+      const reach = ball.size / 2 + HAZARD_TOUCH_PAD;
+      if (dx * dx + dy * dy < reach * reach) killBall();
+    });
+
+    // --- moving spikes: update positions, then AABB-check against the ball ---
+    updateSpikes(level, dt);
+    if (ball.state === "alive") {
+      const bLeft = ball.x - ball.size / 2, bRight = ball.x + ball.size / 2;
+      const bTop = ball.y - ball.size / 2, bBottom = ball.y + ball.size / 2;
+      for (const s of level.spikes) {
+        const sLeft = s.curCol * TILE, sTop = s.curRow * TILE;
+        const sRight = sLeft + s.w * TILE, sBottom = sTop + s.h * TILE;
+        if (bLeft < sRight && bRight > sLeft && bTop < sBottom && bBottom > sTop) {
+          killBall();
+          break;
+        }
+      }
+    }
+
+    // --- triggers (life / checkpoint / antigravity / hoops / goal) ---
+    const goal = collectTriggers();
+    if (goal && ball.state === "alive") {
+      game.score += 500;
+      play("goal");
+      game.mode = "levelcomplete";
+      markLevelComplete(game.levelIndex);
+    }
+
+    // --- camera follows the ball, clamped to level bounds ---
+    const viewW = VIEW_COLS * TILE, viewH = VIEW_ROWS * TILE;
+    const levelW = level.width * TILE, levelH = level.height * TILE;
+    camera.x = Math.max(0, Math.min(levelW - viewW, ball.x - viewW / 2));
+    camera.y = Math.max(0, Math.min(levelH - viewH, ball.y - viewH / 2));
+    if (levelW <= viewW) camera.x = -(viewW - levelW) / 2;
+    if (levelH <= viewH) camera.y = -(viewH - levelH) / 2;
+    // round to whole pixels — a fractional camera offset was sub-pixel-shifting
+    // every tile draw each frame, which showed up as hairline seams (most
+    // visible on thin sprites like the hoops)
+    camera.x = Math.round(camera.x);
+    camera.y = Math.round(camera.y);
+  }
+
+  // ---- rendering -----------------------------------------------
+  function drawSprite(name, dx, dy, dw, dh, rotationDeg, transform) {
+    if (name === "big_spike") {
+      if (!rotationDeg && !transform) {
+        ctx.drawImage(bigSpikeImg, 0, 0, bigSpikeImg.width, bigSpikeImg.height, dx, dy, dw, dh);
+        return true;
+      }
+      ctx.save();
+      ctx.translate(dx + dw / 2, dy + dh / 2);
+      if (transform === "flipX") ctx.scale(-1, 1);
+      else if (transform === "flipY") ctx.scale(1, -1);
+      else if (transform === "rot180") ctx.rotate(Math.PI);
+      if (rotationDeg) ctx.rotate((rotationDeg * Math.PI) / 180);
+      ctx.drawImage(bigSpikeImg, 0, 0, bigSpikeImg.width, bigSpikeImg.height, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
+      return true;
+    }
+    const idx = SPRITE_SLOT[name];
+    if (idx === undefined) return false;
+    if (!rotationDeg && !transform) {
+      ctx.drawImage(tilesetImg, idx * 12, 0, 12, 12, dx, dy, dw, dh);
+      return true;
+    }
+    ctx.save();
+    ctx.translate(dx + dw / 2, dy + dh / 2);
+    if (transform === "flipX") ctx.scale(-1, 1);
+    else if (transform === "flipY") ctx.scale(1, -1);
+    else if (transform === "rot180") ctx.rotate(Math.PI);
+    if (rotationDeg) ctx.rotate((rotationDeg * Math.PI) / 180);
+    ctx.drawImage(tilesetImg, idx * 12, 0, 12, 12, -dw / 2, -dh / 2, dw, dh);
+    ctx.restore();
+    return true;
+  }
+
+  function drawHoopTile(def, dx, dy, col, row, passed) {
+    const set = def.big ? hoopImgs.big : hoopImgs.small;
+    const img = passed ? set.used : set.active;
+    const drawOne = (flipX, flipY, rotationDeg) => {
+      ctx.save();
+      ctx.translate(dx + TILE / 2, dy + TILE / 2);
+      ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+      if (rotationDeg) ctx.rotate((rotationDeg * Math.PI) / 180);
+      ctx.drawImage(img, -TILE / 2, -TILE / 2, TILE, TILE);
+      ctx.restore();
+    };
+    if (def.part === "left" || def.part === "right") {
+      // mirrored top-to-bottom onto itself so each tile is its own symmetric
+      // "(" / ")" half, which then line up side by side into one ring.
+      const flipX = def.part === "right";
+      drawOne(flipX, false, 0);
+      drawOne(flipX, true, 0);
+      return;
+    }
+    // vertical hoop: bottom piece's rotation is used for the TOP tile and
+    // vice versa; each is mirrored left-to-right onto itself so each tile is
+    // its own symmetric cap/cup, stacking into one ring.
+    const rotationDeg = def.part === "top" ? 90 : -90;
+    drawOne(false, false, rotationDeg);
+    drawOne(true, false, rotationDeg);
+  }
+
+  const WATER_COLOR = "#0C60B0";
+
+  function drawTileCell(id, col, row) {
+    const dx = col * TILE - camera.x, dy = row * TILE - camera.y;
+    const def = classifyTile(id);
+    // Water is a solid backing color, not a translucent overlay — any
+    // waterlogged tile (hazard, slope, hoop, ...) draws its normal sprite
+    // on TOP of this same fill, same as plain open water just draws the
+    // fill with nothing on top.
+    if (def.type === "water" || def.water) {
+      ctx.fillStyle = WATER_COLOR;
+      ctx.fillRect(dx, dy, TILE, TILE);
+    }
+    switch (def.type) {
+      case "air": return;
+      case "water": return; // fill above is the entire tile
+      case "hoop": {
+        const passed = passedHoopKeys.has(hoopPairKey(def.part, row, col));
+        drawHoopTile(def, dx, dy, col, row, passed);
+        return;
+      }
+      case "checkpoint": {
+        const key = row + "," + col;
+        if (key === activeCheckpointKey) {
+          ctx.drawImage(checkpointActiveImg, 0, 0, 12, 12, dx, dy, TILE, TILE);
+        } else if (!usedCheckpoints.has(key)) {
+          drawSprite("checkpoint", dx, dy, TILE, TILE);
+        } // else: an older, superseded checkpoint — stays gone for good
+        return;
+      }
+      default:
+        if (def.sprite) {
+          drawSprite(def.sprite, dx, dy, TILE, TILE, def.rotation, def.transform);
+        } else if (def.unknown) {
+          ctx.fillStyle = "rgba(210, 30, 180, 0.5)";
+          ctx.fillRect(dx, dy, TILE, TILE);
+          ctx.strokeStyle = "#ff00d0";
+          ctx.strokeRect(dx + 1, dy + 1, TILE - 2, TILE - 2);
+        }
+    }
+  }
+
+  function drawBackground() {
+    ctx.fillStyle = "#a2d3e3";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawLevel() {
+    const c0 = Math.max(0, Math.floor(camera.x / TILE));
+    const c1 = Math.min(level.width - 1, Math.ceil((camera.x + canvas.width) / TILE));
+    const r0 = Math.max(0, Math.floor(camera.y / TILE));
+    const r1 = Math.min(level.height - 1, Math.ceil((camera.y + canvas.height) / TILE));
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        drawTileCell(level.tiles[r][c], c, r);
+      }
+    }
+    // exit overlay: a 2x2 object, distinct textures for locked vs. unlocked
+    const ex = level.exit.x * TILE - camera.x, ey = level.exit.y * TILE - camera.y;
+    if (exitLocked()) {
+      ctx.drawImage(goalLockedImg, 0, 0, 24, 24, ex, ey, TILE * 2, TILE * 2);
+    } else {
+      ctx.drawImage(goalOpenImg, 0, 0, 12, 12, ex, ey, TILE * 2, TILE * 2);
+    }
+  }
+
+  function drawSpikes() {
+    if (!level.spikes) return;
+    for (const s of level.spikes) {
+      const dx = s.curCol * TILE - camera.x, dy = s.curRow * TILE - camera.y;
+      const dw = s.w * TILE, dh = s.h * TILE;
+      // cull off-screen
+      if (dx + dw < 0 || dy + dh < 0 || dx > canvas.width || dy > canvas.height) continue;
+      drawSprite("big_spike", dx, dy, dw, dh);
+    }
+  }
+
+  function drawBall() {
+    const sx = ball.x - camera.x, sy = ball.y - camera.y;
+    // Sprite must track the ball's CURRENT size, not the level's starting
+    // size — inflater/deflater change ball.size at runtime without ever
+    // touching level.bigBall (that's only ever used for respawn size).
+    const isBig = ball.size === BALL_SIZE_BIG;
+    const img = isBig ? bigBallImg : ballImg;
+    if (ball.state === "popped") {
+      const t = 1 - Math.max(0, ball.popTimer / RESPAWN_DELAY); // 0 -> 1 across the pop duration
+      const scale = 1 + t * 0.7;
+      ctx.save();
+      ctx.globalAlpha = t > 0.7 ? Math.max(0, 1 - (t - 0.7) / 0.3) : 1;
+      ctx.translate(sx, sy);
+      ctx.scale(scale, scale);
+      ctx.drawImage(popImg, -ball.size / 2, -ball.size / 2, ball.size, ball.size);
+      ctx.restore();
+      return;
+    }
+    ctx.save();
+    ctx.translate(sx, sy);
+    if (ball.gravityFlipped) ctx.scale(1, -1);
+    ctx.rotate(ball.rollAngle);
+    // big_ball.png has transparent padding around the circle (16x16 content
+    // inside a 24x24 canvas); crop to content so the sprite fills the hitbox.
+    if (isBig) {
+      ctx.drawImage(img, 4, 4, 16, 16, -ball.size / 2, -ball.size / 2, ball.size, ball.size);
+    } else {
+      ctx.drawImage(img, -ball.size / 2, -ball.size / 2, ball.size, ball.size);
+    }
+    ctx.restore();
+  }
+
+  function drawCenteredPanel(lines) {
+    ctx.fillStyle = "rgba(10, 20, 12, 0.78)";
+    ctx.fillRect(0, canvas.height / 2 - 34, canvas.width, 68);
+    ctx.fillStyle = "#eef7ee";
+    ctx.font = "bold 13px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    lines.forEach((line, i) => {
+      ctx.fillText(line, canvas.width / 2, canvas.height / 2 - 12 + i * 16);
+    });
+    ctx.textAlign = "left";
+  }
+
+  function drawMenu() {
+    canvas.width = 320;
+    canvas.height = 236;
+    ctx.fillStyle = "#0a1f0a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (splashImg.complete && splashImg.naturalWidth) {
+      const s = 132;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(splashImg, (canvas.width - s) / 2, 12, s, s);
+    }
+    ctx.fillStyle = "#eef7ee";
+    ctx.font = "bold 15px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("B O U N C E", canvas.width / 2, 176);
+    ctx.font = "11px 'Courier New', monospace";
+    ctx.fillStyle = "#a9d9b4";
+    ctx.fillText("press start / space", canvas.width / 2, 200);
+    ctx.font = "9px 'Courier New', monospace";
+    ctx.fillStyle = "#7fae8a";
+    ctx.fillText("\u25b2 to jump on landing \u00b7 clear every hoop to unlock the exit", canvas.width / 2, 220);
+    ctx.textAlign = "left";
+  }
+
+  function drawMessageScreen(title, lines) {
+    canvas.width = VIEW_COLS * TILE;
+    canvas.height = VIEW_ROWS * TILE;
+    ctx.fillStyle = "#0a1f0a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#eef7ee";
+    ctx.textAlign = "center";
+    ctx.font = "bold 13px 'Courier New', monospace";
+    ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 10);
+    ctx.font = "10px 'Courier New', monospace";
+    lines.forEach((line, i) => ctx.fillText(line, canvas.width / 2, canvas.height / 2 + 10 + i * 14));
+    ctx.textAlign = "left";
+  }
+
+  // ---- debug collision overlay -----------------------------------
+  // Draws exactly what the collision code actually checks against, not
+  // what the sprites look like: red/cyan fill = full solid box (SOLID_TYPES),
+  // yellow/orange fill = the triangular solid half of a ramp tile (matches
+  // the floor/ceiling formulas in resolveSlopes), magenta outline = hazard.
+  // White square = the ball's bounding box used by boxCollides; green
+  // circle = the ball's actual visual/rolling radius.
+  function drawCollisionDebug() {
+    if (!cheat.enabled || !cheat.debug || !level) return;
+    const c0 = Math.max(0, Math.floor(camera.x / TILE));
+    const c1 = Math.min(level.width - 1, Math.ceil((camera.x + canvas.width) / TILE));
+    const r0 = Math.max(0, Math.floor(camera.y / TILE));
+    const r1 = Math.min(level.height - 1, Math.ceil((camera.y + canvas.height) / TILE));
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const def = classifyTile(level.tiles[r][c]);
+        const dx = c * TILE - camera.x, dy = r * TILE - camera.y;
+        if (THIN_SOLID_BASE_RECT[def.type]) {
+          // Hazard/inflater — draw the actual rotated thin rect, not the
+          // full tile, so the overlay matches what really collides.
+          const r = rotateRectFraction(THIN_SOLID_BASE_RECT[def.type], def.rotation || 0);
+          const fill = def.type === "hazard" ? "rgba(255, 0, 200, 0.4)" : "rgba(120, 220, 120, 0.4)";
+          const stroke = def.type === "hazard" ? "#ff00c8" : "#78dc78";
+          ctx.fillStyle = fill;
+          ctx.fillRect(dx + r.x0 * TILE, dy + r.y0 * TILE, (r.x1 - r.x0) * TILE, (r.y1 - r.y0) * TILE);
+          ctx.strokeStyle = stroke;
+          ctx.strokeRect(dx + r.x0 * TILE + 0.5, dy + r.y0 * TILE + 0.5, (r.x1 - r.x0) * TILE - 1, (r.y1 - r.y0) * TILE - 1);
+        } else if (def.type === "hoop") {
+          if (!def.big && ball.size === BALL_SIZE_BIG) {
+            // Small hoop, thin solid rect because the ball is big and can't fit.
+            const br = BIG_BALL_SMALL_HOOP_RECT[def.part];
+            ctx.fillStyle = "rgba(255, 150, 255, 0.4)";
+            ctx.fillRect(dx + br.x0 * TILE, dy + br.y0 * TILE, (br.x1 - br.x0) * TILE, (br.y1 - br.y0) * TILE);
+            ctx.strokeStyle = "#ff96ff";
+            ctx.strokeRect(dx + br.x0 * TILE + 0.5, dy + br.y0 * TILE + 0.5, (br.x1 - br.x0) * TILE - 1, (br.y1 - br.y0) * TILE - 1);
+          } else {
+            const rect = hoopSolidRectAt(def.part, c, r);
+            if (rect) {
+              ctx.fillStyle = "rgba(150, 255, 255, 0.4)";
+              ctx.fillRect(rect.x0 - c * TILE + dx, rect.y0 - r * TILE + dy, rect.x1 - rect.x0, rect.y1 - rect.y0);
+              ctx.strokeStyle = "#96ffff";
+              ctx.strokeRect(rect.x0 - c * TILE + dx + 0.5, rect.y0 - r * TILE + dy + 0.5, rect.x1 - rect.x0 - 1, rect.y1 - rect.y0 - 1);
+            }
+          }
+        } else if (isSolidTile(def)) {
+          ctx.fillStyle = def.type === "bouncy" ? "rgba(0, 220, 255, 0.35)" : "rgba(255, 40, 40, 0.35)";
+          ctx.fillRect(dx, dy, TILE, TILE);
+          ctx.strokeStyle = def.type === "bouncy" ? "#00dcff" : "#ff2828";
+          ctx.strokeRect(dx + 0.5, dy + 0.5, TILE - 1, TILE - 1);
+        } else if (def.type === "slopeFloor" || def.type === "slopeCeil") {
+          let pts;
+          switch (def.transform) {
+            case "id":     pts = [[TILE, 0], [TILE, TILE], [0, TILE]]; break;
+            case "flipX":  pts = [[0, 0], [TILE, TILE], [0, TILE]]; break;
+            case "flipY":  pts = [[0, 0], [TILE, 0], [TILE, TILE]]; break;
+            case "rot180": pts = [[0, 0], [TILE, 0], [0, TILE]]; break;
+            default: pts = null;
+          }
+          if (pts) {
+            ctx.fillStyle = def.bouncy ? "rgba(0, 220, 255, 0.35)" : (def.type === "slopeCeil" ? "rgba(255, 150, 0, 0.35)" : "rgba(255, 220, 0, 0.35)");
+            ctx.beginPath();
+            ctx.moveTo(dx + pts[0][0], dy + pts[0][1]);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(dx + pts[i][0], dy + pts[i][1]);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = def.bouncy ? "#00dcff" : (def.type === "slopeCeil" ? "#ff9600" : "#ffdc00");
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.restore();
+
+    const half = ball.size / 2;
+    const bx = ball.x - camera.x, by = ball.y - camera.y;
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeRect(bx - half + 0.5, by - half + 0.5, ball.size - 1, ball.size - 1);
+    ctx.strokeStyle = "#00ff9c";
+    ctx.beginPath();
+    ctx.arc(bx, by, half, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = "10px 'Courier New', monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(10, 20, 12, 0.7)";
+    ctx.fillRect(2, 2, 150, 49);
+    ctx.fillStyle = "#eef7ee";
+    ctx.fillText(`pos ${ball.x.toFixed(1)}, ${ball.y.toFixed(1)}`, 6, 13);
+    ctx.fillText(`vel ${ball.vx.toFixed(1)}, ${ball.vy.toFixed(1)}`, 6, 24);
+    ctx.fillText(`grounded ${ball.grounded}  bouncy ${ball.groundBouncy}`, 6, 35);
+    ctx.fillText(`water ${ball.inWater}`, 6, 46);
+    ctx.restore();
+  }
+
+  // Small countdown bars for the three timed pickups (antigrav/highjump/
+  // speedbox) — stacked in the top-right corner, only shown while active,
+  // so it's clear both that a buff is running and roughly how much is left.
+  function drawBuffBars() {
+    const buffs = [];
+    if (ball.gravityTimer > 0) buffs.push({ label: "GRAV", ratio: ball.gravityTimer / ANTIGRAV_TIME, color: "#4fa8ff" });
+    if (ball.jumpBoostTimer > 0) buffs.push({ label: "JUMP", ratio: ball.jumpBoostTimer / HIGHJUMP_BOOST_TIME, color: "#ffd24f" });
+    if (ball.speedBoostTimer > 0) buffs.push({ label: "SPD", ratio: ball.speedBoostTimer / SPEEDBOOST_TIME, color: "#4fffb0" });
+    if (!buffs.length) return;
+    const barW = 54, barH = 7, gap = 3;
+    let y = 4;
+    const x = canvas.width - barW - 4;
+    ctx.save();
+    ctx.font = "7px 'Courier New', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    for (const b of buffs) {
+      ctx.fillStyle = "rgba(10, 20, 12, 0.7)";
+      ctx.fillRect(x, y, barW, barH);
+      ctx.fillStyle = b.color;
+      ctx.fillRect(x + 1, y + 1, Math.max(0, (barW - 2) * Math.min(1, b.ratio)), barH - 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, barW - 1, barH - 1);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(b.label, x + 2, y + barH - 1.5);
+      y += barH + gap;
+    }
+    ctx.restore();
+  }
+
+  function render() {
+    if (game.mode === "menu") { drawMenu(); return; }
+    if (game.mode === "loading") { drawMessageScreen("LOADING\u2026", ["reading level data"]); return; }
+    if (game.mode === "error") { drawMessageScreen("LOAD ERROR", [game.errorMsg, "press start for menu"]); return; }
+    if (!level) return;
+    drawBackground();
+    drawSpikes();
+    drawLevel();
+    drawBall();
+    drawCollisionDebug();
+    drawBuffBars();
+    if (game.mode === "levelcomplete") {
+      drawCenteredPanel(["LEVEL CLEAR!", "score " + game.score, "press start to continue"]);
+    } else if (game.mode === "gameover") {
+      drawCenteredPanel(["GAME OVER", "score " + game.score, "press start for menu"]);
+    }
+  }
+
+  // ---- main loop ------------------------------------------------
+  let lastTime = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.033, (now - lastTime) / 1000);
+    lastTime = now;
+    step(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- cheat panel UI -------------------------------------------------
+  const cheatToggleBtn = document.getElementById("cheat-toggle");
+  const cheatPanel = document.getElementById("cheat-panel");
+  const cheatMasterBox = document.getElementById("cheat-master");
+  const cheatNoclipBox = document.getElementById("cheat-noclip");
+  const cheatInvincibleBox = document.getElementById("cheat-invincible");
+  const cheatDebugBox = document.getElementById("cheat-debug");
+  const rowNoclip = document.getElementById("row-noclip");
+  const rowInvincible = document.getElementById("row-invincible");
+  const rowDebug = document.getElementById("row-debug");
+  const levelGrid = document.getElementById("cheat-level-grid");
+  const buffAntigravBtn = document.getElementById("cheat-buff-antigrav");
+  const buffSpeedBtn = document.getElementById("cheat-buff-speed");
+  const buffHighjumpBtn = document.getElementById("cheat-buff-highjump");
+
+  cheatToggleBtn.addEventListener("click", () => {
+    cheatPanel.classList.toggle("open");
+  });
+  document.getElementById("cheat-close").addEventListener("click", () => {
+    cheatPanel.classList.remove("open");
+  });
+
+  function refreshCheatUI() {
+    cheatToggleBtn.classList.toggle("active", cheat.enabled);
+    cheatNoclipBox.disabled = !cheat.enabled;
+    cheatInvincibleBox.disabled = !cheat.enabled;
+    cheatDebugBox.disabled = !cheat.enabled;
+    rowNoclip.classList.toggle("disabled", !cheat.enabled);
+    rowInvincible.classList.toggle("disabled", !cheat.enabled);
+    rowDebug.classList.toggle("disabled", !cheat.enabled);
+    const canBuff = cheat.enabled && game.mode === "playing";
+    buffAntigravBtn.disabled = !canBuff;
+    buffSpeedBtn.disabled = !canBuff;
+    buffHighjumpBtn.disabled = !canBuff;
+    Array.from(levelGrid.children).forEach((btn, i) => {
+      btn.disabled = !cheat.enabled;
+      btn.classList.toggle("current", level !== null && game.levelIndex === i);
+    });
+  }
+
+  cheatMasterBox.addEventListener("change", () => {
+    cheat.enabled = cheatMasterBox.checked;
+    if (!cheat.enabled) {
+      cheat.noclip = false;
+      cheat.invincible = false;
+      cheat.debug = false;
+      cheatNoclipBox.checked = false;
+      cheatInvincibleBox.checked = false;
+      cheatDebugBox.checked = false;
+      document.getElementById("row-freeroam-hint").style.display = "none";
+    }
+    refreshCheatUI();
+  });
+  cheatNoclipBox.addEventListener("change", () => {
+    cheat.noclip = cheatNoclipBox.checked;
+    document.getElementById("row-freeroam-hint").style.display = cheat.noclip ? "block" : "none";
+  });
+  cheatInvincibleBox.addEventListener("change", () => { cheat.invincible = cheatInvincibleBox.checked; });
+  cheatDebugBox.addEventListener("change", () => { cheat.debug = cheatDebugBox.checked; });
+  bindHold(document.getElementById("freeroam-down-btn"), () => (input.down = true), () => (input.down = false));
+
+  // Instant-grant buttons — same timers/effects the real pickups apply, for
+  // quickly testing buff behavior without hunting down the tile in a level.
+  buffAntigravBtn.addEventListener("click", () => {
+    if (!cheat.enabled || game.mode !== "playing") return;
+    ball.gravityFlipped = !ball.gravityFlipped;
+    ball.gravityTimer = ANTIGRAV_TIME;
+  });
+  buffSpeedBtn.addEventListener("click", () => {
+    if (!cheat.enabled || game.mode !== "playing") return;
+    ball.speedBoostTimer = SPEEDBOOST_TIME;
+  });
+  buffHighjumpBtn.addEventListener("click", () => {
+    if (!cheat.enabled || game.mode !== "playing") return;
+    ball.jumpBoostTimer = HIGHJUMP_BOOST_TIME;
+  });
+
+  LEVEL_FILES.forEach((_, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = "LVL " + (i + 1);
+    btn.disabled = true;
+    btn.addEventListener("click", () => {
+      if (!cheat.enabled) return;
+      game.score = level ? game.score : 0;
+      game.lives = Math.max(game.lives, 3);
+      game.levelIndex = i;
+      loadLevel(i);
+      refreshCheatUI();
+    });
+    levelGrid.appendChild(btn);
+  });
+
+  refreshCheatUI();
+
+  updateHud();
+  requestAnimationFrame(loop);
+})();
+
+  </script>
+</body>
+</html>
