@@ -578,6 +578,8 @@ body {
     "J2MElvl.005", "J2MElvl.006", "J2MElvl.007", "J2MElvl.008",
     "J2MElvl.009", "J2MElvl.010", "J2MElvl.011",
   ];
+  let lastSlopeDebug = null; // debug overlay: last resolveSlopes match info
+  let lastHorizBlockDebug = null; // debug overlay: last horizontal block (box or diagonal)
   const LEVEL_DIR = "../Assets/Bounce/levels/";
 
   // ---- constants -------------------------------------------------
@@ -622,7 +624,7 @@ body {
   // "enter water" event.
   const WATER_FLOAT_ACCEL_BIG = 320;   // net upward accel for a submerged big ball
   const WATER_MAX_RISE_BIG = 80;       // terminal float-up speed
-  const WATER_MAX_DIVE_BIG = 85;       // cap on the initial dive-in speed, separate from normal air fall
+  const WATER_MAX_DIVE_BIG = 60;       // cap on the initial dive-in speed, separate from normal air fall
   const WATER_SINK_GRAVITY_SCALE_SMALL = 0.3; // small ball still sinks, just slower
   const WATER_MAX_SINK_SMALL = 85;
   const WATER_JUMP_SCALE_SMALL = 0.55; // weaker jump impulse, small ball only
@@ -1231,6 +1233,9 @@ body {
   // ball's foot box overlaps its top edge and snags there instead of
   // rolling on. Vertical collision always calls this with footInset 0 so
   // real floors/ceilings still stop the ball exactly.
+  //
+  // That inset alone isn't enough for a full multi-tile staircase, though —
+  // see the ramp-fill skip inside the loop below for the rest of that case.
   function boxCollides(x, y, gSign = 1, footInset = 0) {
     if (cheat.enabled && cheat.noclip) return null;
     const half = ball.size / 2;
@@ -1249,7 +1254,24 @@ body {
           continue; // unlocked exit is passable, handled as a trigger instead
         }
         const def = classifyTile(tileIdAt(c, r));
-        if (isSolidTile(def)) return { col: c, row: r, def };
+        if (!isSolidTile(def)) continue;
+        // A solid tile directly "above" (against gravity) THIS one, same
+        // column, that's a ramp — this is a staircase's own internal fill,
+        // not a wall. It exists so the pyramid LOOKS solid, but the real
+        // walkable path is the diagonal surface one step up, not this tile's
+        // top face. Without this, a ball climbing the staircase gets caught
+        // here on any substep where horizontal movement (which runs BEFORE
+        // resolveSlopes each substep — see its own comment) is evaluated
+        // while the ball's foot is still at the CURRENT step's height,
+        // before it's been lifted to the next one — intermittent by nature,
+        // since it depends on exactly which substep input lands on. Only
+        // applies to the horizontal-only call (footInset > 0); vertical
+        // collision still needs to see every real solid tile.
+        if (footInset > 0) {
+          const aboveDef = slopeDefAt(c, r - gSign);
+          if (aboveDef && aboveDef.type === "slopeFloor") continue;
+        }
+        return { col: c, row: r, def };
       }
     }
     return null;
@@ -1312,8 +1334,34 @@ body {
       } else {
         rect = hoopSolidRectAt(def.part, col, row);
       }
-    } else if (slopeDefAt(col, row)) {
-      return true; // diagonal surface — approximate is fine, resolveSlopes owns the real check
+    } else {
+      const slope = slopeDefAt(col, row);
+      if (slope) {
+        // Used to just `return true` here on the theory that resolveSlopes
+        // "owns the real check" — but resolveSlopes' rejection of a
+        // non-touching slope never clears `grounded`, it just silently
+        // declines to move the ball. That left THIS crude "a slope tile
+        // exists somewhere near the probe row" as the only thing actually
+        // keeping `grounded` true, with zero regard for how far away it
+        // really is — pinning the ball floating in place indefinitely
+        // (every substep: resolveSlopes correctly refuses to touch it,
+        // this function just as confidently says "still supported", so
+        // `grounded` never gets cleared and the ball's y never updates).
+        // Do the same real surface-distance check resolveSlopes itself
+        // uses, so the two can't disagree about what counts as touching.
+        const role = (slope.type === "slopeFloor" && gSign > 0) || (slope.type === "slopeCeil" && gSign < 0)
+          ? "floor"
+          : (slope.type === "slopeCeil" && gSign > 0) || (slope.type === "slopeFloor" && gSign < 0)
+            ? "ceil"
+            : null;
+        if (!role) return false;
+        const xFrac = Math.max(0, Math.min(1, (ball.x - col * TILE) / TILE));
+        const surfaceY = row * TILE + slopeSurfaceFrac(slope.transform, xFrac) * TILE;
+        const overlap = role === "floor"
+          ? (gSign > 0 ? (ball.y + half) - surfaceY : surfaceY - (ball.y - half))
+          : (gSign > 0 ? surfaceY - (ball.y - half) : (ball.y + half) - surfaceY);
+        return overlap >= -0.5 && overlap <= 6;
+      }
     }
     if (!rect) return false;
     const nearX = Math.max(rect.x0, Math.min(ball.x, rect.x1));
@@ -1384,17 +1432,31 @@ body {
   // against gravity from that boundary (it's stacked a level higher than the
   // flat ground leading into it) — so checking only floor(footY/TILE) misses
   // it and lets the ball slide its box under/into the wedge undetected.
-  // Check the foot's own row first, then the row one step further up.
-  function findSlopeForFoot(x, footY, gSign) {
-    const col = Math.floor(x / TILE);
-    const row1 = Math.floor(footY / TILE);
-    let def = slopeDefAt(col, row1);
-    if (def) return { def, row: row1, col };
-    const row2 = row1 - gSign;
-    def = slopeDefAt(col, row2);
-    if (def) return { def, row: row2, col };
-    return null;
-  }
+  // Check the foot's own row first, then (for the ball's CENTER sample only
+  // — see allowFallback below) the row one step further up, then one step
+  // further down (the mirror case: transitioning off the bottom of one ramp
+  // straight onto a lower bump/pyramid whose top is a row further WITH
+  // gravity — without this, the ball can fall past the first ramp's surface
+  // with nothing to catch it until it's already sunk deep into the second
+  // tile, landing partially inside it instead of on top).
+  // allowFallback gates both one-row checks above — only the ball's CENTER
+  // sample gets them. The left/right edge samples exist so a wide ball
+  // can't dip a corner into a diagonal cut on the tile it's ACTUALLY over,
+  // but combined with a row fallback they could also reach sideways into a
+  // neighboring column and false-match a ramp tile nowhere near the ball's
+  // body. The center sample alone is enough to catch genuine transitions,
+  // and whatever it matches still has to pass resolveSlopes' own overlap
+  // check afterward — this just makes the right tile reachable at all.
+  // (Used to be a standalone findSlopeForFoot() that returned the FIRST row
+  // with a slope def — row1, then one row against gravity for a staircase
+  // entry — regardless of whether that row's surface was actually anywhere
+  // near the ball. That broke the case of a ramp bottoming out onto a
+  // lower bump/pyramid: row1 legitimately has A slope tile (the bigger
+  // ramp), so it never even looked at the row below, even when that
+  // upper tile's overlap was huge (ball already sunk deep past it) and the
+  // lower tile would've been a clean touch. Inlined into resolveSlopes
+  // below so each candidate row's overlap can actually be checked before
+  // committing to it — see the candidateRows loop.
 
   // Snaps the ball onto a diagonal ramp surface. Runs every frame after the
   // normal box collision so the ball rides the slope as it moves horizontally,
@@ -1402,29 +1464,49 @@ body {
   // Samples the left edge, center, and right edge of the ball (not just its
   // center) so a wide ball can't dip its corners into the diagonal cut.
   function resolveSlopes(gSign) {
+    lastSlopeDebug = null;
     const half = ball.size / 2;
     const footY = gSign > 0 ? ball.y + half : ball.y - half;
     const inset = Math.min(1, half - 0.01);
     const sampleXs = [ball.x - half + inset, ball.x, ball.x + half - inset];
+    const MAX_SNAP_DEPTH = 6; // how deep a penetration counts as a genuine landing, not a false match
 
-    let best = null; // { surfaceY, def, role: "floor"|"ceil" }
+    let best = null; // { surfaceY, def, role: "floor"|"ceil", fromFallback, row, col, overlap }
     for (const sx of sampleXs) {
-      const found = findSlopeForFoot(sx, footY, gSign);
-      if (!found) continue;
-      const { def, row, col } = found;
-      const role = (def.type === "slopeFloor" && gSign > 0) || (def.type === "slopeCeil" && gSign < 0)
-        ? "floor"
-        : (def.type === "slopeCeil" && gSign > 0) || (def.type === "slopeFloor" && gSign < 0)
-          ? "ceil"
-          : null;
-      if (!role) continue;
-      const xFrac = Math.max(0, Math.min(1, (sx - col * TILE) / TILE));
-      const surfaceY = row * TILE + slopeSurfaceFrac(def.transform, xFrac) * TILE;
-      if (!best) { best = { surfaceY, def, role }; continue; }
-      // pick whichever sample keeps the ball furthest from penetrating the surface
-      const wantMin = (best.role === "floor" && gSign > 0) || (best.role === "ceil" && gSign < 0);
-      const better = wantMin ? surfaceY < best.surfaceY : surfaceY > best.surfaceY;
-      if (better) best = { surfaceY, def, role };
+      const isCenterSample = sx === ball.x;
+      const col = Math.floor(sx / TILE);
+      const row1 = Math.floor(footY / TILE);
+      // Left/right edge samples only ever check the ball's own row — see the
+      // comment above findSlopeForFoot's old body (now folded in here) for
+      // why they don't get the extra rows: an edge sample reaching a row up
+      // or down AND sideways into a neighboring column could false-match a
+      // ramp tile nowhere near the ball's actual body.
+      const candidateRows = isCenterSample ? [row1, row1 - gSign, row1 + gSign] : [row1];
+      for (const row of candidateRows) {
+        const def = slopeDefAt(col, row);
+        if (!def) continue;
+        const role = (def.type === "slopeFloor" && gSign > 0) || (def.type === "slopeCeil" && gSign < 0)
+          ? "floor"
+          : (def.type === "slopeCeil" && gSign > 0) || (def.type === "slopeFloor" && gSign < 0)
+            ? "ceil"
+            : null;
+        if (!role) continue;
+        const xFrac = Math.max(0, Math.min(1, (sx - col * TILE) / TILE));
+        const surfaceY = row * TILE + slopeSurfaceFrac(def.transform, xFrac) * TILE;
+        const overlap = role === "floor"
+          ? (gSign > 0 ? (ball.y + half) - surfaceY : surfaceY - (ball.y - half))
+          : (gSign > 0 ? surfaceY - (ball.y - half) : (ball.y + half) - surfaceY);
+        // Not a real touch from this row — try the next candidate row
+        // instead of settling for a def that merely exists here.
+        if (overlap < -0.5 || overlap > MAX_SNAP_DEPTH) continue;
+        const fromFallback = row !== row1;
+        if (!best) { best = { surfaceY, def, role, fromFallback, row, col, overlap }; break; }
+        // pick whichever sample keeps the ball furthest from penetrating the surface
+        const wantMin = (best.role === "floor" && gSign > 0) || (best.role === "ceil" && gSign < 0);
+        const better = wantMin ? surfaceY < best.surfaceY : surfaceY > best.surfaceY;
+        if (better) best = { surfaceY, def, role, fromFallback, row, col, overlap };
+        break; // first VALID row wins for this sample; don't also try the others
+      }
     }
     // Pinched between two DIFFERENT ceiling-slope tiles at once (e.g. a
     // notch narrower than the ball's own diameter — measured this exact
@@ -1467,28 +1549,20 @@ body {
         // notch rather than getting stuck under it. PINCH_BOP_CAP is the
         // knob: raise it if the ball can't clear the notch anymore, lower
         // it if the bop is still too generous.
-        const PINCH_BOP_CAP = 30;
+        const PINCH_BOP_CAP = 16;
         if (ball.vy * gSign < -PINCH_BOP_CAP) ball.vy = -PINCH_BOP_CAP * gSign;
         if (ball.vy * gSign <= 0) ball.ceilinged = true;
         return;
       }
     }
     if (!best) return;
-    const { surfaceY, def, role } = best;
-    // How far the ball's foot has already crossed past the ramp surface.
-    // The fallback in findSlopeForFoot searches an entire ROW away (up to
-    // a full tile), so it can match a slope that's really just sitting
-    // near unrelated ground far below/above — e.g. walking on flat floor
-    // that happens to have a ramp tile one row up gets treated as
-    // "touching" that ramp from underneath and yanked onto it. Real
-    // contact only ever has a tiny overlap (movement per substep is
-    // small), so cap how deep a penetration we'll accept as a genuine
-    // landing — anything deeper is a false match, not a real touch.
-    const MAX_SNAP_DEPTH = 6;
+    const { surfaceY, def, role, fromFallback, row, col, overlap } = best;
+    // Overlap was already checked against MAX_SNAP_DEPTH per-candidate-row
+    // above (see the candidateRows loop) — every row that could have been
+    // `best` here already passed that check, so it doesn't need repeating.
+    lastSlopeDebug = { transform: def.transform, role, fromFallback, row, col, surfaceY: surfaceY.toFixed(1), overlap: overlap.toFixed(1) };
 
     if (role === "floor") {
-      const overlap = gSign > 0 ? (ball.y + half) - surfaceY : surfaceY - (ball.y - half);
-      if (overlap < -0.5 || overlap > MAX_SNAP_DEPTH) return;
       ball.y = gSign > 0 ? surfaceY - half : surfaceY + half;
       // Bouncy slopes settle like normal ground on contact — they only
       // relaunch (escalating, uncapped) while jump is HELD through the
@@ -1510,8 +1584,6 @@ body {
       // the very next substep sees "already grounded" and zeroes the
       // jump velocity before the ball has moved a single pixel.
     } else {
-      const overlap = gSign > 0 ? surfaceY - (ball.y - half) : (ball.y + half) - surfaceY;
-      if (overlap < -0.5 || overlap > MAX_SNAP_DEPTH) return;
       ball.y = gSign > 0 ? surfaceY + half : surfaceY - half;
       if (ball.vy * gSign <= 0) {
         ball.vy = 0;
@@ -1788,17 +1860,50 @@ body {
     ball.vx = Math.max(-maxMove, Math.min(maxMove, ball.vx));
 
     let newX = ball.x + ball.vx * dt;
+    lastHorizBlockDebug = null;
     // Small foot inset so a ball flush with a slope surface doesn't snag
     // on the lip of a plain solid tile sitting at the same row (see
     // boxCollides comment) — only matters while grounded/on a ramp.
     const FOOT_INSET = ball.grounded ? Math.min(4, ball.size * 0.25) : 0;
     const hitX = boxCollides(newX, ball.y, gSign, FOOT_INSET);
+    const half = ball.size / 2;
     if (hitX) {
+      lastHorizBlockDebug = { kind: "box", col: hitX.col, row: hitX.row, tileType: hitX.def && hitX.def.type };
+      // A grounded ball rolling into a short ledge (e.g. the flat summit at
+      // the top of a small pyramid, one tile up from where the ramp ends)
+      // steps up onto it instead of just stopping dead — same as any
+      // platformer's auto-step. Only for a genuinely SHORT rise (about one
+      // tile), and only if the space the ball would occupy up there is
+      // actually clear; a real multi-tile wall still stops it cold below.
+      const wallTopY = gSign > 0 ? hitX.row * TILE : (hitX.row + 1) * TILE;
+      const stepNeeded = gSign > 0 ? (ball.y + half) - wallTopY : wallTopY - (ball.y - half);
+      // A bigger ball's edge reaches into the wall's column while its
+      // CENTER is still further back (and lower) on the ramp than a
+      // smaller ball's would be at the same wall — so the apparent step
+      // height measured from here (ball.y) comes out larger purely from
+      // that contact-point geometry, even for the exact same physical
+      // ledge. Scaling the limit with the ball's own radius compensates
+      // for that instead of just using one fixed number that only worked
+      // for whichever ball size it happened to be tuned against.
+      const STEP_UP_LIMIT = TILE + half;
+      let steppedUp = false;
+      if (ball.grounded && !hitX.exitLocked && stepNeeded > 0 && stepNeeded <= STEP_UP_LIMIT) {
+        const targetY = gSign > 0 ? wallTopY - half : wallTopY + half;
+        if (!boxCollides(newX, targetY, gSign, 0)) {
+          ball.y = targetY;
+          ball.vy = 0;
+          ball.grounded = true;
+          lastHorizBlockDebug = { kind: "stepup", col: hitX.col, row: hitX.row, stepNeeded: stepNeeded.toFixed(1) };
+          steppedUp = true;
+        }
+      }
       // Only landing on TOP of a bouncy tile (via gravity) should ever launch
       // the ball — touching it from the side is just a normal wall.
-      if (ball.vx > 0) newX = hitX.col * TILE - ball.size / 2 - 0.01;
-      else if (ball.vx < 0) newX = (hitX.col + 1) * TILE + ball.size / 2 + 0.01;
-      ball.vx = 0;
+      if (!steppedUp) {
+        if (ball.vx > 0) newX = hitX.col * TILE - ball.size / 2 - 0.01;
+        else if (ball.vx < 0) newX = (hitX.col + 1) * TILE + ball.size / 2 + 0.01;
+        ball.vx = 0;
+      }
     } else {
       // Ramp tiles are never in SOLID_TYPES (resolveSlopes rides their
       // surface instead), so horizontal collision has never checked them at
@@ -1808,12 +1913,15 @@ body {
       // resolveSlopes itself is built on, checked ONLY against the single
       // column the ball is actually entering (never a neighboring tile's
       // line extrapolated past its own edges — that cross-tile leakage is
-      // what broke a jump at a slope seam earlier in development). A ball
-      // legitimately riding a ramp always keeps its CENTER well clear on the
-      // open side of that same line (a resting ball's center sits roughly
-      // half a radius off it), so normal riding — including transitioning
-      // between two ramp tiles at a peak — never comes remotely close to
-      // this threshold; only a straight-on run into the solid face does.
+      // what broke a jump at a slope seam earlier in development).
+      //
+      // Tried skipping this entirely while grounded (on the theory that a
+      // resting ball stepping onto a ramp should always be handed off to
+      // resolveSlopes) — that let a grounded ball walk straight INTO a
+      // ramp's genuine solid face instead of stopping at it, which is worse
+      // than the false-wall bug it was meant to fix. Reverted: the real fix
+      // for the false-wall case lives in resolveSlopes' fallback-match depth
+      // instead (see findSlopeForFoot / MAX_SNAP_DEPTH), not here.
       //
       // FLOOR ramps only. Every "invisible wall/platform" bug reported
       // across this whole feature (water+ceiling bobbing, the flat-to-ramp
@@ -1827,7 +1935,6 @@ body {
       // separate jump-into-the-underside block, are untouched) — this only
       // removes the horizontal side-on wall check for them. Floor ramps
       // (pyramids, staircases) keep the full check, unchanged.
-      const half = ball.size / 2;
       const enterCol = ball.vx < 0 ? Math.floor((newX - half) / TILE) : Math.floor((newX + half - 1) / TILE);
       const top = Math.floor((ball.y - half) / TILE);
       const bottom = Math.floor((ball.y + half - 1) / TILE);
@@ -1845,6 +1952,7 @@ body {
         const lx = newX - enterCol * TILE, ly = ball.y - row * TILE;
         const signedD = (sx * lx + sy * ly - offset) / Math.SQRT2; // > 0 = solid side
         if (signedD > 1.5) {
+          lastHorizBlockDebug = { kind: "diagonal", col: enterCol, row, transform: def.transform, signedD: signedD.toFixed(1) };
           newX = ball.vx < 0 ? (enterCol + 1) * TILE + half + 0.01 : enterCol * TILE - half - 0.01;
           ball.vx = 0;
           break;
@@ -2635,12 +2743,30 @@ body {
     ctx.font = "10px 'Courier New', monospace";
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(10, 20, 12, 0.7)";
-    ctx.fillRect(2, 2, 150, 49);
+    ctx.fillRect(2, 2, 230, lastSlopeDebug || lastHorizBlockDebug ? 82 : 49);
     ctx.fillStyle = "#eef7ee";
     ctx.fillText(`pos ${ball.x.toFixed(1)}, ${ball.y.toFixed(1)}`, 6, 13);
     ctx.fillText(`vel ${ball.vx.toFixed(1)}, ${ball.vy.toFixed(1)}`, 6, 24);
     ctx.fillText(`grounded ${ball.grounded}  bouncy ${ball.groundBouncy}`, 6, 35);
     ctx.fillText(`water ${ball.inWater}`, 6, 46);
+    if (lastSlopeDebug) {
+      const d = lastSlopeDebug;
+      ctx.fillText(`slope r${d.row} c${d.col} ${d.transform} ${d.role}${d.fromFallback ? " (fallback)" : ""}`, 6, 57);
+      ctx.fillText(`surfY ${d.surfaceY} overlap ${d.overlap} (touching)`, 6, 68);
+    } else {
+      ctx.fillText(`slope: no touch this frame`, 6, 57);
+    }
+    if (lastHorizBlockDebug) {
+      const h = lastHorizBlockDebug;
+      if (h.kind === "box") {
+        const above = slopeDefAt(h.col, h.row - 1);
+        ctx.fillText(`BLOCKED box c${h.col} r${h.row} type=${h.tileType} above=${above ? above.type + " " + above.transform : "none"}`, 6, 79);
+      } else if (h.kind === "stepup") {
+        ctx.fillText(`STEPPED UP c${h.col} r${h.row} need=${h.stepNeeded}`, 6, 79);
+      } else {
+        ctx.fillText(`BLOCKED diag c${h.col} r${h.row} ${h.transform} d=${h.signedD}`, 6, 79);
+      }
+    }
     ctx.restore();
   }
 
