@@ -1,0 +1,25 @@
+{
+  "backgrounds": [
+    { "id": "emerald",  "name": "Emerald Felt",  "felt1": "#0e3d2f", "felt2": "#0a2c22", "glow": "#124b3a" },
+    { "id": "midnight", "name": "Midnight Blue", "felt1": "#0e2a3d", "felt2": "#0a1c2c", "glow": "#123b52" },
+    { "id": "crimson",  "name": "Crimson Room",  "felt1": "#3d0e1a", "felt2": "#2c0a12", "glow": "#521626" },
+    { "id": "charcoal", "name": "Charcoal",      "felt1": "#2a2a2a", "felt2": "#1a1a1a", "glow": "#3a3a3a" },
+    { "id": "oak", "name": "Oak Wood", "image": "../Assets/Cards/Background/oak-wood.jpg",
+      "felt1": "#8a6a44", "felt2": "#5f4a30", "glow": "#b08a5a",
+      "text": "#3a2a18", "accent": "#7a4f22" },
+    { "id": "black-marble", "name": "Black Marble", "image": "../Assets/Cards/Background/black-marble.jpeg",
+      "felt1": "#1a1a1c", "felt2": "#0a0a0b", "glow": "#2e2e32" }
+  ],
+  "cardStyles": [
+    { "id": "classic",       "name": "Classic (drawn)", "path": null },
+    { "id": "standard",      "name": "Standard Deck",   "path": "../Assets/Cards/Cards/standard/" },
+    { "id": "standard-pixel","name": "Standard Pixel",  "path": "../Assets/Cards/Cards/standard-pixel/" },
+    { "id": "simplistic",    "name": "Simplistic",      "path": "../Assets/Cards/Cards/simplistic/" },
+    { "id": "flowers",       "name": "Flowers",         "path": "../Assets/Cards/Cards/flowers/" },
+    { "id": "minimalist",    "name": "Minimalist",      "path": "../Assets/Cards/Cards/minimalist/" }
+  ],
+  "uiSkins": [
+    { "id": "classic", "name": "Classic Felt" },
+    { "id": "arcade",  "name": "Pixel Arcade" }
+  ]
+}
