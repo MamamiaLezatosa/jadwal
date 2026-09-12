@@ -11,8 +11,8 @@
         { "name": "Worlde", "path": "wordle.html", "icon": "wordle.png" },
         { "name": "Flappy Bird", "path": "flappy-bird.html", "icon": "flappy-bird.png" },
         { "name": "Tetris", "path": "tetris.html", "icon": "tetris.png" },
-        { "name": "Pac-Man", "path": "pacman.html", "icon": "Pacman.png" },
-        { "name": "Bounce", "path": "bounce.html", "icon": "bounce.jpg" }
+        { "name": "Bounce", "path": "bounce.html", "icon": "bounce.jpg" },
+        { "name": "Card Games", "path": "card-games.html", "icon": "card-game.jpg" }
       ]
     },
     {
