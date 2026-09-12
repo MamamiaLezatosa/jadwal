@@ -214,6 +214,97 @@
   .style-swatch.arcade .style-swatch-text{
     font-family: 'Press Start 2P','Courier New',monospace; font-size:12px;
   }
+
+  /* ---------- Font color picker ---------- */
+  .theme-grid-fontcolor{ grid-template-columns: repeat(auto-fill, minmax(72px,1fr)); }
+  .fc-tile{
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    padding: 10px 6px; border-radius: 8px; cursor:pointer;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.02);
+    transition: border-color .15s, background .15s, transform .1s;
+  }
+  .fc-tile:hover{ background: rgba(201,163,90,0.09); }
+  .fc-tile:active{ transform: scale(0.97); }
+  .fc-tile.selected{ border-color: #c9a35a; background: rgba(201,163,90,0.14); }
+  .fc-swatch{
+    position: relative; width: 48px; height: 48px; border-radius: 50%;
+    background: #16211c;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fc-tile.selected .fc-swatch{ box-shadow: inset 0 0 12px rgba(0,0,0,0.45), 0 0 0 2px #c9a35a; }
+  .fc-swatch .fc-glyph{
+    font-weight:700; font-size:16px; font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    -webkit-text-stroke: 0.6px rgba(255,255,255,0.35);
+  }
+  .fc-swatch.fc-rainbow{
+    background: conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #30b0c7, #007aff, #af52de, #ff3b30);
+  }
+  .tile-label.fc-hex{ font-size:9.5px; letter-spacing:0.3px; opacity:0.7; text-transform:uppercase; }
+
+  #colorPickerPopup{
+    display:none; position:fixed; inset:0; background: rgba(6,20,15,0.82);
+    align-items:center; justify-content:center; z-index: 75; padding:20px;
+  }
+  #colorPickerPopup.show{ display:flex; }
+  #colorPickerPopup .cp-card{
+    background: linear-gradient(180deg,#123a2e,#0e2c22);
+    border: 1px solid var(--gold-dim);
+    border-radius: 10px;
+    padding: 20px 20px 16px;
+    width: min(300px, 100%);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+  }
+  #colorPickerPopup h3{ margin:0 0 14px 0; color:#c9a35a; font-size:16.5px; letter-spacing:0.3px; }
+  .cp-sv{
+    position:relative; width:100%; height:150px; border-radius:8px;
+    border:1px solid rgba(255,255,255,0.12); cursor:crosshair; touch-action:none;
+    margin-bottom:14px;
+  }
+  .cp-sv-cursor{
+    position:absolute; width:14px; height:14px; border-radius:50%;
+    border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.6);
+    transform: translate(-50%,-50%); pointer-events:none;
+  }
+  .cp-hue{
+    position:relative; width:100%; height:16px; border-radius:8px;
+    border:1px solid rgba(255,255,255,0.12); cursor:pointer; touch-action:none;
+    margin-bottom:16px;
+    background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+  }
+  .cp-hue-handle{
+    position:absolute; top:50%; width:16px; height:16px; border-radius:50%;
+    background:#fff; border:2px solid #123a2e; box-shadow:0 1px 3px rgba(0,0,0,0.5);
+    transform: translate(-50%,-50%); pointer-events:none;
+  }
+  .cp-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .cp-preview{
+    width:34px; height:34px; border-radius:6px; flex-shrink:0;
+    border:1px solid rgba(255,255,255,0.2);
+  }
+  .cp-hex-field{ display:flex; align-items:center; flex:1; gap:6px; }
+  .cp-hex-field span{ color: rgba(242,234,217,0.55); font-size:13px; }
+  #cpHexInput{
+    flex:1; min-width:0; background: rgba(0,0,0,0.28); border:1px solid var(--gold-dim);
+    border-radius:5px; color:#f2ead9; font-family:inherit; font-size:13.5px;
+    padding:7px 8px; letter-spacing:0.5px; text-transform:uppercase;
+  }
+  .cp-rgb-row{ display:flex; gap:8px; margin-bottom:16px; }
+  .cp-rgb-field{ flex:1; display:flex; flex-direction:column; gap:4px; }
+  .cp-rgb-field label{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.6px; color: rgba(242,234,217,0.5); }
+  .cp-rgb-field input{
+    width:100%; background: rgba(0,0,0,0.28); border:1px solid var(--gold-dim);
+    border-radius:5px; color:#f2ead9; font-family:inherit; font-size:13.5px;
+    padding:7px 6px; text-align:center;
+  }
+  #colorPickerPopup .cp-actions{ display:flex; justify-content:flex-end; gap:8px; }
+  #colorPickerPopup .cp-actions button{
+    font-family:inherit; font-size:13px; border-radius:4px; padding:8px 16px; cursor:pointer;
+  }
+  #cpCancelBtn{ background:transparent; border:1px solid var(--gold-dim); color: rgba(242,234,217,0.8); }
+  #cpApplyBtn{ background:#c9a35a; color:#16211c; border:none; font-weight:600; }
   .style-swatch.arcade .style-swatch-btn{
     border-radius:0; text-transform:uppercase;
     box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
@@ -381,6 +472,11 @@
   .rank-cards{ flex:0 0 auto; display:flex; gap:2px; }
   .rank-cards .card-wrap{ width:26px; height:37px; }
   .rank-cards .card-wrap .card{ width:26px; height:37px; font-size:8px; padding:2px 2px; }
+  .card-wrap.rank-win .card, .th-mini-card-wrap.rank-win .card{
+    border-radius:4px;
+    box-shadow: 0 0 6px 2px rgba(255,215,90,0.9), 0 0 12px 4px rgba(255,215,90,0.55);
+    outline: 1px solid #ffd75a;
+  }
   .rank-name{ font-size:12.5px; font-weight:700; color:#f2ead9; letter-spacing:0.2px; }
   .th-info-btn{
     width:22px; height:22px; border-radius:50%; border:1px solid rgba(201,163,90,0.45);
@@ -523,6 +619,53 @@
     min-height:22px; padding:6px 16px; border-radius:6px; background: rgba(10,10,10,0.55);
   }
   .bj-controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  /* ---------- Hearts custom table layout ---------- */
+  .hearts-opponents{
+    display:grid; grid-template-columns: minmax(60px,100px) 1fr minmax(60px,100px);
+    grid-template-rows: auto auto;
+    gap:8px 8px; align-items:start; width:100%; max-width:900px; margin:0 auto;
+  }
+  .hearts-opp-col{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; }
+  .hearts-opp-col.top{ grid-column:2; grid-row:1; }
+  .hearts-opp-col.left{ grid-column:1; grid-row:1/3; align-self:center; margin-top:70px; }
+  .hearts-opp-col.right{ grid-column:3; grid-row:1/3; align-self:center; margin-top:70px; }
+  .hearts-trick-col{ grid-column:2; grid-row:2; margin-top:135px; }
+  .hearts-opp-col .bj-label{ font-size:10px; padding:3px 8px; margin-bottom:2px; white-space:nowrap; }
+  .hearts-row-h{ display:flex; flex-wrap:nowrap; justify-content:center; }
+  .hearts-col-v{ display:flex; flex-direction:column; align-items:center; }
+  .hearts-col-v .card-wrap{ transform:rotate(90deg); }
+  .hearts-your-hand{ flex-wrap:nowrap !important; }
+  .hearts-trick-row{ flex-wrap:nowrap !important; gap:2px !important; }
+
+  /* ---------- Spades bidding UI ---------- */
+  .spades-bid-chips{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:6px; }
+  .spades-bid-chip{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:76px; padding:8px 10px; border-radius:8px;
+    background: rgba(10,10,10,0.4); border:1px solid rgba(var(--cream-rgb),0.12);
+  }
+  .spades-bid-chip.active{ border-color:#e8c383; background: rgba(201,163,90,0.18); }
+  .spades-bid-chip .name{ font-size:11px; opacity:0.75; text-transform:uppercase; letter-spacing:0.5px; }
+  .spades-bid-chip .val{ font-size:18px; font-weight:700; color:#e8c383; }
+  .spades-bid-chip .val.pending{ color:rgba(var(--cream-rgb),0.35); font-size:14px; font-weight:400; }
+  .spades-bid-prompt{ font-size:14px; margin:10px 0 6px; opacity:0.85; }
+  .spades-nil-btn{
+    display:block; margin:0 auto 12px; padding:8px 22px; border-radius:8px;
+    border:1px solid rgba(201,163,90,0.5); background:rgba(178,58,74,0.25);
+    color:#f2ead9; font-weight:700; letter-spacing:0.5px; cursor:pointer;
+  }
+  .spades-nil-btn:hover{ background:rgba(178,58,74,0.4); }
+  .spades-bid-grid{
+    display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px;
+    max-width:420px; margin:0 auto;
+  }
+  .spades-bid-grid button{
+    aspect-ratio:1; border-radius:8px; border:1px solid rgba(var(--cream-rgb),0.18);
+    background: rgba(10,10,10,0.5); color:#f2ead9; font-weight:700; font-size:15px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .spades-bid-grid button:hover{ border-color:#e8c383; background: rgba(201,163,90,0.28); }
   .bj-bet-panel{
     display:flex; flex-direction:column; align-items:center; gap:12px;
     padding: 18px 22px; margin-bottom:14px;
@@ -662,6 +805,7 @@
   }
   .th-below-oval{ display:flex; flex-direction:column; align-items:center; gap:8px; }
   .th-human-cards{ display:flex; gap:10px; }
+  .th-human-cards.th-omaha{ gap:6px; }
   .th-hand-name{ font-size:12.5px; color:#e8c383; font-weight:700; letter-spacing:0.2px; }
   .th-raise-panel{
     display:flex; flex-direction:column; align-items:center; gap:10px;
@@ -868,8 +1012,50 @@
         <div class="theme-grid theme-grid-style" id="styleGrid"></div>
       </div>
 
+      <div class="theme-section">
+        <div class="theme-section-label">Font color</div>
+        <div class="theme-grid theme-grid-fontcolor" id="fontColorGrid"></div>
+      </div>
+
       <div class="theme-actions">
         <button id="themeCloseBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="colorPickerPopup">
+    <div class="cp-card">
+      <h3>Custom font color</h3>
+      <div class="cp-sv" id="cpSv">
+        <div class="cp-sv-cursor" id="cpSvCursor"></div>
+      </div>
+      <div class="cp-hue" id="cpHue">
+        <div class="cp-hue-handle" id="cpHueHandle"></div>
+      </div>
+      <div class="cp-row">
+        <div class="cp-preview" id="cpPreview"></div>
+        <div class="cp-hex-field">
+          <span>#</span>
+          <input type="text" id="cpHexInput" maxlength="7" spellcheck="false" autocomplete="off">
+        </div>
+      </div>
+      <div class="cp-rgb-row">
+        <div class="cp-rgb-field">
+          <label>R</label>
+          <input type="number" id="cpRInput" min="0" max="255">
+        </div>
+        <div class="cp-rgb-field">
+          <label>G</label>
+          <input type="number" id="cpGInput" min="0" max="255">
+        </div>
+        <div class="cp-rgb-field">
+          <label>B</label>
+          <input type="number" id="cpBInput" min="0" max="255">
+        </div>
+      </div>
+      <div class="cp-actions">
+        <button id="cpCancelBtn">Cancel</button>
+        <button id="cpApplyBtn">Apply</button>
       </div>
     </div>
   </div>
@@ -966,6 +1152,9 @@ const knownBadImageSrc = new Set(); // image URLs that already 404'd — never r
 let activeBg = localStorage.getItem("feltfoil.bg") || DEFAULT_THEMES.backgrounds[0].id;
 let activeCardStyle = localStorage.getItem("feltfoil.cardstyle") || DEFAULT_THEMES.cardStyles[0].id;
 let activeSkin = localStorage.getItem("feltfoil.skin") || DEFAULT_THEMES.uiSkins[0].id;
+// Font color override: "original" (use the background theme's own text color), "black", "white", or a "#rrggbb" custom hex.
+let fontColorOverride = localStorage.getItem("feltfoil.fontcolor") || "original";
+let customFontColor = localStorage.getItem("feltfoil.fontcolor.custom") || "#f2ead9";
 
 function getBgTheme(id){
   return THEMES.backgrounds.find(t=>t.id===id) || THEMES.backgrounds[0];
@@ -994,9 +1183,6 @@ function applyBgTheme(id){
   // Backgrounds can override text/accent colors so light backgrounds (like a wood photo)
   // don't end up with hard-to-read light text on top of them. Falls back to the classic
   // cream-on-gold palette if a theme doesn't specify its own.
-  const textColor = t.text || "#f2ead9";
-  root.setProperty("--cream", textColor);
-  root.setProperty("--cream-rgb", hexToRgbString(textColor));
   root.setProperty("--gold", t.accent || "#c9a35a");
 
   if(t.image){
@@ -1011,6 +1197,221 @@ function applyBgTheme(id){
 
   activeBg = t.id;
   localStorage.setItem("feltfoil.bg", t.id);
+  applyTextColor();
+}
+
+/* ---------- Font color override ---------- */
+// Resolves the current text color: an explicit override (black/white/custom hex) wins,
+// otherwise it falls back to whatever the active background theme specifies for text.
+function computeTextColor(){
+  if(fontColorOverride === "black") return "#000000";
+  if(fontColorOverride === "white") return "#ffffff";
+  if(fontColorOverride === "custom") return customFontColor;
+  return getBgTheme(activeBg).text || "#f2ead9";
+}
+function applyTextColor(){
+  const c = computeTextColor();
+  const root = document.documentElement.style;
+  root.setProperty("--cream", c);
+  root.setProperty("--cream-rgb", hexToRgbString(c));
+}
+function setFontColor(value, customHex){
+  fontColorOverride = value;
+  localStorage.setItem("feltfoil.fontcolor", value);
+  if(value === "custom" && customHex){
+    customFontColor = customHex;
+    localStorage.setItem("feltfoil.fontcolor.custom", customHex);
+  }
+  applyTextColor();
+  populateFontColorGrid();
+}
+
+function populateFontColorGrid(){
+  const grid = document.getElementById("fontColorGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  const presets = [
+    { id:"original", label:"Original", glyphColor:"var(--cream)" },
+    { id:"black",    label:"Black",    glyphColor:"#000000" },
+    { id:"white",    label:"White",    glyphColor:"#ffffff" },
+    { id:"custom",   label:"Custom",   glyphColor:customFontColor }
+  ];
+  presets.forEach(p=>{
+    const tile = document.createElement("div");
+    tile.className = "fc-tile" + (fontColorOverride===p.id ? " selected" : "");
+
+    const swatch = document.createElement("div");
+    swatch.className = "fc-swatch";
+
+    if(p.id==="custom" && fontColorOverride!=="custom"){
+      // No custom color chosen yet — show a rainbow wheel inviting the user to pick one.
+      swatch.classList.add("fc-rainbow");
+    } else {
+      const glyph = document.createElement("span");
+      glyph.className = "fc-glyph";
+      glyph.textContent = "Aa";
+      glyph.style.color = p.glyphColor;
+      swatch.appendChild(glyph);
+    }
+
+    const label = document.createElement("div");
+    label.className = "tile-label";
+    label.textContent = p.label;
+
+    tile.appendChild(swatch);
+    tile.appendChild(label);
+    if(p.id==="custom" && fontColorOverride==="custom"){
+      const hexLabel = document.createElement("div");
+      hexLabel.className = "tile-label fc-hex";
+      hexLabel.textContent = customFontColor;
+      tile.appendChild(hexLabel);
+    }
+
+    tile.addEventListener("click", ()=>{
+      if(p.id==="custom"){
+        openColorPicker(fontColorOverride==="custom" ? customFontColor : computeTextColor());
+      } else {
+        setFontColor(p.id);
+      }
+    });
+    grid.appendChild(tile);
+  });
+}
+
+/* ---------- Custom color picker (hand-built — no native <input type="color">) ---------- */
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+function hsvToRgb(h,s,v){
+  s/=100; v/=100;
+  const c = v*s;
+  const x = c*(1 - Math.abs((h/60)%2 - 1));
+  const m = v-c;
+  let r,g,b;
+  if(h<60){ r=c; g=x; b=0; }
+  else if(h<120){ r=x; g=c; b=0; }
+  else if(h<180){ r=0; g=c; b=x; }
+  else if(h<240){ r=0; g=x; b=c; }
+  else if(h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  return { r:Math.round((r+m)*255), g:Math.round((g+m)*255), b:Math.round((b+m)*255) };
+}
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  const d = max-min;
+  let h = 0;
+  if(d!==0){
+    if(max===r) h = 60*(((g-b)/d)%6);
+    else if(max===g) h = 60*((b-r)/d + 2);
+    else h = 60*((r-g)/d + 4);
+  }
+  if(h<0) h+=360;
+  const s = max===0 ? 0 : d/max;
+  return { h, s:s*100, v:max*100 };
+}
+function rgbToHex(r,g,b){
+  return "#"+[r,g,b].map(x=>clamp(Math.round(x),0,255).toString(16).padStart(2,"0")).join("");
+}
+function hexToRgbObj(hex){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if(!m) return null;
+  return { r:parseInt(m[1],16), g:parseInt(m[2],16), b:parseInt(m[3],16) };
+}
+
+let cpHSV = { h:0, s:0, v:100 };
+let cpSuppressInputSync = false;
+
+function openColorPicker(initialHex){
+  const rgb = hexToRgbObj(initialHex) || { r:242, g:234, b:217 };
+  cpHSV = rgbToHsv(rgb.r, rgb.g, rgb.b);
+  renderColorPicker();
+  document.getElementById("colorPickerPopup").classList.add("show");
+}
+function closeColorPicker(){
+  document.getElementById("colorPickerPopup").classList.remove("show");
+}
+function renderColorPicker(){
+  const { h, s, v } = cpHSV;
+  const rgb = hsvToRgb(h, s, v);
+  const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+  const sv = document.getElementById("cpSv");
+  sv.style.background =
+    "linear-gradient(to top, #000, rgba(0,0,0,0)), linear-gradient(to right, #fff, hsl("+h+",100%,50%))";
+  const cursor = document.getElementById("cpSvCursor");
+  cursor.style.left = s + "%";
+  cursor.style.top = (100-v) + "%";
+
+  document.getElementById("cpHueHandle").style.left = (h/360*100) + "%";
+  document.getElementById("cpPreview").style.background = hex;
+
+  cpSuppressInputSync = true;
+  document.getElementById("cpHexInput").value = hex.slice(1).toUpperCase();
+  document.getElementById("cpRInput").value = rgb.r;
+  document.getElementById("cpGInput").value = rgb.g;
+  document.getElementById("cpBInput").value = rgb.b;
+  cpSuppressInputSync = false;
+}
+
+function makeDraggable(el, onMove){
+  el.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    const move = (ev)=>{
+      const rect = el.getBoundingClientRect();
+      const x = clamp(ev.clientX - rect.left, 0, rect.width);
+      const y = clamp(ev.clientY - rect.top, 0, rect.height);
+      onMove(rect.width ? x/rect.width : 0, rect.height ? y/rect.height : 0);
+    };
+    move(e);
+    const up = ()=>{
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+  });
+}
+
+function initColorPicker(){
+  makeDraggable(document.getElementById("cpSv"), (fx,fy)=>{
+    cpHSV.s = fx*100;
+    cpHSV.v = (1-fy)*100;
+    renderColorPicker();
+  });
+  makeDraggable(document.getElementById("cpHue"), (fx)=>{
+    cpHSV.h = fx*360;
+    renderColorPicker();
+  });
+
+  const hexInput = document.getElementById("cpHexInput");
+  hexInput.addEventListener("input", ()=>{
+    if(cpSuppressInputSync) return;
+    const raw = hexInput.value.trim();
+    const rgb = hexToRgbObj(raw);
+    if(rgb){
+      cpHSV = rgbToHsv(rgb.r, rgb.g, rgb.b);
+      renderColorPicker();
+    }
+  });
+
+  ["cpRInput","cpGInput","cpBInput"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", ()=>{
+      if(cpSuppressInputSync) return;
+      const r = clamp(parseInt(document.getElementById("cpRInput").value,10) || 0, 0, 255);
+      const g = clamp(parseInt(document.getElementById("cpGInput").value,10) || 0, 0, 255);
+      const b = clamp(parseInt(document.getElementById("cpBInput").value,10) || 0, 0, 255);
+      cpHSV = rgbToHsv(r,g,b);
+      renderColorPicker();
+    });
+  });
+
+  document.getElementById("cpCancelBtn").addEventListener("click", closeColorPicker);
+  document.getElementById("cpApplyBtn").addEventListener("click", ()=>{
+    const rgb = hsvToRgb(cpHSV.h, cpHSV.s, cpHSV.v);
+    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+    setFontColor("custom", hex);
+    closeColorPicker();
+  });
 }
 
 function applyCardTheme(id){
@@ -1053,6 +1454,7 @@ async function loadThemesConfig(){
     // themes.json not present or not servable (e.g. file://) — DEFAULT_THEMES is used instead
   }
   populateThemeSelects();
+  populateFontColorGrid();
   applyBgTheme(activeBg);
   applyCardTheme(activeCardStyle);
   applySkin(activeSkin);
@@ -5183,7 +5585,7 @@ const HOLDEM_SB = 10, HOLDEM_BB = 20;
 const HOLDEM_RAISE_CHIPS = [10, 25, 50, 100, 500, 1000];
 const HOLDEM_BOT_NAMES = ["Ava", "Marco", "Priya", "Diego", "Nadia"];
 
-function newHoldem(elimination){
+function newHoldem(elimination, variant){
   const players = [
     { name:"You", isHuman:true, chips:HOLDEM_STARTING_CHIPS, hole:[], bet:0, contributed:0, folded:false, allIn:false, eliminated:false, lastAction:"" }
   ];
@@ -5196,6 +5598,7 @@ function newHoldem(elimination){
   });
   return {
     kind:"holdem",
+    variant: variant==="omaha" ? "omaha" : "texas",
     elimination: !!elimination,
     players,
     dealerIndex: Math.floor(Math.random()*players.length),
@@ -5223,22 +5626,42 @@ function freshHoldemDeck(){
 
 // Every 5-of-7 (or 5-of-5/6) combination, scored with pgEvaluate5NoJoker; the
 // best one wins via the same cat/tie comparator Pai Gow already uses.
-function holdemCombos5(arr){
+function holdemCombosK(arr,k){
   const res = [];
   const n = arr.length;
   (function rec(start, chosen){
-    if(chosen.length===5){ res.push(chosen.slice()); return; }
+    if(chosen.length===k){ res.push(chosen.slice()); return; }
     for(let i=start;i<n;i++){ chosen.push(arr[i]); rec(i+1, chosen); chosen.pop(); }
   })(0, []);
   return res;
 }
+function holdemCombos5(arr){ return holdemCombosK(arr,5); }
 function holdemBestHand(cards){
   if(cards.length<5) return null;
-  let best = null;
+  let best = null, bestCards = null;
   holdemCombos5(cards).forEach(c=>{
     const ev = pgEvaluate5NoJoker(c);
-    if(!best || compareEval(ev,best)>0) best = ev;
+    if(!best || compareEval(ev,best)>0){ best = ev; bestCards = c; }
   });
+  best.bestCards = bestCards;
+  return best;
+}
+
+// Omaha rule: exactly 2 of the 4 hole cards + exactly 3 of the community cards —
+// unlike Texas, you can never play 4 hole cards or a "pure board" 5.
+function omahaBestHand(hole, community){
+  if(hole.length<2 || community.length<3) return null;
+  const holePairs = holdemCombosK(hole,2);
+  const boardTriples = holdemCombosK(community,3);
+  let best = null, bestCards = null;
+  holePairs.forEach(hp=>{
+    boardTriples.forEach(bt=>{
+      const combo = hp.concat(bt);
+      const ev = pgEvaluate5NoJoker(combo);
+      if(!best || compareEval(ev,best)>0){ best = ev; bestCards = combo; }
+    });
+  });
+  best.bestCards = bestCards;
   return best;
 }
 
@@ -5258,10 +5681,29 @@ function holdemPreflopStrength(hole){
   }
   return Math.max(0, Math.min(1, s));
 }
-function holdemHandStrength(player, community){
+function holdemHandStrength(player, community, variant){
+  if(variant==="omaha"){
+    if(community.length===0) return omahaPreflopStrength(player.hole);
+    const ev = omahaBestHand(player.hole, community);
+    return Math.max(0, Math.min(1, ev.cat/8 + Math.min(0.06,(ev.tie[0]||0)/14*0.06)));
+  }
   if(community.length===0) return holdemPreflopStrength(player.hole);
   const ev = holdemBestHand(player.hole.concat(community));
   let s = ev.cat/8 + Math.min(0.06, (ev.tie[0]||0)/14*0.06);
+  return Math.max(0, Math.min(1, s));
+}
+// Rough 0..1 preflop strength for a 4-card Omaha hand: the best pair-strength
+// among its six 2-card combos, discounted since only one of those pairs is
+// ever actually played, plus a bonus for being double-suited (two different
+// flush draws live at once, which is where a lot of Omaha's extra equity comes from).
+function omahaPreflopStrength(hole){
+  let best = 0;
+  holdemCombosK(hole,2).forEach(pair=>{ best = Math.max(best, holdemPreflopStrength(pair)); });
+  const suitCounts = {};
+  hole.forEach(c=> suitCounts[c.suit] = (suitCounts[c.suit]||0)+1);
+  const doubleSuited = Object.values(suitCounts).filter(n=>n>=2).length >= 2;
+  let s = best*0.7 + 0.16;
+  if(doubleSuited) s += 0.08;
   return Math.max(0, Math.min(1, s));
 }
 
@@ -5318,7 +5760,8 @@ function beginHoldemHand(){
   setTimeout(()=>{
     if(state!==st) return;
     const order = holdemSeatsFrom(st, (st.dealerIndex+1)%st.players.length);
-    for(let round=0; round<2; round++){
+    const holeCount = st.variant==="omaha" ? 4 : 2;
+    for(let round=0; round<holeCount; round++){
       order.forEach(i=>{
         if(st.players[i].eliminated) return;
         const c = st.deck.pop();
@@ -5404,7 +5847,7 @@ function holdemDoRaiseTo(st, idx, targetTotal){
 function holdemAiAct(st, idx){
   const p = st.players[idx];
   const callAmt = holdemCallAmount(st, p);
-  const strength = holdemHandStrength(p, st.community);
+  const strength = holdemHandStrength(p, st.community, st.variant);
   const s = Math.max(0, Math.min(1, strength + (Math.random()-0.5)*0.18));
 
   if(callAmt===0){
@@ -5504,9 +5947,10 @@ function holdemShowdown(st){
   st.phase = "showdown";
   st.players.forEach(p=>{ if(!p.folded) p.hole.forEach(c=>c.faceUp=true); });
   const evals = {};
-  st.players.forEach((p,i)=>{ if(!p.folded) evals[i] = holdemBestHand(p.hole.concat(st.community)); });
+  st.players.forEach((p,i)=>{ if(!p.folded) evals[i] = st.variant==="omaha" ? omahaBestHand(p.hole, st.community) : holdemBestHand(p.hole.concat(st.community)); });
   const pots = holdemComputePots(st);
   const results = [];
+  const winnerSet = new Set();
   pots.forEach(pot=>{
     if(pot.eligible.length===0) return;
     let bestEval = null;
@@ -5514,10 +5958,11 @@ function holdemShowdown(st){
     const winners = pot.eligible.filter(i=> compareEval(evals[i],bestEval)===0);
     const share = Math.floor(pot.amount/winners.length);
     const remainder = pot.amount - share*winners.length;
-    winners.forEach((i,k)=>{ st.players[i].chips += share + (k<remainder?1:0); });
+    winners.forEach((i,k)=>{ st.players[i].chips += share + (k<remainder?1:0); winnerSet.add(i); });
     results.push({ amount: pot.amount, winnerNames: winners.map(i=>st.players[i].name), handName: bestEval.name });
   });
   st.lastPotResults = results;
+  st.winners = Array.from(winnerSet);
   st.showdown = evals;
   st.pot = 0;
   st.phase = "result";
@@ -5575,9 +6020,9 @@ function holdemMakeBadge(letter){
   wrap.appendChild(img);
   return wrap;
 }
-function holdemMiniCard(card){
+function holdemMiniCard(card, isWin){
   const wrap = document.createElement("div");
-  wrap.className = "th-mini-card-wrap";
+  wrap.className = "th-mini-card-wrap" + (isWin ? " rank-win" : "");
   wrap.appendChild(renderCardEl(card, ""));
   return wrap;
 }
@@ -5601,7 +6046,8 @@ function holdemSeatEl(state, i, isCenterHuman){
   if(!p.isHuman){
     const cardsRow = document.createElement("div");
     cardsRow.className = "th-seat-cards";
-    p.hole.forEach(c=> cardsRow.appendChild(holdemMiniCard(c)));
+    const winIds = holdemWinningCardIds(state);
+    p.hole.forEach(c=> cardsRow.appendChild(holdemMiniCard(c, winIds.has(c.id))));
     seat.appendChild(cardsRow);
   }
   const action = document.createElement("div");
@@ -5615,6 +6061,38 @@ function holdemSeatEl(state, i, isCenterHuman){
     seat.appendChild(hn);
   }
   return seat;
+}
+
+function holdemDefiningCards(ev){
+  // Which of the best-5 cards actually constitute the hand (excludes kickers).
+  const cards = ev.bestCards;
+  if(!cards) return [];
+  const cat = ev.cat;
+  if(cat===4||cat===5||cat===6||cat===8) return cards; // straight, flush, full house, straight flush: all 5 matter
+  if(cat===0){ // high card: just the single highest card
+    let top = cards[0];
+    cards.forEach(c=>{ if(pgHighValue(c.rank) > pgHighValue(top.rank)) top = c; });
+    return [top];
+  }
+  const groups = {};
+  cards.forEach(c=>{ (groups[c.rank]=groups[c.rank]||[]).push(c); });
+  if(cat===7){ for(const r in groups) if(groups[r].length===4) return groups[r]; } // four of a kind
+  if(cat===3){ for(const r in groups) if(groups[r].length===3) return groups[r]; } // three of a kind
+  if(cat===2){ let res=[]; for(const r in groups) if(groups[r].length===2) res = res.concat(groups[r]); return res; } // two pair
+  if(cat===1){ for(const r in groups) if(groups[r].length===2) return groups[r]; } // one pair
+  return cards;
+}
+
+function holdemWinningCardIds(state){
+  // Set of card ids that are part of a winning hand at showdown, across all winners.
+  const ids = new Set();
+  if((state.phase==="result"||state.phase==="showdown") && state.showdown && state.winners && state.winners.length){
+    state.winners.forEach(i=>{
+      const ev = state.showdown[i];
+      if(ev && ev.bestCards) holdemDefiningCards(ev).forEach(c=> ids.add(c.id));
+    });
+  }
+  return ids;
 }
 
 function renderHoldem(){
@@ -5658,9 +6136,10 @@ function renderHoldem(){
   center.appendChild(potRow);
   const community = document.createElement("div");
   community.className = "th-community";
+  const winIds = holdemWinningCardIds(state);
   state.community.forEach(c=>{
     const wrap = document.createElement("div");
-    wrap.className = "card-wrap";
+    wrap.className = "card-wrap" + (winIds.has(c.id) ? " rank-win" : "");
     wrap.appendChild(renderCardEl(c, ""));
     community.appendChild(wrap);
   });
@@ -5678,10 +6157,10 @@ function renderHoldem(){
   const below = document.createElement("div");
   below.className = "th-below-oval";
   const hCards = document.createElement("div");
-  hCards.className = "th-human-cards";
+  hCards.className = "th-human-cards" + (state.variant==="omaha" ? " th-omaha" : "");
   human.hole.forEach(c=>{
     const wrap = document.createElement("div");
-    wrap.className = "card-wrap";
+    wrap.className = "card-wrap" + (winIds.has(c.id) ? " rank-win" : "");
     wrap.appendChild(renderCardEl(c, ""));
     hCards.appendChild(wrap);
   });
@@ -6028,9 +6507,17 @@ function updateHud(){
     "paigow":"Pai Gow Poker",
     "holdem-standard":"Texas Hold'em · Standard",
     "holdem-endless":"Texas Hold'em · Endless",
+    "holdem-omaha-standard":"Omaha Hold'em · Standard",
+    "holdem-omaha-endless":"Omaha Hold'em · Endless",
     "memory-9":"Memory · 9 pairs",
     "memory-12":"Memory · 12 pairs",
-    "memory-18":"Memory · 18 pairs"
+    "memory-18":"Memory · 18 pairs",
+    "crazy8":"Crazy Eights",
+    "teenpatti":"Teen Patti",
+    "speed":"Speed",
+    "ginrummy":"Gin Rummy",
+    "hearts":"Hearts",
+    "spades":"Spades"
   };
   document.getElementById("statMode").textContent = modeNames[mode] || "";
 }
@@ -6192,6 +6679,12 @@ function render(){
   else if(state.kind==="videopoker") renderVideoPoker();
   else if(state.kind==="paigow") renderPaiGow();
   else if(state.kind==="holdem") renderHoldem();
+  else if(state.kind==="crazy8") renderCrazy8();
+  else if(state.kind==="teenpatti") renderTeenPatti();
+  else if(state.kind==="speed") renderSpeed();
+  else if(state.kind==="ginrummy") renderGinRummy();
+  else if(state.kind==="hearts") renderHearts();
+  else if(state.kind==="spades") renderSpades();
   else if(state.kind==="acesup") renderAcesUp();
   else if(state.kind==="memory") renderMemory();
   else renderSpider();
@@ -6228,8 +6721,16 @@ function startGame(newMode){
   else if(mode==="blackjack") state = newBlackjack();
   else if(mode==="videopoker") state = newVideoPoker();
   else if(mode==="paigow") state = newPaiGow();
-  else if(mode==="holdem-standard") state = newHoldem(true);
-  else if(mode==="holdem-endless") state = newHoldem(false);
+  else if(mode==="holdem-standard") state = newHoldem(true, "texas");
+  else if(mode==="holdem-endless") state = newHoldem(false, "texas");
+  else if(mode==="holdem-omaha-standard") state = newHoldem(true, "omaha");
+  else if(mode==="holdem-omaha-endless") state = newHoldem(false, "omaha");
+  else if(mode==="crazy8") state = newCrazy8();
+  else if(mode==="teenpatti") state = newTeenPatti();
+  else if(mode==="speed") state = newSpeed();
+  else if(mode==="ginrummy") state = newGinRummy();
+  else if(mode==="hearts") state = newHearts();
+  else if(mode==="spades") state = newSpades();
   else if(mode==="acesup") state = newAcesUp();
   else if(mode==="memory-9") state = newMemory(9,6);
   else if(mode==="memory-12") state = newMemory(12,6);
@@ -6243,7 +6744,7 @@ function startGame(newMode){
   // against the dealer) or Memory Match (you'd be un-forgetting a flip),
   // so hide it for those two and keep it for the solitaire-style games.
   document.getElementById("btnUndo").style.display =
-    (state.kind==="blackjack" || state.kind==="videopoker" || state.kind==="paigow" || state.kind==="holdem" || state.kind==="memory") ? "none" : "";
+    (state.kind==="blackjack" || state.kind==="videopoker" || state.kind==="paigow" || state.kind==="holdem" || state.kind==="memory" || state.kind==="crazy8" || state.kind==="teenpatti" || state.kind==="speed" || state.kind==="ginrummy" || state.kind==="hearts" || state.kind==="spades") ? "none" : "";
   setMessage("");
   startTimer();
   if(state.kind==="pyramid") dealInAnimationPyramid();
@@ -6256,6 +6757,12 @@ function startGame(newMode){
   else if(state.kind==="videopoker"){ render(); }
   else if(state.kind==="paigow"){ render(); }
   else if(state.kind==="holdem"){ beginHoldemHand(); }
+  else if(state.kind==="crazy8"){ playSfx("shuffle.mp3"); render(); }
+  else if(state.kind==="teenpatti"){ beginTeenPattiHand(); }
+  else if(state.kind==="speed"){ playSfx("shuffle.mp3"); render(); setTimeout(speedBotLoop, 800); }
+  else if(state.kind==="ginrummy"){ playSfx("shuffle.mp3"); render(); }
+  else if(state.kind==="hearts"){ playSfx("shuffle.mp3"); render(); if(state.phase==="playing" && state.currentPlayer!==0) setTimeout(heartsBotTurn, 700); }
+  else if(state.kind==="spades"){ playSfx("shuffle.mp3"); render(); }
   else if(state.kind==="memory"){ playSfx("shuffle.mp3"); render(); }
   else dealInAnimation();
 }
@@ -6690,7 +7197,7 @@ const CATEGORIES = [
   {
     id: "holdem",
     suits: "♠ ♥ ♣ ♦",
-    name: "Texas Hold'em",
+    name: "Hold'em",
     desc: "No-limit hold'em against five AI opponents — blinds, betting rounds, and a showdown for the pot.",
     games: [
       {
@@ -6701,6 +7208,110 @@ const CATEGORIES = [
         variants: [
           { id:"holdem-standard", tag:"Elimination", name:"Standard", desc:"Start with 1,000 chips, blinds 10/20. Busted opponents are knocked out for good — win by busting the whole table. If you run out of chips, the game ends." },
           { id:"holdem-endless", tag:"Classic", name:"Endless", desc:"Start with 1,000 chips, blinds 10/20. Busted AI opponents rebuy so the table always has five opponents — if you run out of chips, the game ends." }
+        ]
+      },
+      {
+        id: "holdem-omaha",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Omaha Hold'em",
+        desc: "6-handed pot-friendly no-limit Omaha. Four hole cards each, but every hand must use exactly 2 of yours with exactly 3 from the board.",
+        variants: [
+          { id:"holdem-omaha-standard", tag:"Elimination", name:"Standard", desc:"Start with 1,000 chips, blinds 10/20. Busted opponents are knocked out for good — win by busting the whole table. If you run out of chips, the game ends." },
+          { id:"holdem-omaha-endless", tag:"Classic", name:"Endless", desc:"Start with 1,000 chips, blinds 10/20. Busted AI opponents rebuy so the table always has five opponents — if you run out of chips, the game ends." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "speed",
+    suits: "♠ ♥ ♣ ♦",
+    name: "Speed",
+    desc: "Real-time reflex game — play a card next to either center pile the instant it's one rank away. No turns, just speed.",
+    games: [
+      {
+        id: "speed",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Speed",
+        desc: "You vs one AI opponent. Both play whenever you can — first to empty your hand and stock wins.",
+        variants: [
+          { id:"speed", tag:"Classic", name:"Standard", desc:"5-card hand, the rest in your personal stock. Ace connects to both King and 2." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "teenpatti",
+    suits: "♠ ♥ ♣ ♦",
+    name: "Teen Patti",
+    desc: "3-card poker against two AI opponents — ante up, fold, call, or raise your way to the best hand.",
+    games: [
+      {
+        id: "teenpatti",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Teen Patti",
+        desc: "Everyone antes and gets 3 cards. Bet in turn — fold, call, or raise — until it's down to one player or a showdown.",
+        variants: [
+          { id:"teenpatti", tag:"Classic", name:"Standard", desc:"Start with 500 chips, 10-chip ante. Trail beats Pure Sequence beats Sequence beats Color beats Pair beats High Card." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "crazy8",
+    suits: "♠ ♥ ♣ ♦",
+    name: "Crazy Eights",
+    desc: "Match the rank or suit of the top card, or play an 8 to change the suit. First to empty their hand wins.",
+    games: [
+      {
+        id: "crazy8",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Crazy Eights",
+        desc: "You against two AI opponents. Play a card matching the top card's rank or suit, or play any 8 as a wild.",
+        variants: [
+          { id:"crazy8", tag:"Classic", name:"Standard", desc:"7 cards each, standard 52-card deck. First player to empty their hand wins the round." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "ginrummy",
+    suits: "♠ ♥ ♣ ♦",
+    name: "Gin Rummy",
+    desc: "Draw, discard, and build sets and runs faster than Marco. Knock once your deadwood is 10 or under — or go all the way to Gin.",
+    games: [
+      {
+        id: "ginrummy",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Gin Rummy",
+        desc: "You against one AI opponent, 10 cards each. Draw from the stock or the discard pile, then discard — or knock once your unmelded cards total 10 points or less.",
+        variants: [
+          { id:"ginrummy", tag:"Classic", name:"Standard", desc:"10 cards each, standard 52-card deck, aces low. Knock (10 or under) for the deadwood difference, or go Gin (0 deadwood) for a 25-point bonus. Undercut the knocker's deadwood to steal the bonus yourself." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "hearts",
+    suits: "♠ ♥ ♣ ♦",
+    name: "Hearts & Spades",
+    desc: "Two classic 4-player trick-taking games — duck the points in Hearts, or bid your tricks in partnership Spades.",
+    games: [
+      {
+        id: "hearts",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Hearts",
+        desc: "You against three AI opponents, 13 cards each. Pass 3 cards before each hand (left, right, across, then hold), then follow suit as tricks are played. Each heart costs 1 point, the Queen of Spades costs 13 — or take all 26 in one hand to shoot the moon and dump them on everyone else.",
+        variants: [
+          { id:"hearts", tag:"Classic", name:"Standard", desc:"Standard 52-card deck, 4 players, aces high. Play to 100 points — the lowest score when someone crosses it wins." }
+        ]
+      },
+      {
+        id: "spades",
+        suits: "♠ ♥ ♣ ♦",
+        name: "Spades",
+        desc: "You & a partner (seated across) vs two AI opponents, 13 cards each. Bid how many tricks your side will take — or bid Nil for a bonus if you can take zero — then follow suit; spades are always trump and can't be led until broken.",
+        variants: [
+          { id:"spades", tag:"Classic", name:"Standard", desc:"Standard 52-card deck, 4 players in 2 partnerships, aces high. Bid tricks (or Nil), make your bid for 10 points each plus 1 per overtrick — 10 overtricks cost 100 points. First team to 200 wins." }
         ]
       }
     ]
@@ -6779,6 +7390,9 @@ function miniBoardSVG(kind){
   if(kind==="videopoker") return miniVideoPokerSVG();
   if(kind==="paigow") return miniPaiGowSVG();
   if(kind==="holdem") return miniHoldemSVG();
+  if(kind==="holdem-omaha") return miniHoldemSVG();
+  if(kind==="hearts") return miniHeartsSVG("♥", "#b23a4a");
+  if(kind==="spades") return miniSpadesSVG();
   if(kind==="memory") return miniMemorySVG();
   const isSpider = kind === "spider";
   const isFreecell = kind === "freecell";
@@ -7151,6 +7765,75 @@ function miniPaiGowSVG(){
   for(let i=0;i<2;i++){
     const x = startX2 + i*(cardW2+gap2);
     svg += '<rect x="'+x.toFixed(1)+'" y="'+bottomY+'" width="'+cardW2+'" height="'+cardH2+'" rx="3" fill="'+faceFill+'" stroke="'+goldStroke+'" stroke-width="1.6"/>';
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+
+// A small central trick — one card per seat, with the winning card called
+// out in gold — above a fanned hand of the player's own cards, standing in
+// for a 4-player trick-taking table (Hearts / Spades).
+function miniHeartsSVG(symbol, symColor){
+  const W = 200, H = 96;
+  const faceFill = "#f2ead9", strokeCol = "rgba(0,0,0,0.35)", goldStroke = "#c9a35a";
+
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">';
+
+  // trick pile: 4 small cards clustered top-center, slightly offset like a
+  // played trick, one outlined gold as the current winner
+  const tcW = 20, tcH = 27;
+  const tcCx = W/2, tcCy = 26;
+  const offsets = [[-22,-4],[-6,-9],[10,-6],[24,0]];
+  offsets.forEach((o,i)=>{
+    const x = tcCx + o[0] - tcW/2, y = tcCy + o[1] - tcH/2;
+    const win = i===1;
+    svg += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+tcW+'" height="'+tcH+'" rx="2.5" fill="'+faceFill+'" stroke="'+(win?goldStroke:strokeCol)+'" stroke-width="'+(win?1.8:0.6)+'"/>';
+    if(win) svg += '<text x="'+(x+tcW/2).toFixed(1)+'" y="'+(y+tcH/2+5).toFixed(1)+'" font-size="13" text-anchor="middle" fill="'+symColor+'" font-family="Georgia, serif">'+symbol+'</text>';
+  });
+
+  // (no corner glyph — the winning card's own suit mark is enough to read
+  // as a trick-taking table, matching the plain style of the other icons)
+
+  // player's fanned hand, bottom center
+  const cardW = 24, cardH = 32, overlapX = 13, n = 5;
+  const totalW = cardW + (n-1)*overlapX;
+  const startX = (W-totalW)/2;
+  const y = H - cardH - 6;
+  for(let i=0;i<n;i++){
+    const x = startX + i*overlapX;
+    svg += '<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+cardW+'" height="'+cardH+'" rx="2.5" fill="'+faceFill+'" stroke="'+strokeCol+'" stroke-width="0.6"/>';
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+
+// Same trick-taking layout as Hearts, but the suit badge is a black spade
+// and one of the corner cards is tinted to suggest a played trump card.
+function miniSpadesSVG(){
+  const W = 200, H = 96;
+  const faceFill = "#f2ead9", strokeCol = "rgba(0,0,0,0.35)", goldStroke = "#c9a35a";
+
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">';
+
+  const tcW = 20, tcH = 27;
+  const tcCx = W/2, tcCy = 26;
+  const offsets = [[-22,-4],[-6,-9],[10,-6],[24,0]];
+  offsets.forEach((o,i)=>{
+    const x = tcCx + o[0] - tcW/2, y = tcCy + o[1] - tcH/2;
+    const win = i===2;
+    svg += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+tcW+'" height="'+tcH+'" rx="2.5" fill="'+faceFill+'" stroke="'+(win?goldStroke:strokeCol)+'" stroke-width="'+(win?1.8:0.6)+'"/>';
+    if(win) svg += '<text x="'+(x+tcW/2).toFixed(1)+'" y="'+(y+tcH/2+5).toFixed(1)+'" font-size="13" text-anchor="middle" fill="#20201c" font-family="Georgia, serif">♠</text>';
+  });
+
+  const cardW = 24, cardH = 32, overlapX = 13, n = 5;
+  const totalW = cardW + (n-1)*overlapX;
+  const startX = (W-totalW)/2;
+  const y = H - cardH - 6;
+  for(let i=0;i<n;i++){
+    const x = startX + i*overlapX;
+    svg += '<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+cardW+'" height="'+cardH+'" rx="2.5" fill="'+faceFill+'" stroke="'+strokeCol+'" stroke-width="0.6"/>';
   }
 
   svg += '</svg>';
@@ -7664,6 +8347,88 @@ const RULES = {
       ]}
     ]
   },
+  "holdem-omaha": {
+    title: "Omaha Hold'em",
+    sub: "6-handed pot-friendly no-limit Omaha — exactly 2 hole + 3 board cards make your hand.",
+    sections: [
+      { label:"Setup", items:[
+        "You and five AI opponents each start with 1,000 chips. The dealer button rotates every hand; the two players to its left post the small blind (10) and big blind (20) automatically.",
+        "Everyone gets 4 private hole cards instead of 2. Up to 5 shared community cards are dealt across the flop (3), turn (1), and river (1)."
+      ]},
+      { label:"The Omaha rule", items:[
+        "Unlike Texas Hold'em, you can't use any combination of your cards — every hand MUST use exactly 2 of your 4 hole cards plus exactly 3 of the 5 community cards, never more or fewer of either.",
+        "This makes big hands (and big draws) far more common than in Texas — a hand that looks huge with all 4 hole cards can end up much weaker once you're limited to just 2 of them."
+      ]},
+      { label:"Betting", items:[
+        "On your turn: Fold to give up the hand, Check/Call to match the current bet (or pass if there's nothing to call), or build a Raise with the chip buttons and confirm it.",
+        "All-in bets your whole stack — if you're covered, side pots are split correctly between whoever's still in for each amount.",
+        "A betting round ends once everyone still in has matched the highest bet or gone all-in; the next community cards are then dealt."
+      ]},
+      { label:"Showdown", items:[
+        "If more than one player is left after the river, hands are compared using each player's best legal 2-hole + 3-board combination.",
+        "Standard poker hand rankings apply, high card up to royal flush. If everyone else folds before showdown, the last player standing wins the pot uncontested."
+      ]},
+      { label:"Win", items:[
+        "Standard mode: busted opponents are knocked out for good — bust the whole table to win. Endless mode: busted AI opponents rebuy so the table stays full and there's no final hand, just build your stack. Either way, if you run out of chips, the game ends."
+      ]}
+    ]
+  },
+  speed: {
+    title: "Speed",
+    sub: "Real-time — no turns, just play the instant you can.",
+    sections: [
+      { label:"Setup", items:[
+        "You and one AI opponent each start with a 5-card hand and a personal stock pile. Two center piles sit between you, each starting with one card."
+      ]},
+      { label:"Play", items:[
+        "Tap any card in your hand that's exactly one rank away from the top card of either center pile to play it there. Ace connects to both King and 2.",
+        "There are no turns — both sides can play any time they have a legal move, so keep watching both piles.",
+        "Playing a card refills your hand from your stock, if any remains.",
+        "If neither side has a legal move, a fresh card is flipped onto each pile automatically to get things moving again."
+      ]},
+      { label:"Win", items:[
+        "First player to empty both their hand and their stock wins."
+      ]}
+    ]
+  },
+  teenpatti: {
+    title: "Teen Patti",
+    sub: "3-card poker — best hand of a fixed ranking wins the pot.",
+    sections: [
+      { label:"Setup", items:[
+        "You and two AI opponents each ante a fixed amount into the pot, then get 3 cards each."
+      ]},
+      { label:"Betting", items:[
+        "On your turn: Fold to give up the hand, Call/Check to match the current bet, or Raise to double it.",
+        "Betting continues around the table until everyone still in has matched the current bet, or only one player is left."
+      ]},
+      { label:"Hand ranking", items:[
+        "Best to worst: Trail (three of a kind), Pure Sequence (straight flush), Sequence (straight), Color (flush), Pair, High Card.",
+        "A-2-3 counts as the lowest valid Sequence."
+      ]},
+      { label:"Win", items:[
+        "If everyone else folds, the last player standing wins the pot uncontested. Otherwise it's a showdown — best hand wins.",
+        "Run out of chips and the game ends; bust both opponents and you win outright."
+      ]}
+    ]
+  },
+  crazy8: {
+    title: "Crazy Eights",
+    sub: "Empty your hand first — match rank or suit, or play an 8 to change the suit.",
+    sections: [
+      { label:"Setup", items:[
+        "You and two AI opponents each start with 7 cards from a standard 52-card deck. One card is flipped to start the discard pile."
+      ]},
+      { label:"Play", items:[
+        "On your turn, play a card that matches the rank or suit of the top discard card.",
+        "Any 8 can be played on top of anything — playing one lets you declare a new suit for the next player to match.",
+        "If you have no legal play, draw one card from the deck. If it can be played, play it; otherwise your turn ends."
+      ]},
+      { label:"Win", items:[
+        "The first player to play their last card wins the round."
+      ]}
+    ]
+  },
   memory: {
     title: "Memory Match",
     sub: "Flip two cards, find every pair.",
@@ -7677,6 +8442,74 @@ const RULES = {
       ]},
       { label:"Win", items:[
         "Clear the whole board by finding every pair. Fewer moves and less time make for a better score."
+      ]}
+    ]
+  },
+  ginrummy: {
+    title: "Gin Rummy",
+    sub: "Build sets and runs, then knock before your opponent does.",
+    sections: [
+      { label:"Setup", items:[
+        "You vs one AI opponent, 10 cards each from a standard 52-card deck, aces low. One card starts the discard pile."
+      ]},
+      { label:"Play", items:[
+        "On your turn, draw from the stock or take the top of the discard pile, then discard one card.",
+        "A set is 3–4 cards of the same rank; a run is 3+ cards in a row, same suit. Any card not part of a set or run is deadwood."
+      ]},
+      { label:"Knocking", items:[
+        "If your deadwood totals 10 points or less, you can knock and lay down your hand instead of discarding.",
+        "Going Gin (0 deadwood) skips the 10-point knock limit entirely and pays a bonus.",
+        "Your opponent then lays down too and can lay off any of their own cards onto your melds to reduce their deadwood."
+      ]},
+      { label:"Scoring", items:[
+        "Knocking: you score the difference between your opponent's deadwood and yours.",
+        "If your opponent's deadwood is equal or lower than yours after laying off, they \"undercut\" you and steal the points (plus a bonus) instead.",
+        "Gin: score your opponent's full deadwood plus a 25-point bonus — no undercut is possible."
+      ]}
+    ]
+  },
+  hearts: {
+    title: "Hearts",
+    sub: "Duck the points — lowest score wins.",
+    sections: [
+      { label:"Setup", items:[
+        "You and three AI opponents, 13 cards each from a standard 52-card deck, aces high."
+      ]},
+      { label:"Passing", items:[
+        "Before most hands, pick 3 cards to pass — left, right, or across, rotating each round (the 4th round you keep your hand)."
+      ]},
+      { label:"Play", items:[
+        "Whoever holds the 2 of clubs leads the very first trick.",
+        "Follow suit if you can; if you can't, play anything.",
+        "Hearts can't be led until they're \"broken\" (someone played one because they couldn't follow suit) — and no point card can be played on the very first trick unless you have nothing else."
+      ]},
+      { label:"Scoring", items:[
+        "Each heart is worth 1 point, the Queen of Spades is worth 13.",
+        "The lowest total score wins once anyone reaches 100.",
+        "Take every point card in a single hand (\"shoot the moon\") and instead of scoring 26 yourself, everyone else takes 26."
+      ]}
+    ]
+  },
+  spades: {
+    title: "Spades",
+    sub: "Bid your tricks, then make your number with your partner.",
+    sections: [
+      { label:"Setup", items:[
+        "You and a partner (seated across from you) vs two AI opponents, 13 cards each from a standard 52-card deck, aces high."
+      ]},
+      { label:"Bidding", items:[
+        "Before play, everyone bids how many tricks they expect to take, 0–13.",
+        "Bidding Nil bets you'll take zero tricks all round, for a bonus if you pull it off — or a penalty if you don't."
+      ]},
+      { label:"Play", items:[
+        "Follow suit if you can; if you can't, play anything — including a spade to trump the trick.",
+        "Spades are always trump and beat every other suit, but can't be led until they're \"broken\" (played on a trick where they weren't led)."
+      ]},
+      { label:"Scoring", items:[
+        "Make your team's combined bid: score bid×10, plus 1 point per trick over the bid (a \"bag\").",
+        "Miss your bid and your team loses bid×10 instead.",
+        "10 bags costs your team 100 points. Nil made is +100; Nil broken is -100.",
+        "First team to 200 points wins."
       ]}
     ]
   },
@@ -7701,21 +8534,2133 @@ function closeRulesPanel(){ rulesPanelEl.classList.remove("show"); }
 document.getElementById("rulesCloseBtn").addEventListener("click", closeRulesPanel);
 rulesPanelEl.addEventListener("click",(e)=>{ if(e.target===rulesPanelEl) closeRulesPanel(); });
 document.getElementById("btnHelp").addEventListener("click", ()=>{
-  if(state && state.kind) openRulesPanel(state.kind);
+  if(state && state.kind){
+    const rid = (state.kind==="holdem" && state.variant==="omaha") ? "holdem-omaha" : state.kind;
+    openRulesPanel(rid);
+  }
 });
+
+/* ============ CRAZY EIGHTS ============ */
+// You + 2 AI opponents. Standard rules: match rank or suit of the top discard,
+// or play any 8 as a wild and declare the suit. Draw when you have no legal play.
+const CRAZY8_BOT_NAMES = ["Marco","Priya"];
+
+function newCrazy8(){
+  const deck = freshHoldemDeck();
+  const players = [
+    { name:"You", isHuman:true, hand:[] },
+    { name:CRAZY8_BOT_NAMES[0], isHuman:false, hand:[] },
+    { name:CRAZY8_BOT_NAMES[1], isHuman:false, hand:[] }
+  ];
+  for(let r=0;r<7;r++) players.forEach(p=> p.hand.push(deck.pop()));
+  players[0].hand.forEach(c=> c.faceUp = true);
+  const top = deck.pop();
+  top.faceUp = true;
+  return {
+    kind:"crazy8",
+    players, deck,
+    discard: [top],
+    chosenSuit: top.rank===7 ? SUITS[Math.floor(Math.random()*SUITS.length)] : null,
+    currentPlayer: 0,
+    phase: "playing", // "playing" | "chooseSuit" | "result"
+    status: "Match the rank or suit, or play an 8. Your turn.",
+    winnerIdx: null
+  };
+}
+
+function crazy8TopSuit(st){ return st.chosenSuit || st.discard[st.discard.length-1].suit; }
+
+function crazy8CardPlayable(st, card){
+  if(card.rank===7) return true;
+  const top = st.discard[st.discard.length-1];
+  return card.suit === crazy8TopSuit(st) || card.rank === top.rank;
+}
+
+function crazy8HasPlayable(st, hand){ return hand.some(c=> crazy8CardPlayable(st,c)); }
+
+function crazy8DrawCard(st){
+  if(st.deck.length===0){
+    const top = st.discard.pop();
+    st.deck = shuffle(st.discard);
+    st.discard = [top];
+  }
+  if(st.deck.length===0) return null;
+  return st.deck.pop();
+}
+
+function crazy8EndTurnAdvance(st){ st.currentPlayer = (st.currentPlayer+1) % st.players.length; }
+
+function crazy8CheckWin(st, idx){
+  if(st.players[idx].hand.length!==0) return false;
+  st.phase = "result";
+  st.winnerIdx = idx;
+  st.status = idx===0 ? "You win! You emptied your hand." : st.players[idx].name+" wins the round.";
+  playSfxRandom(PLACE_SFX);
+  if(idx===0) setTimeout(()=> endGame("You win!", "You played out your whole hand first.", true), 300);
+  else setTimeout(()=> endGame(st.players[idx].name+" wins", st.players[idx].name+" emptied their hand first. Better luck next round!", false), 300);
+  return true;
+}
+
+function crazy8ScheduleBotIfNeeded(){
+  const st = state;
+  if(!st || st.kind!=="crazy8" || st.phase!=="playing") return;
+  if(st.players[st.currentPlayer].isHuman) return;
+  setTimeout(()=>{ if(state===st) crazy8BotAct(st, st.currentPlayer); }, 550 + Math.random()*550);
+}
+
+function crazy8BotAct(st, idx){
+  if(state!==st || st.phase!=="playing" || st.currentPlayer!==idx) return;
+  const player = st.players[idx];
+  let choice = player.hand.findIndex(c=> c.rank!==7 && crazy8CardPlayable(st,c));
+  if(choice===-1) choice = player.hand.findIndex(c=> c.rank===7 && crazy8CardPlayable(st,c));
+  if(choice===-1){
+    const c = crazy8DrawCard(st);
+    if(c){ c.faceUp = false; player.hand.push(c); playSfx("flip.mp3"); }
+    if(c && crazy8CardPlayable(st,c)) choice = player.hand.length-1;
+    else{
+      crazy8EndTurnAdvance(st);
+      st.status = player.name+" drew a card. "+(st.currentPlayer===0?"Your turn.":"Waiting for "+st.players[st.currentPlayer].name+"…");
+      render();
+      crazy8ScheduleBotIfNeeded();
+      return;
+    }
+  }
+  const card = player.hand.splice(choice,1)[0];
+  card.faceUp = true;
+  st.discard.push(card);
+  playSfx("flip.mp3");
+  if(crazy8CheckWin(st, idx)){ render(); return; }
+  if(card.rank===7){
+    const counts = {};
+    player.hand.forEach(c=> counts[c.suit] = (counts[c.suit]||0)+1);
+    let bestSuit = SUITS[0], bestCount = -1;
+    SUITS.forEach(s=>{ if((counts[s]||0) > bestCount){ bestCount = counts[s]||0; bestSuit = s; } });
+    st.chosenSuit = bestSuit;
+  } else st.chosenSuit = null;
+  crazy8EndTurnAdvance(st);
+  st.status = st.currentPlayer===0 ? "Your turn." : "Waiting for "+st.players[st.currentPlayer].name+"…";
+  render();
+  crazy8ScheduleBotIfNeeded();
+}
+
+function onCrazy8PlayCard(idx){
+  if(state.phase!=="playing" || state.currentPlayer!==0) return;
+  const card = state.players[0].hand[idx];
+  if(!crazy8CardPlayable(state, card)) return;
+  state.players[0].hand.splice(idx,1);
+  card.faceUp = true;
+  state.discard.push(card);
+  playSfx("flip.mp3");
+  if(crazy8CheckWin(state, 0)){ render(); return; }
+  if(card.rank===7){
+    state.phase = "chooseSuit";
+    state.chosenSuit = null;
+    state.status = "Choose a suit for your 8.";
+    render();
+    return;
+  }
+  state.chosenSuit = null;
+  crazy8EndTurnAdvance(state);
+  state.status = "Waiting for "+state.players[state.currentPlayer].name+"…";
+  render();
+  crazy8ScheduleBotIfNeeded();
+}
+
+function onCrazy8ChooseSuit(suit){
+  if(state.phase!=="chooseSuit") return;
+  state.chosenSuit = suit;
+  state.phase = "playing";
+  crazy8EndTurnAdvance(state);
+  state.status = "Waiting for "+state.players[state.currentPlayer].name+"…";
+  render();
+  crazy8ScheduleBotIfNeeded();
+}
+
+function onCrazy8Draw(){
+  if(state.phase!=="playing" || state.currentPlayer!==0) return;
+  if(crazy8HasPlayable(state, state.players[0].hand)) return;
+  const c = crazy8DrawCard(state);
+  if(c){ c.faceUp = true; state.players[0].hand.push(c); playSfx("flip.mp3"); }
+  if(!c || !crazy8CardPlayable(state, c)){
+    crazy8EndTurnAdvance(state);
+    state.status = "You drew a card. Waiting for "+state.players[state.currentPlayer].name+"…";
+    render();
+    crazy8ScheduleBotIfNeeded();
+  } else {
+    state.status = "You drew a card you can play!";
+    render();
+  }
+}
+
+function renderCrazy8(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  state.players.forEach((p,i)=>{
+    if(p.isHuman) return;
+    const sec = document.createElement("div");
+    sec.className = "bj-section";
+    const label = document.createElement("div");
+    label.className = "bj-label";
+    label.textContent = p.name + " — " + p.hand.length + " card" + (p.hand.length===1?"":"s") +
+      (state.currentPlayer===i && state.phase!=="result" ? " (thinking…)" : "");
+    sec.appendChild(label);
+    const row = document.createElement("div");
+    row.className = "bj-hand";
+    p.hand.forEach(()=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl({faceUp:false}, ""));
+      row.appendChild(wrap);
+    });
+    sec.appendChild(row);
+    table.appendChild(sec);
+  });
+
+  const midSec = document.createElement("div");
+  midSec.className = "bj-section";
+  const midLabel = document.createElement("div");
+  midLabel.className = "bj-label";
+  midLabel.textContent = "Deck: " + state.deck.length + (state.chosenSuit ? " · Suit in play: " + SUIT_SYM[state.chosenSuit] : "");
+  midSec.appendChild(midLabel);
+  const midRow = document.createElement("div");
+  midRow.className = "bj-hand";
+  const deckWrap = document.createElement("div");
+  deckWrap.className = "card-wrap";
+  deckWrap.appendChild(renderCardEl({faceUp:false}, ""));
+  midRow.appendChild(deckWrap);
+  const top = state.discard[state.discard.length-1];
+  const topWrap = document.createElement("div");
+  topWrap.className = "card-wrap";
+  topWrap.appendChild(renderCardEl(top, ""));
+  midRow.appendChild(topWrap);
+  midSec.appendChild(midRow);
+  table.appendChild(midSec);
+
+  const you = state.players[0];
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  yourLabel.textContent = "Your hand";
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand";
+  you.hand.forEach((c,idx)=>{
+    const playable = state.phase==="playing" && state.currentPlayer===0 && crazy8CardPlayable(state,c);
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.style.cursor = playable ? "pointer" : "default";
+    wrap.style.opacity = (state.phase==="playing" && state.currentPlayer===0 && !playable) ? "0.55" : "1";
+    wrap.appendChild(renderCardEl(c, ""));
+    if(playable) wrap.addEventListener("click", ()=> onCrazy8PlayCard(idx));
+    yourRow.appendChild(wrap);
+  });
+  yourSec.appendChild(yourRow);
+  table.appendChild(yourSec);
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="chooseSuit"){
+    SUITS.forEach(s=>{
+      const btn = document.createElement("button");
+      btn.className = "bj-btn";
+      btn.textContent = SUIT_SYM[s];
+      btn.addEventListener("click", ()=> onCrazy8ChooseSuit(s));
+      controls.appendChild(btn);
+    });
+  } else if(state.phase==="playing" && state.currentPlayer===0){
+    const drawBtn = document.createElement("button");
+    drawBtn.className = "bj-btn";
+    drawBtn.textContent = "Draw";
+    drawBtn.disabled = crazy8HasPlayable(state, you.hand);
+    drawBtn.addEventListener("click", onCrazy8Draw);
+    controls.appendChild(drawBtn);
+  } else if(state.phase==="result"){
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "bj-btn";
+    nextBtn.textContent = "New round";
+    nextBtn.addEventListener("click", ()=> startGame("crazy8"));
+    controls.appendChild(nextBtn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
+
+/* ============ TEEN PATTI ============ */
+// You vs 2 AI opponents, 3-card hands. Everyone antes, then a single betting
+// round (fold / call / raise) plays out until only one player remains or
+// everyone has matched the current bet, followed by a showdown.
+const TEENPATTI_STARTING_CHIPS = 500;
+const TEENPATTI_BOOT = 10;
+const TEENPATTI_BOT_NAMES = ["Marco","Priya"];
+
+function newTeenPatti(){
+  return {
+    kind:"teenpatti",
+    players:[
+      { name:"You", isHuman:true, chips:TEENPATTI_STARTING_CHIPS, hand:[], contributed:0, folded:false, allIn:false },
+      { name:TEENPATTI_BOT_NAMES[0], isHuman:false, chips:TEENPATTI_STARTING_CHIPS, hand:[], contributed:0, folded:false, allIn:false },
+      { name:TEENPATTI_BOT_NAMES[1], isHuman:false, chips:TEENPATTI_STARTING_CHIPS, hand:[], contributed:0, folded:false, allIn:false }
+    ],
+    deck:[], pot:0, currentBet:0, toActQueue:[],
+    phase:"predeal", status:"", showdown:null, winners:null
+  };
+}
+
+function teenPattiEvaluate(cards){
+  const ranks = cards.map(c=> pgHighValue(c.rank)).sort((a,b)=>b-a);
+  const isFlush = cards[0].suit===cards[1].suit && cards[1].suit===cards[2].suit;
+  const isTrail = ranks[0]===ranks[1] && ranks[1]===ranks[2];
+  let isSeq = (ranks[0]-ranks[1]===1 && ranks[1]-ranks[2]===1);
+  let top = ranks[0];
+  if(!isSeq && ranks[0]===14 && ranks[1]===3 && ranks[2]===2){ isSeq = true; top = 3; }
+  if(isTrail) return { cat:5, tie:[ranks[0]], name:"Trail" };
+  if(isSeq && isFlush) return { cat:4, tie:[top], name:"Pure Sequence" };
+  if(isSeq) return { cat:3, tie:[top], name:"Sequence" };
+  if(isFlush) return { cat:2, tie:ranks, name:"Color" };
+  if(ranks[0]===ranks[1] || ranks[1]===ranks[2]){
+    const pairVal = ranks[0]===ranks[1] ? ranks[0] : ranks[1];
+    const kicker = ranks[0]===ranks[1] ? ranks[2] : ranks[0];
+    return { cat:1, tie:[pairVal, kicker], name:"Pair" };
+  }
+  return { cat:0, tie:ranks, name: pgRankName(ranks[0])+" High" };
+}
+
+function teenPattiActiveIdx(st){ const r=[]; st.players.forEach((p,i)=>{ if(!p.folded) r.push(i); }); return r; }
+
+function beginTeenPattiHand(){
+  const st = state;
+  st.deck = freshHoldemDeck();
+  st.pot = 0;
+  st.showdown = null;
+  st.winners = null;
+  st.players.forEach(p=>{
+    p.hand = [st.deck.pop(), st.deck.pop(), st.deck.pop()];
+    p.hand.forEach(c=> c.faceUp = p.isHuman);
+    p.folded = false;
+    p.allIn = false;
+    const boot = Math.min(TEENPATTI_BOOT, p.chips);
+    p.chips -= boot;
+    p.contributed = boot;
+    st.pot += boot;
+  });
+  st.currentBet = TEENPATTI_BOOT;
+  st.toActQueue = [0,1,2];
+  st.phase = "betting";
+  playSfx("shuffle.mp3");
+  teenPattiAdvance(st);
+}
+
+function teenPattiCallAmount(st, idx){ return Math.max(0, st.currentBet - st.players[idx].contributed); }
+
+function teenPattiAdvance(st){
+  const active = teenPattiActiveIdx(st);
+  if(active.length===1){ teenPattiAwardUncontested(st); return; }
+  while(st.toActQueue.length && (st.players[st.toActQueue[0]].folded || st.players[st.toActQueue[0]].allIn)) st.toActQueue.shift();
+  if(st.toActQueue.length===0){ teenPattiShowdown(st); return; }
+  const idx = st.toActQueue[0];
+  st.status = st.players[idx].isHuman
+    ? "Your turn — fold, call "+teenPattiCallAmount(st,idx)+", or raise."
+    : "Waiting for "+st.players[idx].name+"…";
+  render();
+  if(!st.players[idx].isHuman) setTimeout(()=>{ if(state===st) teenPattiBotAct(st, idx); }, 550+Math.random()*550);
+}
+
+function teenPattiFold(st, idx){
+  st.players[idx].folded = true;
+  st.toActQueue.shift();
+  playSfx("flip.mp3");
+  teenPattiAdvance(st);
+}
+
+function teenPattiCall(st, idx){
+  const p = st.players[idx];
+  const pay = Math.min(teenPattiCallAmount(st, idx), p.chips);
+  p.chips -= pay; p.contributed += pay; st.pot += pay;
+  if(p.chips===0) p.allIn = true;
+  st.toActQueue.shift();
+  playSfxRandom(PLACE_SFX);
+  teenPattiAdvance(st);
+}
+
+function teenPattiRaise(st, idx){
+  const p = st.players[idx];
+  const newBet = st.currentBet + st.currentBet;
+  const need = Math.min(newBet, p.contributed + p.chips) - p.contributed;
+  const pay = Math.min(need, p.chips);
+  p.chips -= pay; p.contributed += pay; st.pot += pay;
+  if(p.contributed > st.currentBet) st.currentBet = p.contributed;
+  if(p.chips===0) p.allIn = true;
+  st.toActQueue = teenPattiActiveIdx(st).filter(i=> i!==idx);
+  playSfxRandom(PLACE_SFX);
+  teenPattiAdvance(st);
+}
+
+function teenPattiBotAct(st, idx){
+  if(state!==st || st.phase!=="betting" || st.toActQueue[0]!==idx) return;
+  const p = st.players[idx];
+  const ev = teenPattiEvaluate(p.hand);
+  const strength = ev.cat/5 + (ev.tie[0]||0)/14*0.1;
+  const callAmt = teenPattiCallAmount(st, idx);
+  if(strength < 0.18 && callAmt>0 && Math.random()<0.6) teenPattiFold(st, idx);
+  else if(strength > 0.55 && p.chips > st.currentBet && Math.random()<0.45) teenPattiRaise(st, idx);
+  else teenPattiCall(st, idx);
+}
+
+function teenPattiAwardUncontested(st){
+  const idx = teenPattiActiveIdx(st)[0];
+  st.players[idx].chips += st.pot;
+  st.phase = "result";
+  st.status = st.players[idx].name + " wins " + st.pot + " chips — everyone else folded.";
+  st.pot = 0;
+  playSfxRandom(PLACE_SFX);
+  teenPattiPostHandCheck(st);
+  render();
+}
+
+function teenPattiShowdown(st){
+  st.phase = "showdown";
+  st.players.forEach(p=>{ if(!p.folded) p.hand.forEach(c=> c.faceUp = true); });
+  const evals = {};
+  const active = teenPattiActiveIdx(st);
+  active.forEach(i=> evals[i] = teenPattiEvaluate(st.players[i].hand));
+  let bestEval = null;
+  active.forEach(i=>{ if(!bestEval || compareEval(evals[i],bestEval)>0) bestEval = evals[i]; });
+  const winners = active.filter(i=> compareEval(evals[i],bestEval)===0);
+  const share = Math.floor(st.pot/winners.length);
+  winners.forEach((i,k)=>{ st.players[i].chips += share + (k===0 ? st.pot - share*winners.length : 0); });
+  st.showdown = evals;
+  st.winners = winners;
+  st.phase = "result";
+  st.status = winners.map(i=>st.players[i].name).join(" & ") + " win"+(winners.length>1?"":"s")+" "+st.pot+" with "+bestEval.name+".";
+  st.pot = 0;
+  playSfxRandom(PLACE_SFX);
+  teenPattiPostHandCheck(st);
+  render();
+}
+
+function teenPattiPostHandCheck(st){
+  if(st.players[0].chips<=0){
+    setTimeout(()=> endGame("Out of chips", "You started with "+TEENPATTI_STARTING_CHIPS+" chips. Better luck next time!", false), 400);
+    return;
+  }
+  const activeBots = st.players.slice(1).filter(p=>p.chips>0);
+  if(activeBots.length===0){
+    setTimeout(()=> endGame("You win!", "You busted every opponent at the table.", true), 400);
+  }
+}
+
+function onTeenPattiFold(){ if(state.phase==="betting" && state.toActQueue[0]===0) teenPattiFold(state, 0); }
+function onTeenPattiCall(){ if(state.phase==="betting" && state.toActQueue[0]===0) teenPattiCall(state, 0); }
+function onTeenPattiRaise(){ if(state.phase==="betting" && state.toActQueue[0]===0) teenPattiRaise(state, 0); }
+function onTeenPattiNextHand(){ if(state.phase==="result") beginTeenPattiHand(); }
+
+function renderTeenPatti(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  state.players.forEach((p,i)=>{
+    if(p.isHuman) return;
+    const sec = document.createElement("div");
+    sec.className = "bj-section";
+    const label = document.createElement("div");
+    label.className = "bj-label";
+    label.textContent = p.name + " — " + p.chips + " chips" + (p.folded ? " (folded)" : "") +
+      (state.toActQueue[0]===i && state.phase==="betting" ? " (thinking…)" : "");
+    sec.appendChild(label);
+    const row = document.createElement("div");
+    row.className = "bj-hand";
+    (p.hand||[]).forEach(c=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl(c, ""));
+      row.appendChild(wrap);
+    });
+    sec.appendChild(row);
+    if((state.phase==="result"||state.phase==="showdown") && !p.folded && state.showdown && state.showdown[i]){
+      const hn = document.createElement("div");
+      hn.className = "th-hand-name";
+      hn.textContent = state.showdown[i].name;
+      sec.appendChild(hn);
+    }
+    table.appendChild(sec);
+  });
+
+  const potSec = document.createElement("div");
+  potSec.className = "bj-section";
+  const potLabel = document.createElement("div");
+  potLabel.className = "bj-label";
+  potLabel.textContent = "Pot: " + state.pot + (state.phase==="betting" ? " · Current bet: "+state.currentBet : "");
+  potSec.appendChild(potLabel);
+  table.appendChild(potSec);
+
+  const you = state.players[0];
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  yourLabel.textContent = "Your hand — " + you.chips + " chips" + (you.folded ? " (folded)" : "");
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand";
+  you.hand.forEach(c=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl(c, ""));
+    yourRow.appendChild(wrap);
+  });
+  yourSec.appendChild(yourRow);
+  if((state.phase==="result"||state.phase==="showdown") && !you.folded && state.showdown && state.showdown[0]){
+    const hn = document.createElement("div");
+    hn.className = "th-hand-name";
+    hn.textContent = state.showdown[0].name;
+    yourSec.appendChild(hn);
+  }
+  table.appendChild(yourSec);
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="betting" && state.toActQueue[0]===0){
+    const foldBtn = document.createElement("button");
+    foldBtn.className = "bj-btn"; foldBtn.textContent = "Fold";
+    foldBtn.addEventListener("click", onTeenPattiFold);
+    controls.appendChild(foldBtn);
+    const callAmt = teenPattiCallAmount(state, 0);
+    const callBtn = document.createElement("button");
+    callBtn.className = "bj-btn"; callBtn.textContent = callAmt===0 ? "Check" : "Call "+callAmt;
+    callBtn.disabled = you.chips < callAmt && you.chips>0 ? false : (you.chips<=0);
+    callBtn.addEventListener("click", onTeenPattiCall);
+    controls.appendChild(callBtn);
+    const raiseBtn = document.createElement("button");
+    raiseBtn.className = "bj-btn"; raiseBtn.textContent = "Raise to "+(state.currentBet*2);
+    raiseBtn.disabled = you.chips <= callAmt;
+    raiseBtn.addEventListener("click", onTeenPattiRaise);
+    controls.appendChild(raiseBtn);
+  } else if(state.phase==="result"){
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "bj-btn"; nextBtn.textContent = "Next hand";
+    nextBtn.disabled = state.players[0].chips<=0;
+    nextBtn.addEventListener("click", onTeenPattiNextHand);
+    controls.appendChild(nextBtn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
+
+/* ============ SPEED ============ */
+// You vs 1 bot, real-time: play a card from your hand onto either center pile
+// if it's one rank away (Ace wraps to both King and 2). No turns — whoever can
+// move, moves. First to empty both hand and stock wins.
+function speedAdjacent(r1, r2){
+  const diff = Math.abs(r1-r2);
+  if(diff===1) return true;
+  if((r1===14&&r2===2)||(r1===2&&r2===14)) return true;
+  return false;
+}
+
+function newSpeed(){
+  const deck = freshHoldemDeck();
+  const you = { hand: deck.splice(0,5), stock: [] };
+  const bot = { hand: deck.splice(0,5), stock: [] };
+  you.hand.forEach(c=> c.faceUp = true);
+  bot.hand.forEach(c=> c.faceUp = false);
+  const piles = [deck.pop(), deck.pop()];
+  piles.forEach(c=> c.faceUp = true);
+  const half = Math.floor(deck.length/2);
+  you.stock = deck.slice(0, half);
+  bot.stock = deck.slice(half);
+  return { kind:"speed", you, bot, piles, phase:"playing", status:"Play a card next to either pile — go fast, it's real-time!", winner:null };
+}
+
+function speedAnyLegalMove(hand, piles){ return hand.some(c=> piles.some(p=> speedAdjacent(pgHighValue(c.rank), pgHighValue(p.rank)))); }
+
+function speedCheckWin(st){
+  if(st.you.hand.length===0 && st.you.stock.length===0){
+    st.phase = "result"; st.winner = 0;
+    st.status = "You win! Your hand and stock are empty.";
+    setTimeout(()=> endGame("You win!", "You played out your entire hand and stock first.", true), 300);
+    return true;
+  }
+  if(st.bot.hand.length===0 && st.bot.stock.length===0){
+    st.phase = "result"; st.winner = 1;
+    st.status = "Marco wins! Their hand and stock are empty.";
+    setTimeout(()=> endGame("Marco wins", "Marco played out their hand and stock first. Try again!", false), 300);
+    return true;
+  }
+  return false;
+}
+
+function speedMaybeStuckRefresh(st){
+  if(st.phase!=="playing") return;
+  if(speedAnyLegalMove(st.you.hand, st.piles) || speedAnyLegalMove(st.bot.hand, st.piles)) return;
+  const src0 = st.you.stock.length ? st.you.stock : (st.bot.stock.length ? st.bot.stock : null);
+  const src1 = st.bot.stock.length ? st.bot.stock : (st.you.stock.length ? st.you.stock : null);
+  if(src0){ const c = src0.pop(); c.faceUp = true; st.piles[0] = c; }
+  if(src1){ const c = src1.pop(); c.faceUp = true; st.piles[1] = c; }
+  st.status = "Stuck! New cards flipped to both piles.";
+  render();
+}
+
+function speedBotLoop(){
+  if(!state || state.kind!=="speed" || state.phase!=="playing") return;
+  const st = state, bot = st.bot;
+  let played = false;
+  for(let i=0;i<bot.hand.length && !played;i++){
+    for(let pi=0;pi<2;pi++){
+      if(speedAdjacent(pgHighValue(bot.hand[i].rank), pgHighValue(st.piles[pi].rank))){
+        const card = bot.hand.splice(i,1)[0];
+        card.faceUp = true;
+        st.piles[pi] = card;
+        if(bot.stock.length>0){
+          const drawn = bot.stock.pop();
+          drawn.faceUp = true;
+          bot.hand.push(drawn);
+        }
+        played = true;
+        playSfx("flip.mp3");
+        break;
+      }
+    }
+  }
+  if(played){ if(!speedCheckWin(st)){ render(); speedMaybeStuckRefresh(st); } else render(); }
+  if(st.phase==="playing") setTimeout(speedBotLoop, 700 + Math.random()*700);
+}
+
+function onSpeedPlayAttempt(idx){
+  if(state.phase!=="playing") return;
+  const card = state.you.hand[idx];
+  for(let pi=0; pi<2; pi++){
+    if(speedAdjacent(pgHighValue(card.rank), pgHighValue(state.piles[pi].rank))){
+      state.you.hand.splice(idx,1);
+      card.faceUp = true;
+      state.piles[pi] = card;
+      if(state.you.stock.length>0){
+        const drawn = state.you.stock.pop();
+        drawn.faceUp = true;
+        state.you.hand.push(drawn);
+      }
+      playSfx("flip.mp3");
+      if(!speedCheckWin(state)){ render(); speedMaybeStuckRefresh(state); } else render();
+      return;
+    }
+  }
+}
+
+function renderSpeed(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  const botSec = document.createElement("div");
+  botSec.className = "bj-section";
+  const botLabel = document.createElement("div");
+  botLabel.className = "bj-label";
+  botLabel.textContent = "Marco — hand " + state.bot.hand.length + ", stock " + state.bot.stock.length;
+  botSec.appendChild(botLabel);
+  const botRow = document.createElement("div");
+  botRow.className = "bj-hand";
+  state.bot.hand.forEach(()=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl({faceUp:false}, ""));
+    botRow.appendChild(wrap);
+  });
+  botSec.appendChild(botRow);
+  table.appendChild(botSec);
+
+  const pileSec = document.createElement("div");
+  pileSec.className = "bj-section";
+  const pileLabel = document.createElement("div");
+  pileLabel.className = "bj-label";
+  pileLabel.textContent = "Center piles — tap a card in your hand to play it next to either";
+  pileSec.appendChild(pileLabel);
+  const pileRow = document.createElement("div");
+  pileRow.className = "bj-hand";
+  state.piles.forEach(c=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl(c, ""));
+    pileRow.appendChild(wrap);
+  });
+  pileSec.appendChild(pileRow);
+  table.appendChild(pileSec);
+
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  yourLabel.textContent = "Your hand — stock " + state.you.stock.length;
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand";
+  state.you.hand.forEach((c,idx)=>{
+    const playable = state.phase==="playing" && state.piles.some(p=> speedAdjacent(pgHighValue(c.rank), pgHighValue(p.rank)));
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.style.cursor = playable ? "pointer" : "default";
+    wrap.appendChild(renderCardEl(c, ""));
+    if(playable) wrap.addEventListener("click", ()=> onSpeedPlayAttempt(idx));
+    yourRow.appendChild(wrap);
+  });
+  yourSec.appendChild(yourRow);
+  table.appendChild(yourSec);
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="result"){
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "bj-btn";
+    nextBtn.textContent = "New round";
+    nextBtn.addEventListener("click", ()=> startGame("speed"));
+    controls.appendChild(nextBtn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
+
+/* ============ GIN RUMMY ============ */
+// You vs 1 bot ("Marco"), 10-card hands, classic draw/discard/knock. Aces are
+// low-only for runs. Deadwood is the point value of cards not in any meld
+// (set of 3-4 same rank, or run of 3+ consecutive same-suit cards).
+function grCardPoints(card){
+  if(card.rank===0) return 1;         // Ace
+  if(card.rank<=8) return card.rank+1; // 2..9
+  return 10;                           // 10, J, Q, K
+}
+
+// All plausible sets/runs within a hand, as arrays of indices into `hand`.
+function grFindCandidateMelds(hand){
+  const melds = [];
+  const byRank = {};
+  hand.forEach((c,i)=> (byRank[c.rank]=byRank[c.rank]||[]).push(i));
+  Object.values(byRank).forEach(idxs=>{
+    if(idxs.length===3) melds.push(idxs.slice());
+    else if(idxs.length===4){
+      melds.push(idxs.slice());
+      for(let skip=0; skip<4; skip++) melds.push(idxs.filter((_,k)=> k!==skip));
+    }
+  });
+  const bySuit = {};
+  hand.forEach((c,i)=> (bySuit[c.suit]=bySuit[c.suit]||[]).push(i));
+  Object.values(bySuit).forEach(idxs=>{
+    const sorted = idxs.slice().sort((a,b)=> hand[a].rank-hand[b].rank);
+    let run = [sorted[0]];
+    const runs = [];
+    for(let k=1;k<sorted.length;k++){
+      if(hand[sorted[k]].rank === hand[sorted[k-1]].rank+1) run.push(sorted[k]);
+      else { if(run.length>=3) runs.push(run); run=[sorted[k]]; }
+    }
+    if(run.length>=3) runs.push(run);
+    runs.forEach(r=>{
+      for(let start=0; start<r.length; start++)
+        for(let end=start+2; end<r.length; end++)
+          melds.push(r.slice(start, end+1));
+    });
+  });
+  return melds;
+}
+
+// Exact minimum-deadwood solver via DP over the "unassigned cards" bitmask.
+function grBestMelds(hand){
+  const n = hand.length;
+  if(n===0) return { deadwood:0, melds:[] };
+  const candidates = grFindCandidateMelds(hand).map(idxs=>{
+    let mask=0; idxs.forEach(i=> mask |= (1<<i));
+    return { mask, idxs };
+  });
+  const memo = new Map();
+  function solve(mask){
+    if(mask===0) return { deadwood:0, melds:[] };
+    if(memo.has(mask)) return memo.get(mask);
+    let lowBit=0;
+    while(!(mask & (1<<lowBit))) lowBit++;
+    let best = solve(mask & ~(1<<lowBit));
+    let bestResult = { deadwood: best.deadwood + grCardPoints(hand[lowBit]), melds: best.melds };
+    for(const cm of candidates){
+      if((cm.mask & (1<<lowBit)) && (cm.mask & mask)===cm.mask){
+        const sub = solve(mask & ~cm.mask);
+        if(sub.deadwood < bestResult.deadwood){
+          bestResult = { deadwood: sub.deadwood, melds: sub.melds.concat([cm.idxs]) };
+        }
+      }
+    }
+    memo.set(mask, bestResult);
+    return bestResult;
+  }
+  return solve((1<<n)-1);
+}
+
+// Finds the discard (from an 11-card hand) that minimizes the remaining
+// 10-card hand's deadwood. Used both for "best strategic discard" and for
+// deciding whether a knock is legal (deadwood<=10 after that discard).
+function grBestDiscardChoice(hand){
+  let bestIdx=-1, bestDeadwood=Infinity, bestMelds=null, bestRest=null;
+  for(let i=0;i<hand.length;i++){
+    const rest = hand.slice(0,i).concat(hand.slice(i+1));
+    const res = grBestMelds(rest);
+    if(res.deadwood < bestDeadwood){
+      bestDeadwood = res.deadwood; bestIdx = i; bestMelds = res.melds; bestRest = rest;
+    }
+  }
+  return { idx:bestIdx, deadwood:bestDeadwood, melds:bestMelds, rest:bestRest };
+}
+
+function grCanKnock(hand){ return hand.length>0 && grBestDiscardChoice(hand).deadwood<=10; }
+
+function grCardFitsMeld(card, meld){
+  if(meld.length===0) return false;
+  const sample = meld[0];
+  const allSameRank = meld.every(c=> c.rank===sample.rank);
+  if(allSameRank) return meld.length<4 && card.rank===sample.rank && !meld.some(c=> c.suit===card.suit);
+  if(card.suit!==sample.suit) return false;
+  const ranks = meld.map(c=> c.rank).sort((a,b)=> a-b);
+  return card.rank===ranks[0]-1 || card.rank===ranks[ranks.length-1]+1;
+}
+
+// Attempts to lay each deadwood card off onto the knocker's melds, repeating
+// until no more cards can be placed. Mutates `melds` in place; returns the
+// deadwood cards that couldn't be laid off.
+function grTryLayoffs(deadwoodCards, melds){
+  let remaining = deadwoodCards.slice();
+  let changed = true;
+  while(changed){
+    changed = false;
+    for(let i=0;i<remaining.length;i++){
+      const card = remaining[i];
+      const target = melds.find(m=> grCardFitsMeld(card, m));
+      if(target){ target.push(card); remaining.splice(i,1); changed = true; break; }
+    }
+  }
+  return remaining;
+}
+
+function grIdxToMelds(hand, meldIdxLists){ return meldIdxLists.map(idxs=> idxs.map(i=> hand[i])); }
+function grDeadwoodCards(hand, meldIdxLists){
+  const used = new Set(meldIdxLists.flat());
+  return hand.filter((c,i)=> !used.has(i));
+}
+
+function newGinRummy(){
+  const deck = freshHoldemDeck();
+  const you = { hand: deck.splice(0,10) };
+  const bot = { hand: deck.splice(0,10) };
+  you.hand.forEach(c=> c.faceUp = true);
+  bot.hand.forEach(c=> c.faceUp = false);
+  const upcard = deck.pop();
+  upcard.faceUp = true;
+  return {
+    kind:"ginrummy", you, bot, deck, discard:[upcard],
+    turn: 0, phase: "draw",
+    status: "Your turn — draw from the stock or take the upcard.",
+    result: null
+  };
+}
+
+function grAdvanceTurn(){
+  const st = state;
+  if(st.deck.length===0){
+    st.phase = "result"; st.result = null;
+    st.status = "The stock ran out — hand is a wash, no points awarded.";
+    render();
+    setTimeout(()=> endGame("Hand is a wash", "The stock ran out before anyone could knock. No points awarded this round.", true), 300);
+    return;
+  }
+  st.turn = st.turn===0 ? 1 : 0;
+  st.phase = "draw";
+  st.status = st.turn===0 ? "Your turn — draw from the stock or take the upcard." : "Marco is thinking…";
+  render();
+  if(st.turn===1) setTimeout(grBotTurn, 600 + Math.random()*500);
+}
+
+function grFinishRound(knockerSide, knockerHand, knockerMeldIdx, knockerDeadwoodValue){
+  const st = state;
+  const knockerMelds = grIdxToMelds(knockerHand, knockerMeldIdx);
+  const knockerDeadwoodCards = grDeadwoodCards(knockerHand, knockerMeldIdx);
+
+  const defenderSide = knockerSide===0 ? 1 : 0;
+  const defenderFull = (defenderSide===0 ? st.you : st.bot).hand.slice();
+  const defenderBest = grBestMelds(defenderFull);
+  const defenderMelds = grIdxToMelds(defenderFull, defenderBest.melds);
+  let defenderDeadwoodCards = grDeadwoodCards(defenderFull, defenderBest.melds);
+  let defenderDeadwoodValue = defenderBest.deadwood;
+
+  const isGin = knockerDeadwoodValue===0;
+  if(!isGin){
+    defenderDeadwoodCards = grTryLayoffs(defenderDeadwoodCards, knockerMelds);
+    defenderDeadwoodValue = defenderDeadwoodCards.reduce((s,c)=> s+grCardPoints(c), 0);
+  }
+
+  let knockerScore=0, defenderScore=0, outcome;
+  const knockerName = knockerSide===0 ? "You" : "Marco";
+  const defenderName = defenderSide===0 ? "You" : "Marco";
+  if(isGin){
+    knockerScore = 25 + defenderDeadwoodValue;
+    outcome = knockerName + " went Gin!";
+  } else if(knockerDeadwoodValue < defenderDeadwoodValue){
+    knockerScore = defenderDeadwoodValue - knockerDeadwoodValue;
+    outcome = knockerName + " knocked.";
+  } else {
+    defenderScore = (knockerDeadwoodValue - defenderDeadwoodValue) + 25;
+    outcome = defenderName + " undercut the knock!";
+  }
+
+  const youScore = knockerSide===0 ? knockerScore : defenderScore;
+  const botScore = knockerSide===0 ? defenderScore : knockerScore;
+  st.you.hand = knockerSide===0 ? knockerHand : defenderFull;
+  st.bot.hand = knockerSide===0 ? defenderFull : knockerHand;
+  st.you.hand.forEach(c=> c.faceUp = true);
+  st.bot.hand.forEach(c=> c.faceUp = true);
+  st.result = {
+    youMelds: knockerSide===0 ? knockerMelds : defenderMelds,
+    botMelds: knockerSide===0 ? defenderMelds : knockerMelds,
+    youDeadwood: knockerSide===0 ? knockerDeadwoodCards : defenderDeadwoodCards,
+    botDeadwood: knockerSide===0 ? defenderDeadwoodCards : knockerDeadwoodCards,
+    youScore, botScore
+  };
+  st.phase = "result";
+  st.status = outcome + " You: " + youScore + " pts · Marco: " + botScore + " pts.";
+  render();
+  const youWin = youScore > botScore;
+  const push = youScore === botScore;
+  setTimeout(()=> endGame(
+    push ? "Push" : (youWin ? "You win the hand!" : "Marco wins the hand"),
+    outcome + " Final: You " + youScore + " – Marco " + botScore + ".",
+    push ? true : youWin
+  ), 300);
+}
+
+function grBotTurn(){
+  if(!state || state.kind!=="ginrummy" || state.phase!=="draw" || state.turn!==1) return;
+  const st = state;
+  let fromDiscard = false;
+  if(st.discard.length>0){
+    const top = st.discard[st.discard.length-1];
+    const withTop = grBestMelds(st.bot.hand.concat([top])).deadwood;
+    const without = grBestMelds(st.bot.hand).deadwood;
+    if(withTop < without) fromDiscard = true;
+  }
+  const drawn = fromDiscard ? st.discard.pop() : st.deck.pop();
+  drawn.faceUp = false;
+  st.bot.hand.push(drawn);
+  playSfx("flip.mp3");
+  render();
+
+  setTimeout(()=>{
+    if(!state || state!==st || st.phase!=="draw") return;
+    const choice = grBestDiscardChoice(st.bot.hand);
+    const discardedCard = st.bot.hand.splice(choice.idx,1)[0];
+    discardedCard.faceUp = true;
+    st.discard.push(discardedCard);
+    playSfx("flip.mp3");
+    if(choice.deadwood<=10){ grFinishRound(1, choice.rest, choice.melds, choice.deadwood); return; }
+    grAdvanceTurn();
+  }, 500 + Math.random()*400);
+}
+
+function grDrawFromStock(){
+  if(state.phase!=="draw" || state.turn!==0) return;
+  const c = state.deck.pop();
+  c.faceUp = true;
+  state.you.hand.push(c);
+  playSfx("flip.mp3");
+  state.phase = "discard";
+  state.status = "Discard a card, or knock if your deadwood is 10 or under.";
+  render();
+}
+
+function grDrawFromDiscard(){
+  if(state.phase!=="draw" || state.turn!==0 || state.discard.length===0) return;
+  const c = state.discard.pop();
+  c.faceUp = true;
+  state.you.hand.push(c);
+  playSfx("flip.mp3");
+  state.phase = "discard";
+  state.status = "Discard a card, or knock if your deadwood is 10 or under.";
+  render();
+}
+
+function grDiscard(idx){
+  if(state.phase!=="discard" || state.turn!==0) return;
+  const card = state.you.hand.splice(idx,1)[0];
+  card.faceUp = true;
+  state.discard.push(card);
+  playSfx("flip.mp3");
+  grAdvanceTurn();
+}
+
+function onGrKnock(){
+  if(state.phase!=="discard" || state.turn!==0) return;
+  const choice = grBestDiscardChoice(state.you.hand);
+  if(choice.deadwood>10) return;
+  const discardedCard = state.you.hand.splice(choice.idx,1)[0];
+  discardedCard.faceUp = true;
+  state.discard.push(discardedCard);
+  playSfx("flip.mp3");
+  grFinishRound(0, choice.rest, choice.melds, choice.deadwood);
+}
+
+// Renders a hand as melds (grouped, separated) followed by deadwood cards,
+// so the player can see their own hand structure at a glance.
+function grRenderHandRow(row, hand, meldIdx, deadwoodCards, opts){
+  const meldCards = meldIdx ? grIdxToMelds(hand, meldIdx) : [];
+  const inMeld = new Set();
+  meldCards.forEach(m=> m.forEach(c=> inMeld.add(c.id)));
+  const dw = deadwoodCards || hand.filter(c=> !inMeld.has(c.id));
+  const dwIds = new Set(dw.map(c=> c.id));
+
+  meldCards.forEach((meld,gi)=>{
+    const group = document.createElement("div");
+    group.className = "gr-meld-group";
+    group.style.display = "flex";
+    group.style.gap = "2px";
+    group.style.marginRight = "10px";
+    meld.forEach(c=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl(c, ""));
+      if(opts && opts.onClick) wrap.style.cursor = "pointer";
+      if(opts && opts.onClick) wrap.addEventListener("click", ()=> opts.onClick(hand.indexOf(c)));
+      group.appendChild(wrap);
+    });
+    row.appendChild(group);
+  });
+  hand.filter(c=> dwIds.has(c.id)).forEach(c=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl(c, ""));
+    if(opts && opts.onClick){ wrap.style.cursor = "pointer"; wrap.addEventListener("click", ()=> opts.onClick(hand.indexOf(c))); }
+    row.appendChild(wrap);
+  });
+}
+
+function renderGinRummy(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  const botSec = document.createElement("div");
+  botSec.className = "bj-section";
+  const botLabel = document.createElement("div");
+  botLabel.className = "bj-label";
+  botLabel.textContent = "Marco — " + state.bot.hand.length + " card" + (state.bot.hand.length===1?"":"s") +
+    (state.turn===1 && state.phase!=="result" ? " (thinking…)" : "");
+  botSec.appendChild(botLabel);
+  const botRow = document.createElement("div");
+  botRow.className = "bj-hand";
+  if(state.phase==="result" && state.result){
+    state.result.botMelds.forEach(meld=>{
+      const group = document.createElement("div");
+      group.style.display = "flex"; group.style.gap = "2px"; group.style.marginRight = "10px";
+      meld.forEach(c=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        wrap.appendChild(renderCardEl(c, ""));
+        group.appendChild(wrap);
+      });
+      botRow.appendChild(group);
+    });
+    state.result.botDeadwood.forEach(c=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl(c, ""));
+      botRow.appendChild(wrap);
+    });
+  } else {
+    state.bot.hand.forEach(()=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl({faceUp:false}, ""));
+      botRow.appendChild(wrap);
+    });
+  }
+  botSec.appendChild(botRow);
+  table.appendChild(botSec);
+
+  const pileSec = document.createElement("div");
+  pileSec.className = "bj-section";
+  const pileLabel = document.createElement("div");
+  pileLabel.className = "bj-label";
+  pileLabel.textContent = "Stock: " + state.deck.length + " · Discard pile";
+  pileSec.appendChild(pileLabel);
+  const pileRow = document.createElement("div");
+  pileRow.className = "bj-hand";
+  const canDrawStock = state.phase==="draw" && state.turn===0 && state.deck.length>0;
+  const stockWrap = document.createElement("div");
+  stockWrap.className = "card-wrap";
+  stockWrap.style.cursor = canDrawStock ? "pointer" : "default";
+  stockWrap.appendChild(renderCardEl({faceUp:false}, ""));
+  if(canDrawStock) stockWrap.addEventListener("click", grDrawFromStock);
+  pileRow.appendChild(stockWrap);
+  if(state.discard.length>0){
+    const top = state.discard[state.discard.length-1];
+    const canDrawDiscard = state.phase==="draw" && state.turn===0;
+    const discWrap = document.createElement("div");
+    discWrap.className = "card-wrap";
+    discWrap.style.cursor = canDrawDiscard ? "pointer" : "default";
+    discWrap.appendChild(renderCardEl(top, ""));
+    if(canDrawDiscard) discWrap.addEventListener("click", grDrawFromDiscard);
+    pileRow.appendChild(discWrap);
+  }
+  pileSec.appendChild(pileRow);
+  table.appendChild(pileSec);
+
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  let deadwoodInfo = null;
+  if(state.phase==="discard"){
+    const best = grBestMelds(state.you.hand);
+    deadwoodInfo = best;
+  }
+  yourLabel.textContent = "Your hand" + (deadwoodInfo ? " — deadwood: " + deadwoodInfo.deadwood : "") +
+    (state.phase==="result" && state.result ? " — deadwood: " + state.result.youDeadwood.reduce((s,c)=>s+grCardPoints(c),0) : "");
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand";
+  if(state.phase==="result" && state.result){
+    state.result.youMelds.forEach(meld=>{
+      const group = document.createElement("div");
+      group.style.display = "flex"; group.style.gap = "2px"; group.style.marginRight = "10px";
+      meld.forEach(c=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        wrap.appendChild(renderCardEl(c, ""));
+        group.appendChild(wrap);
+      });
+      yourRow.appendChild(group);
+    });
+    state.result.youDeadwood.forEach(c=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.appendChild(renderCardEl(c, ""));
+      yourRow.appendChild(wrap);
+    });
+  } else if(state.phase==="discard"){
+    grRenderHandRow(yourRow, state.you.hand, deadwoodInfo.melds, null, { onClick: grDiscard });
+  } else {
+    // draw phase: plain sorted-ish display, not clickable
+    const best = grBestMelds(state.you.hand);
+    grRenderHandRow(yourRow, state.you.hand, best.melds, null, null);
+  }
+  yourSec.appendChild(yourRow);
+  table.appendChild(yourSec);
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="discard" && state.turn===0){
+    const knockBtn = document.createElement("button");
+    knockBtn.className = "bj-btn";
+    knockBtn.textContent = deadwoodInfo && deadwoodInfo.deadwood===0 ? "Gin!" : "Knock";
+    knockBtn.disabled = !(deadwoodInfo && deadwoodInfo.deadwood<=10);
+    knockBtn.addEventListener("click", onGrKnock);
+    controls.appendChild(knockBtn);
+  } else if(state.phase==="result"){
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "bj-btn";
+    nextBtn.textContent = "New round";
+    nextBtn.addEventListener("click", ()=> startGame("ginrummy"));
+    controls.appendChild(nextBtn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
+
+/* ============ HEARTS ============ */
+// You vs three AI opponents, 13 cards each. Pass 3 cards each hand (left, right,
+// across, then hold — repeating), then play tricks: follow suit if you can,
+// hearts can't be led until "broken", and nobody may play a heart or the
+// Queen of Spades on the very first trick unless they have no other choice.
+// Each heart is 1 point, the Queen of Spades is 13; lowest score wins once
+// someone reaches 100 — unless a player takes all 26 points in one hand
+// ("shooting the moon"), which flips the scoring onto everyone else.
+const HEARTS_BOT_NAMES = ["Nora","Theo","Amir"];
+const HEARTS_SUIT_ORDER = { clubs:0, diamonds:1, spades:2, hearts:3 };
+
+function hcValue(rank){ return rank===0 ? 14 : rank+1; } // Ace high
+
+function heartsSortCompare(a,b){
+  if(HEARTS_SUIT_ORDER[a.suit] !== HEARTS_SUIT_ORDER[b.suit]) return HEARTS_SUIT_ORDER[a.suit]-HEARTS_SUIT_ORDER[b.suit];
+  return hcValue(a.rank)-hcValue(b.rank);
+}
+
+function heartsCardDanger(c){
+  if(c.suit==="spades" && c.rank===11) return 100; // the Queen herself
+  if(c.suit==="spades" && c.rank>=10) return 80+c.rank; // J/Q/K/A of spades can force taking her
+  if(c.suit==="hearts") return 40+hcValue(c.rank);
+  return hcValue(c.rank)*0.5;
+}
+
+function heartsPassDirFor(roundNum){
+  const m = (roundNum-1)%4;
+  return m===0 ? "left" : m===1 ? "right" : m===2 ? "across" : "none";
+}
+function heartsPassTarget(idx, dir){
+  if(dir==="left") return (idx+1)%4;
+  if(dir==="right") return (idx+3)%4;
+  if(dir==="across") return (idx+2)%4;
+  return idx;
+}
+function heartsPassDirLabel(dir){
+  return dir==="left" ? "left" : dir==="right" ? "right" : dir==="across" ? "across the table" : "";
+}
+
+function heartsStartFirstTrick(st){
+  st.phase = "playing";
+  const leaderIdx = st.players.findIndex(p=> p.hand.some(c=> c.suit==="clubs" && c.rank===1));
+  st.trickLeader = leaderIdx;
+  st.currentPlayer = leaderIdx;
+  st.trick = [];
+  st.trickNum = 1;
+  st.status = leaderIdx===0 ? "You have the 2 of clubs — lead the trick." : "Waiting for "+st.players[leaderIdx].name+" to lead…";
+}
+
+function heartsDealRound(st){
+  const deck = freshHoldemDeck();
+  st.players.forEach(p=> p.hand = []);
+  for(let i=0;i<52;i++) st.players[i%4].hand.push(deck[i]);
+  st.players[0].hand.forEach(c=> c.faceUp = true);
+  st.players.forEach(p=> p.hand.sort(heartsSortCompare));
+  st.passDirection = heartsPassDirFor(st.roundNum);
+  st.selected = [];
+  st.heartsBroken = false;
+  st.roundPoints = [0,0,0,0];
+  if(st.passDirection==="none"){
+    st.phase = "playing";
+    heartsStartFirstTrick(st);
+  } else {
+    st.phase = "passing";
+    st.trick = [];
+    st.status = "Choose 3 cards to pass "+heartsPassDirLabel(st.passDirection)+".";
+  }
+}
+
+function newHearts(){
+  const st = {
+    kind:"hearts",
+    players: [
+      { name:"You", isHuman:true, hand:[] },
+      { name:HEARTS_BOT_NAMES[0], isHuman:false, hand:[] },
+      { name:HEARTS_BOT_NAMES[1], isHuman:false, hand:[] },
+      { name:HEARTS_BOT_NAMES[2], isHuman:false, hand:[] }
+    ],
+    scores: [0,0,0,0],
+    roundNum: 1,
+    status: ""
+  };
+  heartsDealRound(st);
+  return st;
+}
+
+function heartsBeginNextRound(){
+  const st = state;
+  st.roundNum++;
+  heartsDealRound(st);
+  playSfx("shuffle.mp3");
+  render();
+  if(st.phase==="playing" && st.currentPlayer!==0) setTimeout(heartsBotTurn, 700);
+}
+
+function onHeartsToggleSelect(idx){
+  if(!state || state.kind!=="hearts" || state.phase!=="passing") return;
+  const pos = state.selected.indexOf(idx);
+  if(pos>=0) state.selected.splice(pos,1);
+  else { if(state.selected.length>=3) return; state.selected.push(idx); }
+  playSfx("flip.mp3");
+  render();
+}
+
+function onHeartsConfirmPass(){
+  const st = state;
+  if(st.selected.length!==3) return;
+  const passSets = [];
+  st.players.forEach((p,i)=>{
+    if(i===0){
+      passSets[i] = st.selected.slice().sort((a,b)=>b-a).map(idx=> p.hand[idx]);
+    } else {
+      const sorted = p.hand.slice().sort((a,b)=> heartsCardDanger(b)-heartsCardDanger(a));
+      passSets[i] = sorted.slice(0,3);
+    }
+  });
+  st.players.forEach((p,i)=>{
+    passSets[i].forEach(c=>{
+      const idx = p.hand.findIndex(x=> x.id===c.id);
+      if(idx>=0) p.hand.splice(idx,1);
+    });
+  });
+  st.players.forEach((p,i)=>{
+    const target = heartsPassTarget(i, st.passDirection);
+    passSets[i].forEach(c=> st.players[target].hand.push(c));
+  });
+  st.players.forEach(p=> p.hand.sort(heartsSortCompare));
+  st.players[0].hand.forEach(c=> c.faceUp = true);
+  st.selected = [];
+  playSfx("flick.mp3");
+  heartsStartFirstTrick(st);
+  render();
+  if(st.currentPlayer!==0) setTimeout(heartsBotTurn, 700);
+}
+
+function heartsCardPlayable(st, playerIdx, card){
+  const hand = st.players[playerIdx].hand;
+  if(st.trick.length===0){
+    if(st.trickNum===1) return card.suit==="clubs" && card.rank===1;
+    if(card.suit==="hearts" && !st.heartsBroken){
+      if(hand.some(c=> c.suit!=="hearts")) return false;
+    }
+    return true;
+  }
+  const leadSuit = st.trick[0].card.suit;
+  const hasLeadSuit = hand.some(c=> c.suit===leadSuit);
+  if(hasLeadSuit) return card.suit===leadSuit;
+  if(st.trickNum===1){
+    const isPointCard = card.suit==="hearts" || (card.suit==="spades" && card.rank===11);
+    if(isPointCard){
+      const hasSafe = hand.some(c=> !(c.suit==="hearts" || (c.suit==="spades" && c.rank===11)));
+      if(hasSafe) return false;
+    }
+  }
+  return true;
+}
+
+function heartsPlayCard(st, playerIdx, cardIdx){
+  const hand = st.players[playerIdx].hand;
+  const card = hand.splice(cardIdx,1)[0];
+  card.faceUp = true;
+  st.trick.push({ playerIdx, card });
+  if(card.suit==="hearts") st.heartsBroken = true;
+  playSfx("flip.mp3");
+}
+
+function heartsTrickWinner(trick){
+  const leadSuit = trick[0].card.suit;
+  let best = trick[0];
+  trick.forEach(t=>{
+    if(t.card.suit===leadSuit && hcValue(t.card.rank) > hcValue(best.card.rank)) best = t;
+  });
+  return best.playerIdx;
+}
+
+function heartsFinishRound(){
+  const st = state;
+  const shooterIdx = st.roundPoints.findIndex(p=> p===26);
+  if(shooterIdx!==-1){
+    st.players.forEach((p,i)=> st.scores[i] += (i===shooterIdx ? 0 : 26));
+  } else {
+    st.players.forEach((p,i)=> st.scores[i] += st.roundPoints[i]);
+  }
+  const moonNote = shooterIdx!==-1 ? st.players[shooterIdx].name+" shot the moon! " : "";
+  const summary = st.players.map((p,i)=> p.name+": "+st.scores[i]).join(" · ");
+  const gameOver = st.scores.some(s=> s>=100);
+  if(gameOver){
+    st.phase = "gameEnd";
+    st.status = moonNote+"Game over — lowest score wins. "+summary;
+    render();
+    const minScore = Math.min(...st.scores);
+    const winners = st.players.map((p,i)=>i).filter(i=> st.scores[i]===minScore);
+    const youWin = winners.includes(0);
+    const title = winners.length===1 ? (winners[0]===0 ? "You win!" : st.players[winners[0]].name+" wins") : (youWin ? "You tied for the win!" : "It's a tie");
+    setTimeout(()=> endGame(title, moonNote+"Final scores — "+summary+".", youWin), 300);
+  } else {
+    st.phase = "roundEnd";
+    st.status = moonNote+"Round over. "+summary;
+    render();
+  }
+}
+
+function heartsAdvanceAfterPlay(playerIdx){
+  const st = state;
+  if(st.trick.length===4){
+    st.currentPlayer = -1;
+    render();
+    setTimeout(heartsResolveTrick, 900);
+  } else {
+    st.currentPlayer = (playerIdx+1)%4;
+    st.status = st.currentPlayer===0 ? "Your turn." : "Waiting for "+st.players[st.currentPlayer].name+"…";
+    render();
+    if(st.currentPlayer!==0) setTimeout(heartsBotTurn, 550+Math.random()*500);
+  }
+}
+
+function heartsResolveTrick(){
+  const st = state;
+  const winnerIdx = heartsTrickWinner(st.trick);
+  let pts = 0;
+  st.trick.forEach(t=>{
+    if(t.card.suit==="hearts") pts += 1;
+    if(t.card.suit==="spades" && t.card.rank===11) pts += 13;
+  });
+  st.roundPoints[winnerIdx] += pts;
+  st.status = st.players[winnerIdx].name+(winnerIdx===0?" take":" takes")+" the trick"+(pts>0 ? " (+"+pts+" pt"+(pts===1?"":"s")+")" : "")+".";
+  st.trick = [];
+  st.trickLeader = winnerIdx;
+  st.currentPlayer = winnerIdx;
+  st.trickNum = (st.trickNum||1)+1;
+  if(st.players[0].hand.length===0){
+    heartsFinishRound();
+  } else {
+    render();
+    if(st.currentPlayer!==0) setTimeout(heartsBotTurn, 600+Math.random()*500);
+  }
+}
+
+function heartsBotChooseCard(st, idx, legalIdxs){
+  const hand = st.players[idx].hand;
+  if(st.trick.length===0){
+    const nonPoint = legalIdxs.filter(i=> !(hand[i].suit==="hearts") && !(hand[i].suit==="spades" && hand[i].rank===11));
+    const pool = nonPoint.length ? nonPoint : legalIdxs;
+    pool.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank));
+    return pool[0];
+  }
+  const leadSuit = st.trick[0].card.suit;
+  const followable = legalIdxs.filter(i=> hand[i].suit===leadSuit);
+  if(followable.length){
+    let winVal = hcValue(st.trick[0].card.rank);
+    st.trick.forEach(t=>{ if(t.card.suit===leadSuit) winVal = Math.max(winVal, hcValue(t.card.rank)); });
+    const isLastToPlay = st.trick.length===3;
+    const losing = followable.filter(i=> hcValue(hand[i].rank) < winVal);
+    const trickHasPoints = st.trick.some(t=> t.card.suit==="hearts" || (t.card.suit==="spades" && t.card.rank===11));
+    if(isLastToPlay){
+      if(trickHasPoints && losing.length){ losing.sort((a,b)=> hcValue(hand[b].rank)-hcValue(hand[a].rank)); return losing[0]; }
+      if(!trickHasPoints && losing.length===followable.length){ followable.sort((a,b)=> hcValue(hand[b].rank)-hcValue(hand[a].rank)); return followable[0]; }
+    }
+    if(losing.length){ losing.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank)); return losing[0]; }
+    followable.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank));
+    return followable[0];
+  }
+  const sorted = legalIdxs.slice().sort((a,b)=> heartsCardDanger(hand[b])-heartsCardDanger(hand[a]));
+  return sorted[0];
+}
+
+function heartsBotTurn(){
+  const st = state;
+  if(!st || st.kind!=="hearts" || st.phase!=="playing") return;
+  const idx = st.currentPlayer;
+  if(idx<0 || st.players[idx].isHuman) return;
+  const hand = st.players[idx].hand;
+  const legal = hand.map((c,i)=>i).filter(i=> heartsCardPlayable(st, idx, hand[i]));
+  const choiceIdx = heartsBotChooseCard(st, idx, legal);
+  heartsPlayCard(st, idx, choiceIdx);
+  heartsAdvanceAfterPlay(idx);
+}
+
+function onHeartsPlayCard(idx){
+  if(!state || state.kind!=="hearts" || state.phase!=="playing" || state.currentPlayer!==0) return;
+  const card = state.players[0].hand[idx];
+  if(!heartsCardPlayable(state, 0, card)) return;
+  heartsPlayCard(state, 0, idx);
+  heartsAdvanceAfterPlay(0);
+}
+
+/* ============ SPADES ============ */
+// Partnerships: You (seat 0) & the top-seat bot (seat 2) vs the left/right
+// bots (seats 1 & 3). Each hand, everyone bids how many tricks they'll take
+// (or Nil, betting on zero); spades are always trump and can't be led until
+// "broken". Make your bid and you score bid×10 plus 1 per overtrick ("bag");
+// 10 bags costs 100 points. Miss your bid and you lose bid×10. Nil made is
+// +100, Nil broken is -100. First team to the target score wins.
+const SPADES_BOT_NAMES = ["Nora","Sam","Amir"]; // seat1=left, seat2=top(partner), seat3=right
+const SPADES_WIN_SCORE = 200;
+
+function spadesEstimateBid(hand){
+  let bid = 0;
+  const bySuit = { spades:[], hearts:[], clubs:[], diamonds:[] };
+  hand.forEach(c=> bySuit[c.suit].push(c));
+  Object.keys(bySuit).forEach(suit=>{
+    const cards = bySuit[suit].slice().sort((a,b)=> hcValue(b.rank)-hcValue(a.rank));
+    cards.forEach((c,i)=>{
+      const v = hcValue(c.rank);
+      if(suit==="spades"){
+        if(v===14 || v===13 || (v===12 && i<=1) || (v===11 && i<=0)) bid += 1;
+      } else {
+        if(v===14) bid += 1;
+        else if(v===13 && cards.length>=2) bid += 0.6;
+      }
+    });
+  });
+  const spadeCount = bySuit.spades.length;
+  if(spadeCount>4) bid += (spadeCount-4)*0.5;
+  return Math.max(0, Math.round(bid));
+}
+
+function spadesDealRound(st){
+  const deck = freshHoldemDeck();
+  st.players.forEach(p=> p.hand = []);
+  for(let i=0;i<52;i++) st.players[i%4].hand.push(deck[i]);
+  st.players[0].hand.forEach(c=> c.faceUp = true);
+  st.players.forEach(p=> p.hand.sort(heartsSortCompare));
+  st.spadesBroken = false;
+  st.bids = [null,null,null,null];
+  st.nils = [false,false,false,false];
+  st.tricksWon = [0,0,0,0];
+  st.trick = [];
+  st.phase = "bidding";
+  st.biddingIdx = 0;
+  st.status = "Choose your bid.";
+}
+
+function newSpades(){
+  const st = {
+    kind:"spades",
+    players: [
+      { name:"You", isHuman:true, hand:[] },
+      { name:SPADES_BOT_NAMES[0], isHuman:false, hand:[] },
+      { name:SPADES_BOT_NAMES[1], isHuman:false, hand:[] },
+      { name:SPADES_BOT_NAMES[2], isHuman:false, hand:[] }
+    ],
+    teamScores: [0,0],
+    bags: [0,0],
+    roundNum: 1,
+    status: ""
+  };
+  spadesDealRound(st);
+  return st;
+}
+
+function spadesBeginNextRound(){
+  const st = state;
+  st.roundNum++;
+  spadesDealRound(st);
+  playSfx("shuffle.mp3");
+  render();
+}
+
+function spadesAdvanceBidding(){
+  const st = state;
+  st.biddingIdx++;
+  if(st.biddingIdx>=4){
+    spadesStartPlay();
+    return;
+  }
+  render();
+  if(!st.players[st.biddingIdx].isHuman) setTimeout(spadesBotBidTurn, 550);
+}
+
+function spadesBotBidTurn(){
+  const st = state;
+  if(!st || st.kind!=="spades" || st.phase!=="bidding") return;
+  const idx = st.biddingIdx;
+  if(idx<0 || idx>3 || st.players[idx].isHuman) return;
+  const hand = st.players[idx].hand;
+  const est = spadesEstimateBid(hand);
+  const spadeCount = hand.filter(c=> c.suit==="spades").length;
+  const isNil = est<=1 && spadeCount<=2;
+  st.nils[idx] = isNil;
+  st.bids[idx] = isNil ? 0 : Math.max(1, est);
+  st.status = st.players[idx].name+" bids "+(isNil ? "Nil" : st.bids[idx])+".";
+  spadesAdvanceBidding();
+}
+
+function onSpadesBid(bidVal, isNil){
+  const st = state;
+  if(!st || st.kind!=="spades" || st.phase!=="bidding" || st.biddingIdx!==0) return;
+  st.nils[0] = !!isNil;
+  st.bids[0] = isNil ? 0 : bidVal;
+  st.status = "You bid "+(isNil ? "Nil" : bidVal)+".";
+  playSfx("flick.mp3");
+  spadesAdvanceBidding();
+}
+
+function spadesStartPlay(){
+  const st = state;
+  st.phase = "playing";
+  st.trick = [];
+  st.trickNum = 1;
+  const leaderIdx = st.players.findIndex(p=> p.hand.some(c=> c.suit==="clubs" && c.rank===1));
+  st.trickLeader = leaderIdx>=0 ? leaderIdx : 0;
+  st.currentPlayer = st.trickLeader;
+  const teamA = "You/"+st.players[2].name+": "+((st.nils[0]?0:st.bids[0])+(st.nils[2]?0:st.bids[2]));
+  const teamB = st.players[1].name+"/"+st.players[3].name+": "+((st.nils[1]?0:st.bids[1])+(st.nils[3]?0:st.bids[3]));
+  st.status = (st.currentPlayer===0 ? "Your lead. " : "Waiting for "+st.players[st.currentPlayer].name+"… ")+teamA+" · "+teamB;
+  render();
+  if(st.currentPlayer!==0) setTimeout(spadesBotTurn, 700);
+}
+
+function spadesCardPlayable(st, playerIdx, card){
+  const hand = st.players[playerIdx].hand;
+  if(st.trick.length===0){
+    if(card.suit==="spades" && !st.spadesBroken){
+      const hasNonSpade = hand.some(c=> c.suit!=="spades");
+      if(hasNonSpade) return false;
+    }
+    return true;
+  }
+  const leadSuit = st.trick[0].card.suit;
+  const hasLeadSuit = hand.some(c=> c.suit===leadSuit);
+  if(hasLeadSuit) return card.suit===leadSuit;
+  return true;
+}
+
+function spadesPlayCard(st, playerIdx, cardIdx){
+  const hand = st.players[playerIdx].hand;
+  const card = hand.splice(cardIdx,1)[0];
+  card.faceUp = true;
+  st.trick.push({ playerIdx, card });
+  if(card.suit==="spades") st.spadesBroken = true;
+  playSfx("flip.mp3");
+}
+
+function spadesTrickWinner(trick){
+  const leadSuit = trick[0].card.suit;
+  const spadesInTrick = trick.filter(t=> t.card.suit==="spades");
+  const pool = spadesInTrick.length ? spadesInTrick : trick.filter(t=> t.card.suit===leadSuit);
+  let best = pool[0];
+  pool.forEach(t=>{ if(hcValue(t.card.rank) > hcValue(best.card.rank)) best = t; });
+  return best.playerIdx;
+}
+
+function spadesFinishRound(){
+  const st = state;
+  const teams = [[0,2],[1,3]];
+  const teamNames = ["You & "+st.players[2].name, st.players[1].name+" & "+st.players[3].name];
+  const summary = [];
+  teams.forEach((team, tIdx)=>{
+    let bidSum = 0, trickSum = 0, roundScore = 0, bagsAdd = 0;
+    const notes = [];
+    team.forEach(pi=>{
+      trickSum += st.tricksWon[pi];
+      if(st.nils[pi]){
+        if(st.tricksWon[pi]===0){ roundScore += 100; notes.push(st.players[pi].name+" made Nil (+100)"); }
+        else { roundScore -= 100; notes.push(st.players[pi].name+" broke Nil (-100)"); }
+      } else {
+        bidSum += st.bids[pi];
+      }
+    });
+    if(bidSum>0){
+      if(trickSum>=bidSum){
+        const over = trickSum-bidSum;
+        roundScore += bidSum*10 + over;
+        bagsAdd = over;
+      } else {
+        roundScore -= bidSum*10;
+      }
+    }
+    st.teamScores[tIdx] += roundScore;
+    st.bags[tIdx] += bagsAdd;
+    if(st.bags[tIdx]>=10){
+      st.bags[tIdx] -= 10;
+      st.teamScores[tIdx] -= 100;
+      notes.push("bag penalty (-100)");
+    }
+    summary.push(teamNames[tIdx]+": "+(roundScore>=0?"+":"")+roundScore+" ("+st.teamScores[tIdx]+" pts, "+st.bags[tIdx]+" bags)"+(notes.length ? " — "+notes.join(", ") : ""));
+  });
+  const summaryStr = summary.join(" · ");
+  const gameOver = st.teamScores.some(s=> s>=SPADES_WIN_SCORE);
+  if(gameOver){
+    st.phase = "gameEnd";
+    st.status = summaryStr;
+    render();
+    const maxScore = Math.max(...st.teamScores);
+    const winIdx = st.teamScores.indexOf(maxScore);
+    const youWin = winIdx===0;
+    const title = youWin ? "Your team wins!" : teamNames[winIdx]+" wins";
+    setTimeout(()=> endGame(title, "Final scores — "+teamNames[0]+": "+st.teamScores[0]+" · "+teamNames[1]+": "+st.teamScores[1]+".", youWin), 300);
+  } else {
+    st.phase = "roundEnd";
+    st.status = summaryStr;
+    render();
+  }
+}
+
+function spadesAdvanceAfterPlay(playerIdx){
+  const st = state;
+  if(st.trick.length===4){
+    st.currentPlayer = -1;
+    render();
+    setTimeout(spadesResolveTrick, 900);
+  } else {
+    st.currentPlayer = (playerIdx+1)%4;
+    st.status = st.currentPlayer===0 ? "Your turn." : "Waiting for "+st.players[st.currentPlayer].name+"…";
+    render();
+    if(st.currentPlayer!==0) setTimeout(spadesBotTurn, 550+Math.random()*500);
+  }
+}
+
+function spadesResolveTrick(){
+  const st = state;
+  const winnerIdx = spadesTrickWinner(st.trick);
+  st.tricksWon[winnerIdx]++;
+  st.status = st.players[winnerIdx].name+(winnerIdx===0?" take":" takes")+" the trick.";
+  st.trick = [];
+  st.trickLeader = winnerIdx;
+  st.currentPlayer = winnerIdx;
+  st.trickNum = (st.trickNum||1)+1;
+  if(st.players[0].hand.length===0){
+    spadesFinishRound();
+  } else {
+    render();
+    if(st.currentPlayer!==0) setTimeout(spadesBotTurn, 600+Math.random()*500);
+  }
+}
+
+function spadesBotChooseCard(st, idx, legalIdxs){
+  const hand = st.players[idx].hand;
+  if(st.trick.length===0){
+    const nonSpade = legalIdxs.filter(i=> hand[i].suit!=="spades");
+    const pool = nonSpade.length ? nonSpade : legalIdxs;
+    pool.sort((a,b)=> hcValue(hand[b].rank)-hcValue(hand[a].rank));
+    return pool[0];
+  }
+  const leadSuit = st.trick[0].card.suit;
+  const spadesInTrick = st.trick.some(t=> t.card.suit==="spades");
+  const bestPool = spadesInTrick ? st.trick.filter(t=> t.card.suit==="spades") : st.trick.filter(t=> t.card.suit===leadSuit);
+  const bestVal = Math.max(...bestPool.map(t=> hcValue(t.card.rank)));
+  const followable = legalIdxs.filter(i=> hand[i].suit===leadSuit);
+  if(followable.length){
+    const winning = (!spadesInTrick) ? followable.filter(i=> hcValue(hand[i].rank) > bestVal) : [];
+    if(winning.length){ winning.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank)); return winning[0]; }
+    followable.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank));
+    return followable[0];
+  }
+  const spadeOptions = legalIdxs.filter(i=> hand[i].suit==="spades");
+  if(spadeOptions.length){
+    const winningSpades = spadeOptions.filter(i=> !spadesInTrick || hcValue(hand[i].rank) > bestVal);
+    if(winningSpades.length){ winningSpades.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank)); return winningSpades[0]; }
+    spadeOptions.sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank));
+    return spadeOptions[0];
+  }
+  const sorted = legalIdxs.slice().sort((a,b)=> hcValue(hand[a].rank)-hcValue(hand[b].rank));
+  return sorted[0];
+}
+
+function spadesBotTurn(){
+  const st = state;
+  if(!st || st.kind!=="spades" || st.phase!=="playing") return;
+  const idx = st.currentPlayer;
+  if(idx<0 || st.players[idx].isHuman) return;
+  const hand = st.players[idx].hand;
+  const legal = hand.map((c,i)=>i).filter(i=> spadesCardPlayable(st, idx, hand[i]));
+  const choiceIdx = spadesBotChooseCard(st, idx, legal);
+  spadesPlayCard(st, idx, choiceIdx);
+  spadesAdvanceAfterPlay(idx);
+}
+
+function onSpadesPlayCard(idx){
+  if(!state || state.kind!=="spades" || state.phase!=="playing" || state.currentPlayer!==0) return;
+  const card = state.players[0].hand[idx];
+  if(!spadesCardPlayable(state, 0, card)) return;
+  spadesPlayCard(state, 0, idx);
+  spadesAdvanceAfterPlay(0);
+}
+
+function renderSpades(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  const teamNames = ["You & "+state.players[2].name, state.players[1].name+" & "+state.players[3].name];
+
+  const scoreSec = document.createElement("div");
+  scoreSec.className = "bj-section";
+  const scoreLabel = document.createElement("div");
+  scoreLabel.className = "bj-label";
+  scoreLabel.textContent = "Round "+state.roundNum+" · "+teamNames[0]+": "+state.teamScores[0]+" ("+state.bags[0]+" bags) · "+teamNames[1]+": "+state.teamScores[1]+" ("+state.bags[1]+" bags)";
+  scoreSec.appendChild(scoreLabel);
+  table.appendChild(scoreSec);
+
+  if(state.phase==="bidding"){
+    const bidSec = document.createElement("div");
+    bidSec.className = "bj-section";
+    const bidLabel = document.createElement("div");
+    bidLabel.className = "bj-label";
+    bidLabel.textContent = "Bidding";
+    bidSec.appendChild(bidLabel);
+
+    const names = ["You", state.players[1].name, state.players[2].name, state.players[3].name];
+    const chips = document.createElement("div");
+    chips.className = "spades-bid-chips";
+    names.forEach((n,i)=>{
+      const chip = document.createElement("div");
+      chip.className = "spades-bid-chip"+(state.biddingIdx===i ? " active" : "");
+      const nameEl = document.createElement("div");
+      nameEl.className = "name";
+      nameEl.textContent = n;
+      const valEl = document.createElement("div");
+      const bid = state.bids[i];
+      valEl.className = "val"+(bid===null ? " pending" : "");
+      valEl.textContent = bid===null ? "…" : (state.nils[i] ? "Nil" : bid);
+      chip.appendChild(nameEl);
+      chip.appendChild(valEl);
+      chips.appendChild(chip);
+    });
+    bidSec.appendChild(chips);
+
+    const status = document.createElement("div");
+    status.className = "bj-status";
+    status.textContent = state.status || "";
+    bidSec.appendChild(status);
+
+    if(state.biddingIdx===0){
+      const prompt = document.createElement("div");
+      prompt.className = "spades-bid-prompt";
+      prompt.textContent = "How many tricks will you take?";
+      bidSec.appendChild(prompt);
+
+      const nilBtn = document.createElement("button");
+      nilBtn.className = "spades-nil-btn";
+      nilBtn.textContent = "Bid Nil (take zero)";
+      nilBtn.addEventListener("click", ()=> onSpadesBid(0, true));
+      bidSec.appendChild(nilBtn);
+
+      const grid = document.createElement("div");
+      grid.className = "spades-bid-grid";
+      for(let b=1;b<=13;b++){
+        const btn = document.createElement("button");
+        btn.textContent = String(b);
+        btn.addEventListener("click", ()=> onSpadesBid(b, false));
+        grid.appendChild(btn);
+      }
+      bidSec.appendChild(grid);
+    }
+    table.appendChild(bidSec);
+
+    const you = state.players[0];
+    const handSec = document.createElement("div");
+    handSec.className = "bj-section";
+    const handLabel = document.createElement("div");
+    handLabel.className = "bj-label";
+    handLabel.textContent = "Your hand";
+    handSec.appendChild(handLabel);
+    const handRow = document.createElement("div");
+    handRow.className = "bj-hand hearts-your-hand";
+    const cw = getCardWidthPx();
+    const sp = Math.round(cw*0.42);
+    you.hand.forEach((c,idx)=>{
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      if(idx>0) wrap.style.marginLeft = (sp-cw)+"px";
+      wrap.appendChild(renderCardEl(c, ""));
+      handRow.appendChild(wrap);
+    });
+    handSec.appendChild(handRow);
+    table.appendChild(handSec);
+    boardInner.appendChild(table);
+    updateHud();
+    return;
+  }
+
+  const oppSec = document.createElement("div");
+  oppSec.className = "bj-section hearts-opponents";
+  const seatPos = ["left","top","right"];
+  const cardW = getCardWidthPx();
+  const cardH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--card-h")) || Math.round(cardW*1.4);
+  let seatI = 0;
+  state.players.forEach((p,i)=>{
+    if(p.isHuman) return;
+    const pos = seatPos[seatI] || "top"; seatI++;
+    const col = document.createElement("div");
+    col.className = "hearts-opp-col "+pos;
+    const label = document.createElement("div");
+    label.className = "bj-label";
+    const bidText = state.bids[i]===null ? "" : (" · bid "+(state.nils[i] ? "Nil" : state.bids[i])+", won "+state.tricksWon[i]);
+    label.textContent = p.name+bidText+(state.currentPlayer===i && state.phase==="playing" ? " (thinking…)" : "");
+    col.appendChild(label);
+    const n = p.hand.length;
+    const hSpacing = Math.round(cardW*0.36);
+    const vSpacing = Math.round(cardH*0.30);
+    if(pos==="top"){
+      const row = document.createElement("div");
+      row.className = "hearts-row-h";
+      p.hand.forEach((c,idx)=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        if(idx>0) wrap.style.marginLeft = (hSpacing-cardW)+"px";
+        wrap.style.zIndex = String(idx);
+        wrap.appendChild(renderCardEl({faceUp:false}, ""));
+        row.appendChild(wrap);
+      });
+      col.appendChild(row);
+    } else {
+      const stack = document.createElement("div");
+      stack.className = "hearts-col-v";
+      p.hand.forEach((c,idx)=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        if(idx>0) wrap.style.marginTop = (vSpacing-cardH)+"px";
+        wrap.style.zIndex = String(idx);
+        wrap.appendChild(renderCardEl({faceUp:false}, ""));
+        stack.appendChild(wrap);
+      });
+      col.appendChild(stack);
+    }
+    oppSec.appendChild(col);
+  });
+
+  const trickSec = document.createElement("div");
+  trickSec.className = "hearts-opp-col top hearts-trick-col";
+  const trickLabel = document.createElement("div");
+  trickLabel.className = "bj-label";
+  trickLabel.textContent = "Trick "+Math.min(state.trickNum||1,13)+" of 13"+(state.spadesBroken ? " · Spades broken" : "");
+  trickSec.appendChild(trickLabel);
+  const trickRow = document.createElement("div");
+  trickRow.className = "bj-hand hearts-trick-row";
+  state.trick.forEach(t=>{
+    const col = document.createElement("div");
+    col.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:4px;";
+    const nameTag = document.createElement("div");
+    nameTag.style.cssText = "font-size:11px;opacity:0.7;";
+    nameTag.textContent = state.players[t.playerIdx].name;
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl(t.card, ""));
+    col.appendChild(nameTag);
+    col.appendChild(wrap);
+    trickRow.appendChild(col);
+  });
+  trickSec.appendChild(trickRow);
+  oppSec.appendChild(trickSec);
+  table.appendChild(oppSec);
+
+  const you = state.players[0];
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  const yourBidText = state.bids[0]===null ? "" : (" · bid "+(state.nils[0] ? "Nil" : state.bids[0])+", won "+state.tricksWon[0]);
+  yourLabel.textContent = "Your hand"+yourBidText;
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand hearts-your-hand";
+  const yourCardW = getCardWidthPx();
+  const yourSpacing = Math.round(yourCardW*0.42);
+  you.hand.forEach((c,idx)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    if(idx>0) wrap.style.marginLeft = (yourSpacing-yourCardW)+"px";
+    let playable = false;
+    if(state.phase==="playing" && state.currentPlayer===0){
+      playable = spadesCardPlayable(state, 0, c);
+      wrap.style.cursor = playable ? "pointer" : "default";
+      wrap.style.opacity = playable ? "1" : "0.5";
+    }
+    wrap.addEventListener("mouseenter", ()=>{ wrap.style.zIndex = "10"; });
+    wrap.addEventListener("mouseleave", ()=>{ wrap.style.zIndex = ""; });
+    wrap.appendChild(renderCardEl(c, ""));
+    if(playable) wrap.addEventListener("click", ()=> onSpadesPlayCard(idx));
+    yourRow.appendChild(wrap);
+  });
+  yourSec.appendChild(yourRow);
+  table.appendChild(yourSec);
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="roundEnd"){
+    const btn = document.createElement("button");
+    btn.className = "bj-btn";
+    btn.textContent = "Next round";
+    btn.addEventListener("click", spadesBeginNextRound);
+    controls.appendChild(btn);
+  } else if(state.phase==="gameEnd"){
+    const btn = document.createElement("button");
+    btn.className = "bj-btn";
+    btn.textContent = "New game";
+    btn.addEventListener("click", ()=> startGame("spades"));
+    controls.appendChild(btn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
+
+function renderHearts(){
+  boardInner.innerHTML = "";
+  const table = document.createElement("div");
+  table.className = "bj-table";
+
+  const scoreSec = document.createElement("div");
+  scoreSec.className = "bj-section";
+  const scoreLabel = document.createElement("div");
+  scoreLabel.className = "bj-label";
+  const dirLabel = state.passDirection==="none" ? "Hold" : ("Pass "+state.passDirection.charAt(0).toUpperCase()+state.passDirection.slice(1));
+  scoreLabel.textContent = "Round "+state.roundNum+" · "+dirLabel+" · "+state.players.map((p,i)=> p.name+" "+state.scores[i]).join(" · ");
+  scoreSec.appendChild(scoreLabel);
+  table.appendChild(scoreSec);
+
+  const oppSec = document.createElement("div");
+  oppSec.className = "bj-section hearts-opponents";
+  const seatPos = ["left","top","right"]; // seats 1,2,3 relative to human at seat 0
+  const cardW = getCardWidthPx();
+  const cardH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--card-h")) || Math.round(cardW*1.4);
+  let seatI = 0;
+  state.players.forEach((p,i)=>{
+    if(p.isHuman) return;
+    const pos = seatPos[seatI] || "top"; seatI++;
+    const col = document.createElement("div");
+    col.className = "hearts-opp-col "+pos;
+    const label = document.createElement("div");
+    label.className = "bj-label";
+    label.textContent = p.name+" — "+p.hand.length+
+      (state.currentPlayer===i && state.phase==="playing" ? " (thinking…)" : "");
+    col.appendChild(label);
+
+    const n = p.hand.length;
+    const hSpacing = Math.round(cardW*0.36);   // visible sliver per card, horizontal fan
+    const vSpacing = Math.round(cardH*0.30);   // visible sliver per card, vertical fan
+    if(pos==="top"){
+      const row = document.createElement("div");
+      row.className = "hearts-row-h";
+      p.hand.forEach((c,idx)=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        if(idx>0) wrap.style.marginLeft = (hSpacing-cardW)+"px";
+        wrap.style.zIndex = String(idx);
+        wrap.appendChild(renderCardEl({faceUp:false}, ""));
+        row.appendChild(wrap);
+      });
+      col.appendChild(row);
+    } else {
+      const stack = document.createElement("div");
+      stack.className = "hearts-col-v";
+      p.hand.forEach((c,idx)=>{
+        const wrap = document.createElement("div");
+        wrap.className = "card-wrap";
+        if(idx>0) wrap.style.marginTop = (vSpacing-cardH)+"px";
+        wrap.style.zIndex = String(idx);
+        wrap.appendChild(renderCardEl({faceUp:false}, ""));
+        stack.appendChild(wrap);
+      });
+      col.appendChild(stack);
+    }
+    oppSec.appendChild(col);
+  });
+
+  const trickSec = document.createElement("div");
+  trickSec.className = "hearts-opp-col top hearts-trick-col";
+  const trickLabel = document.createElement("div");
+  trickLabel.className = "bj-label";
+  trickLabel.textContent = "Trick "+Math.min(state.trickNum||1,13)+" of 13"+(state.heartsBroken ? " · Hearts broken" : "");
+  trickSec.appendChild(trickLabel);
+  const trickRow = document.createElement("div");
+  trickRow.className = "bj-hand hearts-trick-row";
+  state.trick.forEach(t=>{
+    const col = document.createElement("div");
+    col.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:4px;";
+    const nameTag = document.createElement("div");
+    nameTag.style.cssText = "font-size:11px;opacity:0.7;";
+    nameTag.textContent = state.players[t.playerIdx].name;
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    wrap.appendChild(renderCardEl(t.card, ""));
+    col.appendChild(nameTag);
+    col.appendChild(wrap);
+    trickRow.appendChild(col);
+  });
+  trickSec.appendChild(trickRow);
+  oppSec.appendChild(trickSec);
+  table.appendChild(oppSec);
+
+  const you = state.players[0];
+  const yourSec = document.createElement("div");
+  yourSec.className = "bj-section";
+  const yourLabel = document.createElement("div");
+  yourLabel.className = "bj-label";
+  yourLabel.textContent = state.phase==="passing" ? "Your hand — select 3 to pass ("+state.selected.length+"/3)" : "Your hand";
+  yourSec.appendChild(yourLabel);
+  const yourRow = document.createElement("div");
+  yourRow.className = "bj-hand hearts-your-hand";
+  const yourCardW = getCardWidthPx();
+  const yourSpacing = Math.round(yourCardW*0.42); // visible sliver per card, klondike-fan style
+  you.hand.forEach((c,idx)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrap";
+    if(idx>0) wrap.style.marginLeft = (yourSpacing-yourCardW)+"px";
+    let playable = false, selected = false;
+    if(state.phase==="passing"){
+      selected = state.selected.includes(idx);
+      wrap.style.cursor = "pointer";
+      if(selected) wrap.style.zIndex = "5";
+    } else if(state.phase==="playing" && state.currentPlayer===0){
+      playable = heartsCardPlayable(state, 0, c);
+      wrap.style.cursor = playable ? "pointer" : "default";
+      wrap.style.opacity = playable ? "1" : "0.5";
+    }
+    wrap.addEventListener("mouseenter", ()=>{ wrap.style.zIndex = "10"; });
+    wrap.addEventListener("mouseleave", ()=>{ wrap.style.zIndex = selected ? "5" : ""; });
+    wrap.appendChild(renderCardEl(c, selected ? "selected" : ""));
+    if(state.phase==="passing") wrap.addEventListener("click", ()=> onHeartsToggleSelect(idx));
+    else if(playable) wrap.addEventListener("click", ()=> onHeartsPlayCard(idx));
+    yourRow.appendChild(wrap);
+  });
+  yourSec.appendChild(yourRow);
+  table.appendChild(yourSec);
+
+
+  const status = document.createElement("div");
+  status.className = "bj-status";
+  status.textContent = state.status || "";
+  table.appendChild(status);
+
+  const controls = document.createElement("div");
+  controls.className = "bj-controls";
+  if(state.phase==="passing"){
+    const btn = document.createElement("button");
+    btn.className = "bj-btn";
+    btn.textContent = "Pass cards";
+    btn.disabled = state.selected.length!==3;
+    btn.addEventListener("click", onHeartsConfirmPass);
+    controls.appendChild(btn);
+  } else if(state.phase==="roundEnd"){
+    const btn = document.createElement("button");
+    btn.className = "bj-btn";
+    btn.textContent = "Next round";
+    btn.addEventListener("click", heartsBeginNextRound);
+    controls.appendChild(btn);
+  } else if(state.phase==="gameEnd"){
+    const btn = document.createElement("button");
+    btn.className = "bj-btn";
+    btn.textContent = "New game";
+    btn.addEventListener("click", ()=> startGame("hearts"));
+    controls.appendChild(btn);
+  }
+  table.appendChild(controls);
+  boardInner.appendChild(table);
+  updateHud();
+}
 
 /* ---- Poker hand rankings reference ---- */
 const HAND_RANKINGS = [
-  { name:"Royal Flush", cards:[["spades",9],["spades",10],["spades",11],["spades",12],["spades",0]] },
-  { name:"Straight Flush", cards:[["clubs",4],["clubs",5],["clubs",6],["clubs",7],["clubs",8]] },
-  { name:"Four of a Kind", cards:[["diamonds",0],["clubs",0],["hearts",0],["spades",0],["clubs",7]] },
-  { name:"Full House", cards:[["clubs",12],["hearts",12],["spades",12],["clubs",9],["spades",9]] },
-  { name:"Flush", cards:[["clubs",11],["clubs",7],["clubs",5],["clubs",3],["clubs",2]] },
-  { name:"Straight", cards:[["diamonds",0],["clubs",1],["spades",2],["diamonds",3],["clubs",4]] },
-  { name:"Three of a Kind", cards:[["diamonds",9],["clubs",9],["hearts",9],["clubs",3],["diamonds",6]] },
-  { name:"Two Pair", cards:[["spades",4],["clubs",4],["clubs",9],["diamonds",9],["diamonds",11]] },
-  { name:"One Pair", cards:[["hearts",0],["clubs",0],["diamonds",1],["hearts",4],["spades",6]] },
-  { name:"High Card", cards:[["hearts",11],["spades",9],["clubs",8],["hearts",4],["diamonds",1]] }
+  { name:"Royal Flush", cards:[["spades",9],["spades",10],["spades",11],["spades",12],["spades",0]], win:[0,1,2,3,4] },
+  { name:"Straight Flush", cards:[["clubs",4],["clubs",5],["clubs",6],["clubs",7],["clubs",8]], win:[0,1,2,3,4] },
+  { name:"Four of a Kind", cards:[["diamonds",0],["clubs",0],["hearts",0],["spades",0],["clubs",7]], win:[0,1,2,3] },
+  { name:"Full House", cards:[["clubs",12],["hearts",12],["spades",12],["clubs",9],["spades",9]], win:[0,1,2,3,4] },
+  { name:"Flush", cards:[["clubs",11],["clubs",7],["clubs",5],["clubs",3],["clubs",2]], win:[0,1,2,3,4] },
+  { name:"Straight", cards:[["diamonds",0],["clubs",1],["spades",2],["diamonds",3],["clubs",4]], win:[0,1,2,3,4] },
+  { name:"Three of a Kind", cards:[["diamonds",9],["clubs",9],["hearts",9],["clubs",3],["diamonds",6]], win:[0,1,2] },
+  { name:"Two Pair", cards:[["spades",4],["clubs",4],["clubs",9],["diamonds",9],["diamonds",11]], win:[0,1,2,3] },
+  { name:"One Pair", cards:[["hearts",0],["clubs",0],["diamonds",1],["hearts",4],["spades",6]], win:[0,1] },
+  { name:"High Card", cards:[["hearts",11],["spades",9],["clubs",8],["hearts",4],["diamonds",1]], win:[0] }
 ];
 const rankPanelEl = document.getElementById("rankPanel");
 function openRankPanel(){
@@ -7730,9 +10675,9 @@ function openRankPanel(){
     row.appendChild(num);
     const cardsWrap = document.createElement("div");
     cardsWrap.className = "rank-cards";
-    h.cards.forEach(([suit,rank])=>{
+    h.cards.forEach(([suit,rank],idx)=>{
       const wrap = document.createElement("div");
-      wrap.className = "card-wrap";
+      wrap.className = "card-wrap" + (h.win && h.win.includes(idx) ? " rank-win" : "");
       const c = makeCard(suit, rank); c.faceUp = true;
       wrap.appendChild(renderCardEl(c, ""));
       cardsWrap.appendChild(wrap);
@@ -7764,6 +10709,7 @@ document.getElementById("btnTheme").addEventListener("click", openThemePanel);
 document.getElementById("btnThemeMenu").addEventListener("click", openThemePanel);
 document.getElementById("themeCloseBtn").addEventListener("click", closeThemePanel);
 themePanelEl.addEventListener("click", (e)=>{ if(e.target===themePanelEl) closeThemePanel(); });
+initColorPicker();
 loadThemesConfig();
 
 window.addEventListener("resize", ()=>{ if(state) render(); });
