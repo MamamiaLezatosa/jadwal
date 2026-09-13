@@ -1742,6 +1742,50 @@ function renderCardEl(card, extraClasses){
   return div;
 }
 
+/* Shared stock-pile slot builder — used by every game whose layout has a
+   stock pile with a card-back on top and an "empty" placeholder underneath.
+   Only the empty-state label and click handler differ between games. */
+function buildStockSlotEl(clickHandler, emptyLabel){
+  const stockSlot = document.createElement("div");
+  stockSlot.className = "slot";
+  stockSlot.id = "stockSlot";
+  if(state.stock.length>0){
+    const back = renderCardEl({faceUp:false}, "");
+    back.style.position="static";
+    stockSlot.appendChild(back);
+  } else {
+    const mark = document.createElement("div");
+    mark.className = "stock-empty-mark";
+    mark.textContent = emptyLabel;
+    stockSlot.appendChild(mark);
+  }
+  stockSlot.addEventListener("click", clickHandler);
+  return stockSlot;
+}
+
+/* Shared foundation-slot builder — used by every game with a classic
+   4-suit foundation row: an empty slot shows the suit hint symbol,
+   a non-empty pile shows its top card. Click handler and any special
+   id/anchor assignment are left to the caller since those vary. */
+function buildFoundationSlotEl(suit){
+  const slot = document.createElement("div");
+  slot.className = "slot";
+  slot.dataset.suit = suit;
+  const pile = state.foundations[suit];
+  if(pile.length===0){
+    const hint = document.createElement("div");
+    hint.className = "hint";
+    hint.textContent = SUIT_SYM[suit];
+    slot.appendChild(hint);
+  } else {
+    const c = pile[pile.length-1];
+    const el = renderCardEl(c,"");
+    el.style.position="static";
+    slot.appendChild(el);
+  }
+  return slot;
+}
+
 function captureSlotOrigin(slotId, faceUp){
   const slot = document.getElementById(slotId);
   if(!slot) return null;
@@ -1883,11 +1927,19 @@ function tryMoveSelectionToFreecell(idx){
   moves++; selection=null; playSfxRandom(PLACE_SFX); render(); return true;
 }
 
-function checkFreecellWin(){
+/* Shared win-check for the classic "sort all 52 into the 4 foundations"
+   games. gameName feeds "<gameName> complete!"; completeMsgLead feeds
+   "<completeMsgLead> in N moves and T." — the two things that vary
+   between these games' win messages. */
+function checkClassicFoundationWin(gameName, completeMsgLead){
   const total = SUITS.reduce((a,s)=>a+state.foundations[s].length,0);
   if(total===52){
-    endGame("FreeCell complete!", "You sorted the full deck in "+moves+" moves and "+formatTime(seconds)+".");
+    endGame(gameName+" complete!", completeMsgLead+" in "+moves+" moves and "+formatTime(seconds)+".");
   }
+}
+
+function checkFreecellWin(){
+  checkClassicFoundationWin("FreeCell", "You sorted the full deck");
 }
 
 /* ============ BAKER'S DOZEN ============ */
@@ -1968,10 +2020,7 @@ function tryMoveSelectionToBDTableau(destCol){
 }
 
 function checkBakersDozenWin(){
-  const total = SUITS.reduce((a,s)=>a+state.foundations[s].length,0);
-  if(total===52){
-    endGame("Baker's Dozen complete!", "You sorted the full deck in "+moves+" moves and "+formatTime(seconds)+".");
-  }
+  checkClassicFoundationWin("Baker's Dozen", "You sorted the full deck");
 }
 
 function renderBakersDozen(){
@@ -1983,22 +2032,8 @@ function renderBakersDozen(){
   const fo = document.createElement("div");
   fo.className = "foundations";
   SUITS.forEach((s, i)=>{
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.suit = s;
+    const slot = buildFoundationSlotEl(s);
     if(i===0) slot.id = "bdAnchorSlot";
-    const pile = state.foundations[s];
-    if(pile.length===0){
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = SUIT_SYM[s];
-      slot.appendChild(hint);
-    } else {
-      const c = pile[pile.length-1];
-      const el = renderCardEl(c,"");
-      el.style.position="static";
-      slot.appendChild(el);
-    }
     slot.addEventListener("click", ()=> onFoundationClick(s));
     fo.appendChild(slot);
   });
@@ -2197,20 +2232,7 @@ function renderFortyThieves(){
   const sw = document.createElement("div");
   sw.className = "stockwaste";
 
-  const stockSlot = document.createElement("div");
-  stockSlot.className = "slot";
-  stockSlot.id = "stockSlot";
-  if(state.stock.length>0){
-    const back = renderCardEl({faceUp:false}, "");
-    back.style.position="static";
-    stockSlot.appendChild(back);
-  } else {
-    const mark = document.createElement("div");
-    mark.className = "stock-empty-mark";
-    mark.textContent = "empty";
-    stockSlot.appendChild(mark);
-  }
-  stockSlot.addEventListener("click", onFTStockClick);
+  const stockSlot = buildStockSlotEl(onFTStockClick, "empty");
   sw.appendChild(stockSlot);
 
   const wasteSlot = document.createElement("div");
@@ -2315,21 +2337,7 @@ function renderFreecell(){
   const fo = document.createElement("div");
   fo.className = "foundations";
   for(const s of SUITS){
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.suit = s;
-    const pile = state.foundations[s];
-    if(pile.length===0){
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = SUIT_SYM[s];
-      slot.appendChild(hint);
-    } else {
-      const c = pile[pile.length-1];
-      const el = renderCardEl(c,"");
-      el.style.position="static";
-      slot.appendChild(el);
-    }
+    const slot = buildFoundationSlotEl(s);
     slot.addEventListener("click", ()=> onFoundationClick(s));
     fo.appendChild(slot);
   }
@@ -2378,20 +2386,7 @@ function renderKlondike(){
   const sw = document.createElement("div");
   sw.className = "stockwaste";
 
-  const stockSlot = document.createElement("div");
-  stockSlot.className = "slot";
-  stockSlot.id = "stockSlot";
-  if(state.stock.length>0){
-    const back = renderCardEl({faceUp:false}, "");
-    back.style.position="static";
-    stockSlot.appendChild(back);
-  } else {
-    const mark = document.createElement("div");
-    mark.className = "stock-empty-mark";
-    mark.textContent = state.waste.length? "↺ reset" : "empty";
-    stockSlot.appendChild(mark);
-  }
-  stockSlot.addEventListener("click", onStockClick);
+  const stockSlot = buildStockSlotEl(onStockClick, state.waste.length? "↺ reset" : "empty");
   sw.appendChild(stockSlot);
 
   const wasteSlot = document.createElement("div");
@@ -2432,21 +2427,7 @@ function renderKlondike(){
   const fo = document.createElement("div");
   fo.className = "foundations";
   for(const s of SUITS){
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.suit = s;
-    const pile = state.foundations[s];
-    if(pile.length===0){
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = SUIT_SYM[s];
-      slot.appendChild(hint);
-    } else {
-      const c = pile[pile.length-1];
-      const el = renderCardEl(c,"");
-      el.style.position="static";
-      slot.appendChild(el);
-    }
+    const slot = buildFoundationSlotEl(s);
     slot.addEventListener("click", ()=> onFoundationClick(s));
     fo.appendChild(slot);
   }
@@ -2541,34 +2522,42 @@ function getOverlap(){
   return parseInt(getComputedStyle(document.documentElement).getPropertyValue("--overlap")) || 26;
 }
 
+/* Shared "reshuffle stock from waste" logic, used when the stock pile is
+   empty and the player clicks it. Returns true if the caller should stop
+   (nothing to reshuffle, or the reshuffle just happened) — mirroring the
+   early `return` at the end of this block in each game's stock-click
+   handler — or false if the stock still has cards and the caller should
+   continue with its own draw logic. */
+function tryReshuffleStockFromWaste(){
+  if(state.stock.length>0) return false;
+  if(state.waste.length===0){ history.pop(); setMessage("Stock and waste are both empty."); return true; }
+  const wasteOrigin = captureSlotOrigin("wasteSlot", "0");
+  const stockOrigin = captureSlotOrigin("stockSlot", "0");
+  const wasteCount = state.waste.length;
+  state.stock = state.waste.slice().reverse();
+  state.stock.forEach(c=>c.faceUp=false);
+  state.waste = [];
+  setMessage("Stock reshuffled from waste.");
+  playSfx("shuffle.mp3");
+  render();
+  animateWasteResetSweep(wasteOrigin, stockOrigin, wasteCount);
+  moves++;
+  return true;
+}
+
 function onStockClick(){
   clearSelectionVisual();
   selection = null;
   pushHistory();
-  if(state.stock.length===0){
-    if(state.waste.length===0){ history.pop(); setMessage("Stock and waste are both empty."); return; }
-    const wasteOrigin = captureSlotOrigin("wasteSlot", "0");
-    const stockOrigin = captureSlotOrigin("stockSlot", "0");
-    const wasteCount = state.waste.length;
-    state.stock = state.waste.slice().reverse();
-    state.stock.forEach(c=>c.faceUp=false);
-    state.waste = [];
-    setMessage("Stock reshuffled from waste.");
-    playSfx("shuffle.mp3");
-    render();
-    animateWasteResetSweep(wasteOrigin, stockOrigin, wasteCount);
-    moves++;
-    return;
-  } else {
-    const origin = captureSlotOrigin("stockSlot", "0");
-    const n = state.drawCount===3 ? 3 : 1;
-    for(let i=0;i<n && state.stock.length>0;i++){
-      const c = state.stock.pop();
-      c.faceUp = true;
-      state.waste.push(c);
-      if(origin) flightOrigins.set(c.id, Object.assign({}, origin, { delay: i*70 }));
-      playSfx("flip.mp3", i*70);
-    }
+  if(tryReshuffleStockFromWaste()) return;
+  const origin = captureSlotOrigin("stockSlot", "0");
+  const n = state.drawCount===3 ? 3 : 1;
+  for(let i=0;i<n && state.stock.length>0;i++){
+    const c = state.stock.pop();
+    c.faceUp = true;
+    state.waste.push(c);
+    if(origin) flightOrigins.set(c.id, Object.assign({}, origin, { delay: i*70 }));
+    playSfx("flip.mp3", i*70);
   }
   moves++;
   render();
@@ -2716,10 +2705,7 @@ function tryMoveSelectionToTableau(destCol){
 }
 
 function checkKlondikeWin(){
-  const total = SUITS.reduce((a,s)=>a+state.foundations[s].length,0);
-  if(total===52){
-    endGame("Klondike complete!", "You sorted the full deck in "+moves+" moves and "+formatTime(seconds)+".");
-  }
+  checkClassicFoundationWin("Klondike", "You sorted the full deck");
 }
 
 /* Double click / tap-to-autoplay for Klondike: clicking a card that could
@@ -2862,21 +2848,7 @@ function onPyramidStockClick(){
   clearSelectionVisual();
   selection = null;
   pushHistory();
-  if(state.stock.length===0){
-    if(state.waste.length===0){ history.pop(); setMessage("Stock and waste are both empty."); return; }
-    const wasteOrigin = captureSlotOrigin("wasteSlot", "0");
-    const stockOrigin = captureSlotOrigin("stockSlot", "0");
-    const wasteCount = state.waste.length;
-    state.stock = state.waste.slice().reverse();
-    state.stock.forEach(c=>c.faceUp=false);
-    state.waste = [];
-    setMessage("Stock reshuffled from waste.");
-    playSfx("shuffle.mp3");
-    render();
-    animateWasteResetSweep(wasteOrigin, stockOrigin, wasteCount);
-    moves++;
-    return;
-  }
+  if(tryReshuffleStockFromWaste()) return;
   const origin = captureSlotOrigin("stockSlot", "0");
   const c = state.stock.pop();
   c.faceUp = true;
@@ -2939,20 +2911,7 @@ function renderPyramid(){
   const sw = document.createElement("div");
   sw.className = "stockwaste";
 
-  const stockSlot = document.createElement("div");
-  stockSlot.className = "slot";
-  stockSlot.id = "stockSlot";
-  if(state.stock.length>0){
-    const back = renderCardEl({faceUp:false}, "");
-    back.style.position="static";
-    stockSlot.appendChild(back);
-  } else {
-    const mark = document.createElement("div");
-    mark.className = "stock-empty-mark";
-    mark.textContent = state.waste.length? "↺ reset" : "empty";
-    stockSlot.appendChild(mark);
-  }
-  stockSlot.addEventListener("click", onPyramidStockClick);
+  const stockSlot = buildStockSlotEl(onPyramidStockClick, state.waste.length? "↺ reset" : "empty");
   sw.appendChild(stockSlot);
 
   const wasteSlot = document.createElement("div");
@@ -3142,20 +3101,7 @@ function renderGolf(){
   const sw = document.createElement("div");
   sw.className = "stockwaste";
 
-  const stockSlot = document.createElement("div");
-  stockSlot.className = "slot";
-  stockSlot.id = "stockSlot";
-  if(state.stock.length>0){
-    const back = renderCardEl({faceUp:false}, "");
-    back.style.position="static";
-    stockSlot.appendChild(back);
-  } else {
-    const mark = document.createElement("div");
-    mark.className = "stock-empty-mark";
-    mark.textContent = "empty";
-    stockSlot.appendChild(mark);
-  }
-  stockSlot.addEventListener("click", onGolfStockClick);
+  const stockSlot = buildStockSlotEl(onGolfStockClick, "empty");
   sw.appendChild(stockSlot);
 
   const foundationSlot = document.createElement("div");
@@ -3972,10 +3918,7 @@ function onYukonEmptyClick(colIdx){
 }
 
 function checkYukonWin(){
-  const total = SUITS.reduce((a,s)=>a+state.foundations[s].length,0);
-  if(total===52){
-    endGame("Yukon complete!", "You sorted the full deck in "+moves+" moves and "+formatTime(seconds)+".");
-  }
+  checkClassicFoundationWin("Yukon", "You sorted the full deck");
 }
 
 function renderYukon(){
@@ -3990,21 +3933,7 @@ function renderYukon(){
   const fo = document.createElement("div");
   fo.className = "foundations";
   for(const s of SUITS){
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.suit = s;
-    const pile = state.foundations[s];
-    if(pile.length===0){
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = SUIT_SYM[s];
-      slot.appendChild(hint);
-    } else {
-      const c = pile[pile.length-1];
-      const el = renderCardEl(c,"");
-      el.style.position="static";
-      slot.appendChild(el);
-    }
+    const slot = buildFoundationSlotEl(s);
     if(s===SUITS[0]) slot.id = "yukonAnchorSlot";
     slot.addEventListener("click", ()=> onFoundationClick(s));
     fo.appendChild(slot);
@@ -4129,21 +4058,7 @@ function onCanfieldStockClick(){
   clearSelectionVisual();
   selection = null;
   pushHistory();
-  if(state.stock.length===0){
-    if(state.waste.length===0){ history.pop(); setMessage("Stock and waste are both empty."); return; }
-    const wasteOrigin = captureSlotOrigin("wasteSlot", "0");
-    const stockOrigin = captureSlotOrigin("stockSlot", "0");
-    const wasteCount = state.waste.length;
-    state.stock = state.waste.slice().reverse();
-    state.stock.forEach(c=>c.faceUp=false);
-    state.waste = [];
-    setMessage("Stock reshuffled from waste.");
-    playSfx("shuffle.mp3");
-    render();
-    animateWasteResetSweep(wasteOrigin, stockOrigin, wasteCount);
-    moves++;
-    return;
-  }
+  if(tryReshuffleStockFromWaste()) return;
   const origin = captureSlotOrigin("stockSlot", "0");
   const c = state.stock.pop();
   c.faceUp = true;
@@ -4221,10 +4136,7 @@ function tryMoveCanfieldSelectionToTableau(destCol){
 }
 
 function checkCanfieldWin(){
-  const total = SUITS.reduce((a,s)=>a+state.foundations[s].length,0);
-  if(total===52){
-    endGame("Canfield complete!", "You beat the reserve in "+moves+" moves and "+formatTime(seconds)+".");
-  }
+  checkClassicFoundationWin("Canfield", "You beat the reserve");
 }
 
 function renderCanfield(){
@@ -4255,20 +4167,7 @@ function renderCanfield(){
   reserveSlot.addEventListener("click", onCanfieldReserveClick);
   sw.appendChild(reserveSlot);
 
-  const stockSlot = document.createElement("div");
-  stockSlot.className = "slot";
-  stockSlot.id = "stockSlot";
-  if(state.stock.length>0){
-    const back = renderCardEl({faceUp:false}, "");
-    back.style.position="static";
-    stockSlot.appendChild(back);
-  } else {
-    const mark = document.createElement("div");
-    mark.className = "stock-empty-mark";
-    mark.textContent = state.waste.length? "↺ reset" : "empty";
-    stockSlot.appendChild(mark);
-  }
-  stockSlot.addEventListener("click", onCanfieldStockClick);
+  const stockSlot = buildStockSlotEl(onCanfieldStockClick, state.waste.length? "↺ reset" : "empty");
   sw.appendChild(stockSlot);
 
   const wasteSlot = document.createElement("div");
@@ -4291,21 +4190,7 @@ function renderCanfield(){
   const fo = document.createElement("div");
   fo.className = "foundations";
   for(const s of SUITS){
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.suit = s;
-    const pile = state.foundations[s];
-    if(pile.length===0){
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = SUIT_SYM[s];
-      slot.appendChild(hint);
-    } else {
-      const c = pile[pile.length-1];
-      const el = renderCardEl(c,"");
-      el.style.position="static";
-      slot.appendChild(el);
-    }
+    const slot = buildFoundationSlotEl(s);
     slot.addEventListener("click", ()=> onCanfieldFoundationClick(s));
     fo.appendChild(slot);
   }
@@ -4388,7 +4273,10 @@ function bjIsBlackjack(hand){
   return hand.length===2 && bjHandValue(hand)===21;
 }
 
-function onBlackjackChip(amount){
+/* Shared chip-betting handlers — used identically by Blackjack, Video
+   Poker, and Pai Gow's betting screens (all operate on the single global
+   `state` for whichever game is currently active). */
+function onChipBet(amount){
   if(state.phase!=="bet") return;
   if(state.bet + amount > state.chips){ setMessage("Not enough chips for that bet."); return; }
   state.bet += amount;
@@ -4396,7 +4284,7 @@ function onBlackjackChip(amount){
   render();
 }
 
-function onBlackjackClearBet(){
+function onClearBet(){
   if(state.phase!=="bet") return;
   state.bet = 0;
   state.status = "Place a bet to begin.";
@@ -4661,7 +4549,7 @@ function renderBlackjack(){
       label.textContent = v;
       chip.appendChild(label);
 
-      chip.addEventListener("click", ()=> onBlackjackChip(v));
+      chip.addEventListener("click", ()=> onChipBet(v));
       betRow.appendChild(chip);
     });
     betPanel.appendChild(betRow);
@@ -4673,7 +4561,7 @@ function renderBlackjack(){
     clearBtn.className = "bj-btn";
     clearBtn.textContent = "Clear bet";
     clearBtn.disabled = state.bet===0;
-    clearBtn.addEventListener("click", onBlackjackClearBet);
+    clearBtn.addEventListener("click", onClearBet);
     actionRow.appendChild(clearBtn);
 
     const dealBtn = document.createElement("button");
@@ -4782,20 +4670,7 @@ function vpEvaluate(hand){
   return { name:"No win", mult:0 };
 }
 
-function onVPChip(amount){
-  if(state.phase!=="bet") return;
-  if(state.bet + amount > state.chips){ setMessage("Not enough chips for that bet."); return; }
-  state.bet += amount;
-  state.status = "Bet: "+state.bet+" chips.";
-  render();
-}
 
-function onVPClearBet(){
-  if(state.phase!=="bet") return;
-  state.bet = 0;
-  state.status = "Place a bet to begin.";
-  render();
-}
 
 function onVPDeal(){
   if(state.phase!=="bet" || state.bet<=0) return;
@@ -4990,7 +4865,7 @@ function renderVideoPoker(){
       label.textContent = v;
       chip.appendChild(label);
 
-      chip.addEventListener("click", ()=> onVPChip(v));
+      chip.addEventListener("click", ()=> onChipBet(v));
       betRow.appendChild(chip);
     });
     betPanel.appendChild(betRow);
@@ -5002,7 +4877,7 @@ function renderVideoPoker(){
     clearBtn.className = "bj-btn";
     clearBtn.textContent = "Clear bet";
     clearBtn.disabled = state.bet===0;
-    clearBtn.addEventListener("click", onVPClearBet);
+    clearBtn.addEventListener("click", onClearBet);
     actionRow.appendChild(clearBtn);
 
     const dealBtn = document.createElement("button");
@@ -5191,20 +5066,7 @@ function pgBestSplit(cards){
   return best;
 }
 
-function onPGChip(amount){
-  if(state.phase!=="bet") return;
-  if(state.bet + amount > state.chips){ setMessage("Not enough chips for that bet."); return; }
-  state.bet += amount;
-  state.status = "Bet: "+state.bet+" chips.";
-  render();
-}
 
-function onPGClearBet(){
-  if(state.phase!=="bet") return;
-  state.bet = 0;
-  state.status = "Place a bet to begin.";
-  render();
-}
 
 function onPGDeal(){
   if(state.phase!=="bet" || state.bet<=0) return;
@@ -5521,7 +5383,7 @@ function renderPaiGow(){
       label.textContent = v;
       chip.appendChild(label);
 
-      chip.addEventListener("click", ()=> onPGChip(v));
+      chip.addEventListener("click", ()=> onChipBet(v));
       betRow.appendChild(chip);
     });
     betPanel.appendChild(betRow);
@@ -5533,7 +5395,7 @@ function renderPaiGow(){
     clearBtn.className = "bj-btn";
     clearBtn.textContent = "Clear bet";
     clearBtn.disabled = state.bet===0;
-    clearBtn.addEventListener("click", onPGClearBet);
+    clearBtn.addEventListener("click", onClearBet);
     actionRow.appendChild(clearBtn);
 
     const dealBtn = document.createElement("button");
@@ -5618,10 +5480,7 @@ function holdemNextLiveSeat(st, from){
 }
 
 function freshHoldemDeck(){
-  const deck = [];
-  for(const s of SUITS) for(let r=0;r<13;r++) deck.push(makeCard(s,r));
-  shuffle(deck);
-  return deck;
+  return freshShoe();
 }
 
 // Every 5-of-7 (or 5-of-5/6) combination, scored with pgEvaluate5NoJoker; the
@@ -6838,12 +6697,15 @@ function dealInAnimationCanfield(){
    card at the foundation row to serve as that deck, keeps it on screen for the
    whole sweep (matching the shuffle-long sfx), then removes it once every card
    has actually finished flying in. */
-function dealInAnimationYukon(){
+/* Shared "anchor-slot" deal-in animation — used by games whose tableau
+   deals from a fixed anchor slot in the layout (rather than the shared
+   #stockSlot). Only the anchor element's id differs between games. */
+function dealInAnimationFromAnchor(anchorId){
   const realTableau = state.tableau;
   state.tableau = realTableau.map(()=>[]);
   render();
 
-  const anchorSlot = document.getElementById("yukonAnchorSlot");
+  const anchorSlot = document.getElementById(anchorId);
   let origin = null;
   let dealerEl = null;
   if(anchorSlot){
@@ -6879,92 +6741,18 @@ function dealInAnimationYukon(){
     const lastDelay = (ordered.length-1)*step;
     setTimeout(()=> dealerEl.remove(), lastDelay + 320);
   }
+}
+
+function dealInAnimationYukon(){
+  dealInAnimationFromAnchor("yukonAnchorSlot");
 }
 
 function dealInAnimationBakersDozen(){
-  const realTableau = state.tableau;
-  state.tableau = realTableau.map(()=>[]);
-  render();
-
-  const anchorSlot = document.getElementById("bdAnchorSlot");
-  let origin = null;
-  let dealerEl = null;
-  if(anchorSlot){
-    const rect = anchorSlot.getBoundingClientRect();
-    dealerEl = renderCardEl({faceUp:false}, "");
-    dealerEl.style.cssText =
-      `position:fixed; left:${rect.left}px; top:${rect.top}px; `+
-      `width:${rect.width}px; height:${rect.height}px; margin:0; `+
-      `z-index:9999; pointer-events:none;`;
-    document.body.appendChild(dealerEl);
-    origin = { rect, faceUp:"0", clone: dealerEl.cloneNode(true) };
-  }
-  state.tableau = realTableau;
-
-  const ordered = [];
-  const maxRows = Math.max(...realTableau.map(c=>c.length));
-  for(let row=0; row<maxRows; row++){
-    for(let col=0; col<realTableau.length; col++){
-      if(realTableau[col][row]) ordered.push(realTableau[col][row]);
-    }
-  }
-
-  const totalDuration = 3000;
-  const step = Math.max(15, Math.floor(totalDuration / Math.max(1, ordered.length)));
-  if(origin){
-    ordered.forEach((c,i)=>{
-      flightOrigins.set(c.id, Object.assign({}, origin, { faceUp:"0", delay: i*step }));
-    });
-  }
-  playSfx("shuffle-long.mp3");
-  render();
-  if(dealerEl){
-    const lastDelay = (ordered.length-1)*step;
-    setTimeout(()=> dealerEl.remove(), lastDelay + 320);
-  }
+  dealInAnimationFromAnchor("bdAnchorSlot");
 }
 
 function dealInAnimationAcesUp(){
-  const realTableau = state.tableau;
-  state.tableau = realTableau.map(()=>[]);
-  render();
-
-  const anchorSlot = document.getElementById("acesUpAnchorSlot");
-  let origin = null;
-  let dealerEl = null;
-  if(anchorSlot){
-    const rect = anchorSlot.getBoundingClientRect();
-    dealerEl = renderCardEl({faceUp:false}, "");
-    dealerEl.style.cssText =
-      `position:fixed; left:${rect.left}px; top:${rect.top}px; `+
-      `width:${rect.width}px; height:${rect.height}px; margin:0; `+
-      `z-index:9999; pointer-events:none;`;
-    document.body.appendChild(dealerEl);
-    origin = { rect, faceUp:"0", clone: dealerEl.cloneNode(true) };
-  }
-  state.tableau = realTableau;
-
-  const ordered = [];
-  const maxRows = Math.max(...realTableau.map(c=>c.length));
-  for(let row=0; row<maxRows; row++){
-    for(let col=0; col<realTableau.length; col++){
-      if(realTableau[col][row]) ordered.push(realTableau[col][row]);
-    }
-  }
-
-  const totalDuration = 3000;
-  const step = Math.max(15, Math.floor(totalDuration / Math.max(1, ordered.length)));
-  if(origin){
-    ordered.forEach((c,i)=>{
-      flightOrigins.set(c.id, Object.assign({}, origin, { faceUp:"0", delay: i*step }));
-    });
-  }
-  playSfx("shuffle-long.mp3");
-  render();
-  if(dealerEl){
-    const lastDelay = (ordered.length-1)*step;
-    setTimeout(()=> dealerEl.remove(), lastDelay + 320);
-  }
+  dealInAnimationFromAnchor("acesUpAnchorSlot");
 }
 
 function backToMenu(){
@@ -7902,8 +7690,14 @@ function miniMemorySVG(){
 }
 
 function showCategories(){
-  menuLevel = "categories";
-  menuCategory = null;
+  showCategoryMenuLevel(null, "categories");
+}
+
+/* Shared category-menu navigation — both land on `catId`'s category and
+   reset the deeper menu levels; only the destination level differs. */
+function showCategoryMenuLevel(catId, level){
+  menuLevel = level;
+  menuCategory = catId;
   menuGroup = null;
   menuFamily = null;
   skippedGamesLevel = false;
@@ -7911,21 +7705,11 @@ function showCategories(){
 }
 
 function showGroupsForCategory(catId){
-  menuLevel = "groups";
-  menuCategory = catId;
-  menuGroup = null;
-  menuFamily = null;
-  skippedGamesLevel = false;
-  buildTiles();
+  showCategoryMenuLevel(catId, "groups");
 }
 
 function showGamesForCategory(catId){
-  menuLevel = "games";
-  menuCategory = catId;
-  menuGroup = null;
-  menuFamily = null;
-  skippedGamesLevel = false;
-  buildTiles();
+  showCategoryMenuLevel(catId, "games");
 }
 
 function enterGroup(catId, groupId){
@@ -9326,7 +9110,6 @@ function grBestDiscardChoice(hand){
   return { idx:bestIdx, deadwood:bestDeadwood, melds:bestMelds, rest:bestRest };
 }
 
-function grCanKnock(hand){ return hand.length>0 && grBestDiscardChoice(hand).deadwood<=10; }
 
 function grCardFitsMeld(card, meld){
   if(meld.length===0) return false;
@@ -9895,18 +9678,26 @@ function heartsFinishRound(){
   }
 }
 
-function heartsAdvanceAfterPlay(playerIdx){
+/* Shared trick-advance logic for Hearts and Spades: resolve the trick once
+   all 4 players have played, otherwise hand off to the next player (and
+   trigger their bot turn if it isn't the human). Only the resolve/bot-turn
+   callbacks differ between the two games. */
+function trickAdvanceAfterPlay(playerIdx, resolveTrickFn, botTurnFn){
   const st = state;
   if(st.trick.length===4){
     st.currentPlayer = -1;
     render();
-    setTimeout(heartsResolveTrick, 900);
+    setTimeout(resolveTrickFn, 900);
   } else {
     st.currentPlayer = (playerIdx+1)%4;
     st.status = st.currentPlayer===0 ? "Your turn." : "Waiting for "+st.players[st.currentPlayer].name+"…";
     render();
-    if(st.currentPlayer!==0) setTimeout(heartsBotTurn, 550+Math.random()*500);
+    if(st.currentPlayer!==0) setTimeout(botTurnFn, 550+Math.random()*500);
   }
+}
+
+function heartsAdvanceAfterPlay(playerIdx){
+  trickAdvanceAfterPlay(playerIdx, heartsResolveTrick, heartsBotTurn);
 }
 
 function heartsResolveTrick(){
@@ -10190,17 +9981,7 @@ function spadesFinishRound(){
 }
 
 function spadesAdvanceAfterPlay(playerIdx){
-  const st = state;
-  if(st.trick.length===4){
-    st.currentPlayer = -1;
-    render();
-    setTimeout(spadesResolveTrick, 900);
-  } else {
-    st.currentPlayer = (playerIdx+1)%4;
-    st.status = st.currentPlayer===0 ? "Your turn." : "Waiting for "+st.players[st.currentPlayer].name+"…";
-    render();
-    if(st.currentPlayer!==0) setTimeout(spadesBotTurn, 550+Math.random()*500);
-  }
+  trickAdvanceAfterPlay(playerIdx, spadesResolveTrick, spadesBotTurn);
 }
 
 function spadesResolveTrick(){
