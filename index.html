@@ -398,6 +398,74 @@
     gap: 8px;
   }
 
+  /* GRID VIEW MODE */
+  .drawer-list.grid-view{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .drawer-list.grid-view .search-folder-label{
+    grid-column: 1 / -1;
+  }
+
+  .drawer-list.grid-view .drawer-item{
+    flex-direction:column;
+    justify-content:center;
+    text-align:center;
+    gap: 8px;
+    padding: 14px 8px 12px;
+  }
+
+  .drawer-list.grid-view .drawer-item .item-icon{
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .drawer-list.grid-view .drawer-item .item-icon svg{ width: 21px; height: 21px; }
+  .drawer-list.grid-view .drawer-item .item-icon-emoji{ font-size: 22px; }
+  .drawer-list.grid-view .drawer-item .item-icon-img{ width: 26px; height: 26px; }
+
+  .drawer-list.grid-view .drawer-item span:not(.item-icon):not(.item-icon-emoji){
+    font-size: 12px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .drawer-list.grid-view .drawer-item .item-chevron{ display:none; }
+
+  /* VIEW TOGGLE BUTTON */
+  .drawer-view-toggle{
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: border-color 0.2s ease;
+    flex-shrink:0;
+  }
+
+  .drawer-view-toggle:hover{ border-color: var(--amber); }
+  .drawer-view-toggle svg{ width: 16px; height: 16px; }
+  .drawer-view-toggle .icon-grid{ display:none; }
+  .drawer-view-toggle.is-grid .icon-list{ display:none; }
+  .drawer-view-toggle.is-grid .icon-grid{ display:block; }
+
+  .drawer-header-actions{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+
   .drawer-item{
     display:flex;
     align-items:center;
@@ -971,9 +1039,15 @@
   <nav class="drawer" id="drawer">
     <div class="drawer-header">
       <div class="drawer-title" id="drawerTitle">Menu</div>
-      <button class="drawer-close" id="drawerClose" type="button" aria-label="Tutup menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="drawer-header-actions">
+        <button class="drawer-view-toggle" id="drawerViewToggle" type="button" aria-label="Ganti tampilan">
+          <svg class="icon-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <svg class="icon-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="Tutup menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
     </div>
 
     <button class="drawer-crumb hidden" id="drawerBack" type="button">
@@ -1273,6 +1347,23 @@
   let menuData = null;
   let menuLoadError = false;
   let currentFolder = null; // null = root
+
+  const drawerViewToggle = document.getElementById('drawerViewToggle');
+  let viewMode = localStorage.getItem('menuViewMode') || 'list'; // 'list' | 'grid'
+
+  function applyViewMode(){
+    drawerList.classList.toggle('grid-view', viewMode === 'grid');
+    drawerViewToggle.classList.toggle('is-grid', viewMode === 'grid');
+    drawerViewToggle.setAttribute('aria-label', viewMode === 'grid' ? 'Ganti ke tampilan baris' : 'Ganti ke tampilan grid');
+  }
+
+  drawerViewToggle.addEventListener('click', () => {
+    viewMode = viewMode === 'grid' ? 'list' : 'grid';
+    localStorage.setItem('menuViewMode', viewMode);
+    applyViewMode();
+  });
+
+  applyViewMode();
 
   const drawerSearch = document.getElementById('drawerSearch');
   const drawerSearchInput = document.getElementById('drawerSearchInput');
