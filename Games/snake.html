@@ -523,6 +523,7 @@
   });
 
   document.getElementById('settings-btn').addEventListener('click', () => {
+    if (running && !paused) togglePause();   // auto-pause while settings are open
     pendingCfg = { ...cfg };
     speedSlider.value = cfg.speedLevel;
     document.getElementById('speed-label').textContent = cfg.speedLevel;
@@ -546,12 +547,21 @@
     document.getElementById('settings-modal').classList.remove('open');
   }
   function applySettings() {
+    const old = cfg;
     cfg = { ...pendingCfg };
     localStorage.setItem('snake_cfg', JSON.stringify(cfg));
     closeSettings();
-    resizeCanvas();
-    refreshBestDisplay();
-    startGame();
+    // Only settings that change the rules need a fresh game (they also change the leaderboard mode).
+    // Snake color and sound apply live, so the current run keeps going.
+    const needsRestart = old.speedLevel !== cfg.speedLevel || old.cols !== cfg.cols ||
+      old.rows !== cfg.rows || old.foodCount !== cfg.foodCount || old.foodType !== cfg.foodType;
+    if (needsRestart) {
+      resizeCanvas();
+      refreshBestDisplay();
+      startGame();
+    } else if (!((running && !paused) || waiting)) {
+      drawFrame(performance.now());   // idle/paused/game over: redraw once with the new color
+    }
   }
   document.getElementById('settings-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('settings-modal')) closeSettings();
@@ -1157,13 +1167,22 @@
     if (d) {
       e.preventDefault();
       if (gameOver) { startGame(); return; }
-      if (paused) return;
+      if (paused) { resumeWith(d); return; }
       if (waiting) { queueDir(d); beginMoving(); return; }
       if (running) queueDir(d);
     }
   });
+  // Pressing a direction while paused resumes the game and heads that way
+  // (a 180° reverse is ignored, same as normal play). Ignored while a modal is open.
+  function resumeWith(d) {
+    if (document.querySelector('#settings-modal.open, #leaderboard-modal.open')) return;
+    dirQueue = [];
+    queueDir(d);
+    togglePause();
+  }
   function dpadDir(d) {
     if (gameOver) { startGame(); return; }
+    if (paused) { resumeWith(d); return; }
     if (waiting) { queueDir(d); beginMoving(); return; }
     if (running) queueDir(d);
   }
