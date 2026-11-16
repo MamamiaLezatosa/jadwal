@@ -342,21 +342,25 @@
       buffers[key] = await audioCtx.decodeAudioData(await res.arrayBuffer());
     } catch (e) {}
   }
-  function playBuf(key) {
+  function playBuf(key, rate) {
     const buf = buffers[key];
     if (!buf || !cfg.sfxEnabled || cfg.sfxVolume <= 0) return false;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
-    src.buffer = buf; g.gain.value = cfg.sfxVolume / 100;
+    src.buffer = buf; src.playbackRate.value = rate || 1; g.gain.value = cfg.sfxVolume / 100;
     src.connect(g); g.connect(audioCtx.destination); src.start();
     return true;
   }
-  loadBuf('place', 'block_place.mp3');
+  const PLACE_VARIANTS = 3;
+  for (let i = 1; i <= PLACE_VARIANTS; i++) loadBuf('place' + i, 'place_' + i + '.mp3');
   loadBuf('gameover', 'game_over.mp3');
   for (let i = 1; i <= MAX_COMBO; i++) loadBuf('combo' + i, 'clear_combo_' + i + '.mp3');
 
   function sfxPlace() {
-    if (!playBuf('place')) { tone(240, 0.11, 'sine', 0.4, 0, 120); tone(900, 0.03, 'square', 0.08); }
+    const ready = [];
+    for (let i = 1; i <= PLACE_VARIANTS; i++) if (buffers['place' + i]) ready.push(i);
+    const pitch = 0.8 + Math.random() * 0.3;
+    if (!ready.length || !playBuf('place' + ready[Math.floor(Math.random() * ready.length)], pitch)) { tone(240, 0.11, 'sine', 0.4, 0, 120); tone(900, 0.03, 'square', 0.08); }
   }
   // streak = consecutive moves that cleared lines: 1, 2, 3 ... capped at 14, resets on a non-clearing move
   function sfxClear(lines, streak) {
@@ -452,10 +456,11 @@
   });
   function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
   function applySettings() {
+    const sizeChanged = pendingCfg.size !== cfg.size;
     cfg = { ...pendingCfg };
     localStorage.setItem('bb_cfg', JSON.stringify(cfg));
     closeSettings();
-    startGame();
+    if (sizeChanged) startGame();   // only a new grid size needs a fresh game
   }
   document.getElementById('settings-modal').addEventListener('click', e => {
     if (e.target.id === 'settings-modal') closeSettings();
