@@ -12,7 +12,8 @@
         { "name": "Flappy Bird", "path": "flappy-bird.html", "icon": "flappy-bird.png" },
         { "name": "Tetris", "path": "tetris.html", "icon": "tetris.png" },
         { "name": "Bounce", "path": "bounce.html", "icon": "bounce.jpg" },
-        { "name": "Card Games", "path": "card-games.html", "icon": "card-game.jpg" }
+        { "name": "Card Games", "path": "card-games.html", "icon": "card-game.jpg" },
+        { "name": "Block Puzzle", "path": "block-puzzle.html", "icon": "block-puzzle.png" }
       ]
     },
     {
